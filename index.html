@@ -135,11 +135,11 @@
             padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; 
             font-weight: 600; text-transform: uppercase; display: inline-block;
         }
-        .st-pending { background: #fff3e0; color: var(--warning); }
-        .st-approved { background: #e8f5e9; color: var(--success); }
-        .st-disapproved { background: #ffebee; color: var(--danger); }
-        .st-released { background: #e3f2fd; color: var(--info); }
-        .st-completed { background: #f3e5f5; color: var(--purple); }
+        .st-pending { background: #fff3e0; color: var(--status-pending); }
+        .st-approved { background: #e8f5e9; color: var(--status-approved); }
+        .st-disapproved { background: #ffebee; color: var(--status-disapproved); }
+        .st-released { background: #e3f2fd; color: var(--status-released); }
+        .st-completed { background: #f3e5f5; color: var(--status-completed); }
 
         .action-select { padding: 6px; border-radius: 4px; border: 1px solid #ddd; font-size: 0.8rem; width: 130px; }
         .remark-input { padding: 6px; border-radius: 4px; border: 1px solid #ddd; font-size: 0.8rem; width: 150px; }
@@ -148,18 +148,28 @@
             padding: 8px 12px; border-radius: 4px; cursor: pointer;
         }
 
+        /* Image Display Styles */
+        .thumb-img {
+            width: 60px; height: 60px; border-radius: 6px; object-fit: cover;
+            cursor: pointer; border: 1px solid #eee; background: #fff;
+            transition: transform 0.2s;
+        }
+        .thumb-img:hover { transform: scale(1.1); }
+        
+        .sig-preview {
+            width: 100px; height: 40px; border: 1px solid #eee;
+            background: #fff; object-fit: contain; cursor: pointer;
+            display: block; margin-top: 5px;
+        }
+
+        .notes-text {
+            font-size: 0.75rem; color: #555; font-style: italic;
+            max-width: 150px; white-space: normal; line-height: 1.3;
+        }
+
         #syncIndicator { font-size: 0.75rem; color: #666; display: flex; align-items: center; gap: 5px; }
         .pulse { animation: pulse-animation 2s infinite; }
         @keyframes pulse-animation { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-
-        /* Additional Assets styling */
-        .thumb-img {
-            width: 40px; height: 40px; border-radius: 4px; object-fit: cover;
-            cursor: pointer; border: 1px solid #ddd;
-        }
-        .sig-canvas-img {
-            width: 80px; height: auto; border-bottom: 1px solid #ccc;
-        }
 
         @media (max-width: 1024px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -255,12 +265,11 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Requester Info</th>
+                    <th>Requester</th>
                     <th>Items & Qty</th>
+                    <th>Photo</th>
+                    <th>Notes & Signatures</th>
                     <th>Status</th>
-                    <th>Photos</th>
-                    <th>Notes/Sig</th>
-                    <th>Set Status</th>
                     <th>Admin Remarks</th>
                     <th>Action</th>
                 </tr>
@@ -287,28 +296,24 @@
             document.getElementById('dashboard').style.display = 'block';
             fetchData();
         } else {
-            Swal.fire('Access Denied', 'Incorrect password for TDMH CSR System', 'error');
+            Swal.fire('Access Denied', 'Incorrect password', 'error');
         }
     }
 
     async function fetchData() {
         document.getElementById('loadingState').style.display = 'block';
-        document.getElementById('tableBody').innerHTML = '';
-        
         try {
             const res = await fetch(`${SCRIPT_URL}?action=getRequests`);
             allData = await res.json();
-            
-            // Sort by latest ID
             allData.sort((a, b) => b.id - a.id);
-            
             updateStats(allData);
             populateDeptFilter(allData);
             renderTable(allData);
-            document.getElementById('loadingState').style.display = 'none';
         } catch (e) {
             console.error(e);
-            Swal.fire('Sync Error', 'Could not connect to Google Database', 'error');
+            Swal.fire('Error', 'Could not sync with Google Sheets', 'error');
+        } finally {
+            document.getElementById('loadingState').style.display = 'none';
         }
     }
 
@@ -322,21 +327,15 @@
     function populateDeptFilter(data) {
         const depts = [...new Set(data.map(item => item.dept))].sort();
         const select = document.getElementById('filterDept');
-        const currentVal = select.value;
-        select.innerHTML = '<option value="">All Departments</option>';
-        depts.forEach(d => {
-            const opt = document.createElement('option');
-            opt.value = d; opt.innerText = d;
-            select.appendChild(opt);
-        });
-        select.value = currentVal;
+        select.innerHTML = '<option value="">All Departments</option>' + 
+            depts.map(d => `<option value="${d}">${d}</option>`).join('');
     }
 
-    function viewImage(url) {
-        if(!url) return;
+    function viewFullImage(src) {
+        if(!src) return;
         Swal.fire({
-            imageUrl: url,
-            imageAlt: 'Requisition Photo',
+            imageUrl: src,
+            imageAlt: 'Document Image',
             width: 'auto',
             showCloseButton: true,
             showConfirmButton: false
@@ -353,15 +352,17 @@
             const sClass = "st-" + status.toLowerCase().replace(/\s/g, '');
             const pClass = row.priority === 'Urgent' ? 'p-urgent' : 'p-regular';
 
-            // Handle multiple images if they exist (assuming comma or space separated)
-            const photoHtml = row.photo ? `<img src="${row.photo}" class="thumb-img" onclick="viewImage('${row.photo}')">` : '<span style="color:#ccc">N/A</span>';
-            const signatureHtml = row.signature ? `<img src="${row.signature}" class="sig-canvas-img">` : '<span style="color:#ccc">No Sig</span>';
+            // Mapping images and notes
+            const photoSrc = row.photo || "";
+            const sigHodSrc = row.sigHod || "";
+            const sigAdminSrc = row.sigAdmin || "";
+            const notes = row.additionalNotes || "No notes.";
 
             tr.innerHTML = `
                 <td><strong>#${row.id}</strong></td>
                 <td>
                     <div style="font-weight:600">${row.dept}</div>
-                    <div style="font-size:0.75rem; color:#666">${row.date} | ${row.reqBy}</div>
+                    <div style="font-size:0.75rem; color:#666">${row.reqBy}</div>
                 </td>
                 <td>
                     <div style="font-size:0.8rem; line-height:1.4">
@@ -369,18 +370,19 @@
                     </div>
                 </td>
                 <td>
+                    ${photoSrc ? `<img src="${photoSrc}" class="thumb-img" onclick="viewFullImage('${photoSrc}')">` : '<span style="color:#ccc">None</span>'}
+                </td>
+                <td>
+                    <div class="notes-text">${notes}</div>
+                    <div style="display:flex; gap:5px; margin-top:5px;">
+                        ${sigHodSrc ? `<img src="${sigHodSrc}" class="sig-preview" onclick="viewFullImage('${sigHodSrc}')" title="HOD Sig">` : ''}
+                        ${sigAdminSrc ? `<img src="${sigAdminSrc}" class="sig-preview" onclick="viewFullImage('${sigAdminSrc}')" title="Admin Sig">` : ''}
+                    </div>
+                </td>
+                <td>
                     <span class="priority-indicator ${pClass}"></span>
                     <span class="status-badge ${sClass}">${status}</span>
-                </td>
-                <td>${photoHtml}</td>
-                <td>
-                    <div style="font-size:0.7rem; color:#444; max-width:150px; overflow-wrap: break-word;">
-                        ${row.additionalNotes || '—'}
-                    </div>
-                    <div style="margin-top:5px;">${signatureHtml}</div>
-                </td>
-                <td>
-                    <select class="action-select" id="act-${row.id}">
+                    <select class="action-select" id="act-${row.id}" style="display:block; margin-top:5px;">
                         <option value="Pending" ${status === 'Pending' ? 'selected' : ''}>Pending</option>
                         <option value="Approved" ${status === 'Approved' ? 'selected' : ''}>Approved</option>
                         <option value="Disapproved" ${status === 'Disapproved' ? 'selected' : ''}>Disapproved</option>
@@ -389,11 +391,11 @@
                     </select>
                 </td>
                 <td>
-                    <input type="text" class="remark-input" id="rem-${row.id}" value="${row.remarks || ''}" placeholder="Add note...">
+                    <input type="text" class="remark-input" id="rem-${row.id}" value="${row.remarks || ''}" placeholder="Note...">
                 </td>
                 <td>
                     <button class="save-btn" onclick="updateRow(${row.id})">
-                        <i class="fas fa-check"></i>
+                        <i class="fas fa-save"></i>
                     </button>
                 </td>
             `;
@@ -405,7 +407,7 @@
         const newStatus = document.getElementById(`act-${id}`).value;
         const newRemark = document.getElementById(`rem-${id}`).value;
         
-        Swal.fire({ title: 'Updating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
         try {
             await fetch(SCRIPT_URL, {
@@ -419,17 +421,10 @@
                 })
             });
             
-            Swal.fire({ icon: 'success', title: 'Saved!', timer: 800, showConfirmButton: false });
-            // Local update to avoid full refresh lag
-            const item = allData.find(d => d.id == id);
-            if(item) {
-                item.status = newStatus;
-                item.remarks = newRemark;
-                updateStats(allData);
-                renderTable(allData);
-            }
+            Swal.fire({ icon: 'success', title: 'Saved!', timer: 1000, showConfirmButton: false });
+            fetchData();
         } catch (e) {
-            Swal.fire('Error', 'Failed to update record', 'error');
+            Swal.fire('Error', 'Save failed', 'error');
         }
     }
 
@@ -451,10 +446,7 @@
     }
 
     function resetFilters() {
-        document.getElementById('filterDept').value = "";
-        document.getElementById('filterStart').value = "";
-        document.getElementById('filterEnd').value = "";
-        document.getElementById('filterPriority').value = "";
+        document.querySelectorAll('.filters-section input, .filters-section select').forEach(i => i.value = "");
         renderTable(allData);
     }
 </script>
