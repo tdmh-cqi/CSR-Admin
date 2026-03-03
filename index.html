@@ -17,30 +17,23 @@
         .header { border-bottom: 2px solid #002147; padding-bottom: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         h1 { color: #002147; font-size: 24px; margin: 0; }
         
-        /* Filter Styles */
-        .filter-bar {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: flex-end;
-            border: 1px solid #e9ecef;
-        }
+        .sync-status { font-size: 12px; display: flex; align-items: center; gap: 8px; color: #666; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #ccc; }
+        .dot-online { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
+        .dot-offline { background: #e74c3c; box-shadow: 0 0 5px #e74c3c; }
+
+        .filter-bar { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; border: 1px solid #e9ecef; }
         .filter-group { display: flex; flex-direction: column; gap: 5px; }
         .filter-group label { font-size: 12px; font-weight: bold; color: #002147; }
         .filter-input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
 
-        .btn-group { display: flex; gap: 10px; }
+        .btn-group { display: flex; gap: 10px; align-items: center; }
         .refresh-btn { background-color: #002147; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .clear-btn { background-color: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
         th { background-color: #f8f9fa; color: #002147; position: sticky; top: 0; }
-
         .status-select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; width: 120px; }
         .admin-input { padding: 6px; border-radius: 4px; border: 1px solid #ccc; width: 150px; font-size: 12px; }
         .save-btn { background: #002147; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; }
@@ -68,7 +61,13 @@
 
 <div class="admin-container" id="mainContainer">
     <div class="header">
-        <h1>CSR ADMIN: Request Management</h1>
+        <div>
+            <h1>CSR ADMIN: Request Management</h1>
+            <div class="sync-status">
+                <div id="syncDot" class="status-dot"></div>
+                <span id="syncText">Checking database connection...</span>
+            </div>
+        </div>
         <div class="btn-group">
             <button class="refresh-btn" onclick="fetchRequests()">🔄 Refresh Data</button>
         </div>
@@ -80,7 +79,6 @@
             <label>Department</label>
             <select id="filterDept" class="filter-input" onchange="applyFilters()">
                 <option value="">All Departments</option>
-                <!-- Departments will be populated dynamically -->
             </select>
         </div>
         <div class="filter-group">
@@ -121,13 +119,31 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhQwVJTvLo_W4IcxPTdcCDojC92XjS4Y5wb1r_ldwO1jXu7LJ99QBMJ_Ncl4FBek239Q/exec"; 
     const SECRET_KEY = "CSR2026APPRVD";
-    
-    let allRequests = []; // Global store for local filtering
+    let allRequests = [];
+
+    async function checkSync() {
+        const dot = document.getElementById('syncDot');
+        const text = document.getElementById('syncText');
+        try {
+            const res = await fetch(SCRIPT_URL + "?action=ping");
+            const data = await res.json();
+            if (data.status === "connected") {
+                dot.className = "status-dot dot-online";
+                text.innerText = "Synced with Google Sheets";
+                return true;
+            }
+        } catch (e) {
+            dot.className = "status-dot dot-offline";
+            text.innerText = "Connection Failed: Check Script URL";
+            return false;
+        }
+    }
 
     function checkPassword() {
         if (document.getElementById('passInput').value === SECRET_KEY) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainContainer').style.display = 'block';
+            checkSync();
             fetchRequests();
         } else {
             Swal.fire('Error', 'Incorrect Password', 'error');
@@ -143,13 +159,13 @@
             const res = await fetch(SCRIPT_URL + "?action=getRequests");
             const data = await res.json();
             allRequests = data.sort((a, b) => b.id - a.id);
-            
             populateDeptFilter(allRequests);
             renderTable(allRequests);
-            
             document.getElementById('loader').style.display = 'none';
+            checkSync(); // Also refresh sync status
         } catch (e) {
             document.getElementById('loader').innerText = 'Error loading data.';
+            checkSync();
         }
     }
 
@@ -157,12 +173,10 @@
         const deptSelect = document.getElementById('filterDept');
         const currentVal = deptSelect.value;
         const depts = [...new Set(data.map(r => r.dept))].sort();
-        
         deptSelect.innerHTML = '<option value="">All Departments</option>';
         depts.forEach(d => {
             const opt = document.createElement('option');
-            opt.value = d;
-            opt.textContent = d;
+            opt.value = d; opt.textContent = d;
             deptSelect.appendChild(opt);
         });
         deptSelect.value = currentVal;
@@ -172,18 +186,13 @@
         const dept = document.getElementById('filterDept').value;
         const fromDate = document.getElementById('filterDateFrom').value;
         const toDate = document.getElementById('filterDateTo').value;
-
         const filtered = allRequests.filter(req => {
             const matchDept = !dept || req.dept === dept;
-            
-            // Handle date comparison (req.date is YYYY-MM-DD)
             const reqDate = req.date; 
             const matchFrom = !fromDate || reqDate >= fromDate;
             const matchTo = !toDate || reqDate <= toDate;
-
             return matchDept && matchFrom && matchTo;
         });
-
         renderTable(filtered);
     }
 
@@ -197,18 +206,15 @@
     function renderTable(data) {
         const tbody = document.getElementById('adminBody');
         tbody.innerHTML = '';
-        
         if (data.length === 0) {
             document.getElementById('noDataMsg').style.display = 'block';
             return;
         } else {
             document.getElementById('noDataMsg').style.display = 'none';
         }
-
         data.forEach(req => {
             const tr = document.createElement('tr');
             const statusClass = "st-" + (req.status || 'pending').toLowerCase().replace(/\s/g, '');
-            
             tr.innerHTML = `
                 <td><strong>#${req.id}</strong></td>
                 <td><b>${req.dept}</b><br><small>${req.date}</small></td>
@@ -225,15 +231,9 @@
                         <option value="Ready to Dispatch">Ready to Dispatch</option>
                     </select>
                 </td>
-                <td>
-                    <input type="text" class="admin-input" id="rec-${req.id}" value="${req.recBy || ''}" placeholder="Name of Receiver">
-                </td>
-                <td>
-                    <input type="text" class="admin-input" id="rem-${req.id}" value="${req.remarks || ''}" placeholder="Add note...">
-                </td>
-                <td>
-                    <button class="save-btn" onclick="updateRow('${req.id}')">SAVE</button>
-                </td>
+                <td><input type="text" class="admin-input" id="rec-${req.id}" value="${req.recBy || ''}" placeholder="Receiver"></td>
+                <td><input type="text" class="admin-input" id="rem-${req.id}" value="${req.remarks || ''}" placeholder="Note..."></td>
+                <td><button class="save-btn" onclick="updateRow('${req.id}')">SAVE</button></td>
             `;
             tbody.appendChild(tr);
         });
@@ -241,31 +241,25 @@
 
     async function updateRow(id) {
         Swal.fire({ title: 'Updating...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
-        
         const status = document.getElementById(`stat-${id}`).value;
         const remarks = document.getElementById(`rem-${id}`).value;
         const recBy = document.getElementById(`rec-${id}`).value;
-
         try {
             const res = await fetch(SCRIPT_URL, { 
                 method: "POST", 
-                body: JSON.stringify({ 
-                    action: "updateStatus", 
-                    id: id,
-                    status: status,
-                    remarks: remarks,
-                    recBy: recBy
-                }) 
+                body: JSON.stringify({ action: "updateStatus", id: id, status: status, remarks: remarks, recBy: recBy }) 
             });
-            if (res.ok) {
+            const result = await res.json();
+            if (result.result === "success") {
                 Swal.fire('Updated!', 'Row saved successfully.', 'success');
                 fetchRequests();
+            } else {
+                Swal.fire('Error', result.message || 'Update failed.', 'error');
             }
         } catch (e) {
-            Swal.fire('Error', 'Update failed.', 'error');
+            Swal.fire('Error', 'Update failed. Check sync status.', 'error');
         }
     }
 </script>
 </body>
-
 </html>
