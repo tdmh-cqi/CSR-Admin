@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
         :root {
             --primary-navy: #002147;
@@ -40,109 +40,151 @@
             min-height: 100vh;
         }
 
-        /* --- NEW MODERN LOGIN OVERLAY --- */
+        /* --- REDESIGNED ULTRA-PREMIUM LOGIN OVERLAY --- */
         #loginOverlay { 
             position: fixed; 
             top: 0; 
             left: 0; 
             width: 100%; 
             height: 100%; 
-            background: linear-gradient(135deg, #001229 0%, #002147 100%);
+            /* Subtle medical/hospital background image */
+            background: url('https://images.unsplash.com/photo-1538108149393-cebb47acddb2?auto=format&fit=crop&q=80&w=2000') no-repeat center center;
+            background-size: cover;
             display: flex; 
             justify-content: center; 
             align-items: center; 
             z-index: 9999; 
-            transition: opacity 0.3s ease;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        #loginOverlay::before {
+            content: '';
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            /* Deep navy gradient blur over the background */
+            background: linear-gradient(135deg, rgba(0, 33, 71, 0.9) 0%, rgba(0, 18, 41, 0.95) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
         
         .login-wrapper {
-            background: #ffffff;
-            padding: 50px 40px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 50px 45px;
             border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset;
             text-align: center;
             width: 100%;
             max-width: 420px;
+            transform: translateY(0);
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUpFade {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
         
         .login-wrapper .logo-circle {
-            width: 80px; 
-            height: 80px;
-            background: var(--primary-navy);
+            width: 76px; 
+            height: 76px;
+            background: linear-gradient(135deg, #002147 0%, #004080 100%);
             color: white;
-            border-radius: 50%;
+            border-radius: 22px;
             display: flex; 
             justify-content: center; 
             align-items: center;
-            margin: 0 auto 20px;
-            box-shadow: 0 10px 20px rgba(0,33,71,0.2);
+            margin: 0 auto 24px;
+            box-shadow: 0 12px 24px rgba(0,33,71,0.25);
             font-size: 32px;
+            transform: rotate(-3deg);
+            transition: transform 0.3s ease;
+        }
+
+        .login-wrapper:hover .logo-circle { 
+            transform: rotate(0deg) scale(1.05); 
         }
         
         .login-wrapper h2 {
-            color: var(--primary-navy);
-            margin: 0 0 5px 0;
-            font-size: 1.8rem;
-            font-weight: 700;
+            color: #0f172a; 
+            margin: 0 0 8px 0; 
+            font-size: 1.8rem; 
+            font-weight: 800; 
+            letter-spacing: -0.5px;
         }
         
         .login-wrapper p {
-            color: #64748b;
-            margin: 0 0 30px 0;
-            font-size: 0.95rem;
+            color: #64748b; 
+            margin: 0 0 35px 0; 
+            font-size: 0.95rem; 
+            font-weight: 500;
         }
         
-        .login-wrapper .input-group {
-            position: relative;
-            margin-bottom: 25px;
+        .login-wrapper .input-group { 
+            position: relative; 
+            margin-bottom: 25px; 
         }
         
         .login-wrapper .input-group i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
+            position: absolute; 
+            left: 18px; 
+            top: 50%; 
             transform: translateY(-50%);
-            color: #94a3b8;
+            color: #94a3b8; 
+            font-size: 18px; 
+            transition: color 0.3s ease;
+            z-index: 2;
         }
         
         .login-wrapper input {
-            width: 100%;
-            padding: 16px 16px 16px 45px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
+            position: relative; 
+            width: 100%; 
+            padding: 16px 16px 16px 52px;
+            border: 2px solid #e2e8f0; 
+            border-radius: 14px;
+            font-size: 16px; 
             transition: all 0.3s ease;
-            background: #f8fafc;
+            background: #f8fafc; 
+            font-weight: 500; 
+            color: #0f172a;
         }
         
         .login-wrapper input:focus {
-            outline: none;
-            border-color: var(--primary-navy);
+            outline: none; 
+            border-color: var(--primary-navy); 
             background: #ffffff;
             box-shadow: 0 0 0 4px rgba(0,33,71,0.1);
         }
         
+        .login-wrapper .input-group:focus-within i { 
+            color: var(--primary-navy); 
+        }
+        
         .login-wrapper button {
-            width: 100%;
-            padding: 16px;
-            background: var(--primary-navy);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 16px;
+            width: 100%; 
+            padding: 18px;
+            background: linear-gradient(135deg, #002147 0%, #003066 100%);
+            color: white; 
+            border: none; 
+            border-radius: 14px;
+            font-weight: 600; 
+            font-size: 16px; 
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            transition: all 0.3s ease; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
             gap: 10px;
+            box-shadow: 0 8px 16px rgba(0,33,71,0.2);
         }
         
         .login-wrapper button:hover {
-            background: #00152e;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,33,71,0.2);
+            transform: translateY(-2px); 
+            box-shadow: 0 12px 20px rgba(0,33,71,0.3); 
+            background: linear-gradient(135deg, #00152e 0%, #002147 100%);
         }
 
         /* Sidebar */
@@ -368,7 +410,7 @@
             width: 100px; 
             height: 50px; 
             border: 1px solid #eee;
-            background: #fff; 
+            background: transparent; 
             object-fit: contain; 
             cursor: pointer;
             display: block; 
@@ -447,7 +489,7 @@
         </div>
         
         <button onclick="login()">
-            Sign In <i class="fas fa-arrow-right"></i>
+            Secure Login <i class="fas fa-arrow-right"></i>
         </button>
     </div>
 </div>
@@ -596,24 +638,17 @@
     function viewFullImage(src) {
         if(!src || src.length < 20) return;
         
-        // Force SVG backgrounds to white for better visibility in the popup
-        let bgColor = src.includes('svg+xml') ? '#ffffff' : 'transparent';
-        
         Swal.fire({
             imageUrl: src,
             imageAlt: 'Visual Preview',
             width: 'auto',
             showCloseButton: true,
             showConfirmButton: false,
-            backdrop: `rgba(0,0,10,0.85)`,
-            customClass: { image: 'swal-custom-img' }
+            backdrop: `rgba(0,0,10,0.85)`
         });
-        
-        if(src.includes('svg+xml')) {
-            document.querySelector('.swal2-image').style.backgroundColor = 'white';
-        }
     }
 
+    // This function parses the row data to easily grab the specific image data
     function getKeyValue(obj, patterns) {
         const keys = Object.keys(obj);
         for (const pattern of patterns) {
@@ -621,7 +656,6 @@
             if (foundKey) {
                 let val = obj[foundKey];
                 if (val && typeof val === 'string') {
-                    // Clean Excel/Sheet artifacts like leading single quotes
                     val = val.trim().replace(/^'/, '');
                     if (val.includes('data:image')) return val;
                 }
@@ -643,6 +677,7 @@
             const sClass = "st-" + status.toLowerCase().replace(/\s/g, '');
             const pClass = row.priority === 'Urgent' ? 'p-urgent' : 'p-regular';
 
+            // Reading directly from the robust keys generated by the new Backend
             const itemPhoto = getKeyValue(row, ['itemphoto', 'photo', 'image']) || "";
             const sigHod = getKeyValue(row, ['sighod', 'hodsignature', 'signaturehod', 'headsignature', 'signature1']) || "";
             const sigAdmin = getKeyValue(row, ['sigadmin', 'adminsignature', 'signatureadmin', 'signature2']) || "";
