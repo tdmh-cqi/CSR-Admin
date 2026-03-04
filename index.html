@@ -356,11 +356,30 @@
             display: inline-block;
         }
         
-        .st-pending { background: #fff3e0; color: var(--status-pending); }
-        .st-approved { background: #e8f5e9; color: var(--status-approved); }
-        .st-disapproved { background: #ffebee; color: var(--status-disapproved); }
-        .st-forreleasing { background: #e3f2fd; color: var(--status-releasing); }
-        .st-completed { background: #f3e5f5; color: var(--status-completed); }
+        .st-pending { 
+            background: #fff3e0; 
+            color: var(--status-pending); 
+        }
+        
+        .st-approved { 
+            background: #e8f5e9; 
+            color: var(--status-approved); 
+        }
+        
+        .st-disapproved { 
+            background: #ffebee; 
+            color: var(--status-disapproved); 
+        }
+        
+        .st-forreleasing { 
+            background: #e3f2fd; 
+            color: var(--status-releasing); 
+        }
+        
+        .st-completed { 
+            background: #f3e5f5; 
+            color: var(--status-completed); 
+        }
 
         .action-select { 
             padding: 6px; 
@@ -385,6 +404,9 @@
             padding: 8px 12px; 
             border-radius: 4px; 
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         /* Image Display Styles */
@@ -464,10 +486,62 @@
         }
 
         @media (max-width: 1024px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .sidebar { width: 70px; }
-            .sidebar h2, .sidebar span { display: none; }
-            .main-content { margin-left: 70px; }
+            .stats-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+            }
+            .sidebar { 
+                width: 70px; 
+            }
+            .sidebar h2, .sidebar span { 
+                display: none; 
+            }
+            .main-content { 
+                margin-left: 70px; 
+            }
+        }
+
+        /* --- PRINT STYLES --- */
+        @media print {
+            body { 
+                background: white; 
+                font-size: 12px; 
+            }
+            
+            .sidebar { 
+                display: none !important; 
+            }
+            
+            .main-content { 
+                margin-left: 0 !important; 
+                padding: 0 !important; 
+            }
+            
+            .page-header button, .filters-section, #loginOverlay { 
+                display: none !important; 
+            }
+            
+            .table-container { 
+                box-shadow: none; 
+                border: 1px solid #ddd; 
+            }
+            
+            /* Hide the Action Column entirely when printing */
+            table th:last-child, table td:last-child { 
+                display: none !important; 
+            }
+            
+            .stat-card { 
+                border: 1px solid #ddd; 
+                break-inside: avoid; 
+            }
+            
+            .remark-input, .action-select { 
+                border: none; 
+                background: transparent; 
+                padding: 0; 
+                appearance: none; 
+                -webkit-appearance: none; 
+            }
         }
     </style>
 </head>
@@ -497,9 +571,7 @@
     <div class="nav-item active">
         <i class="fas fa-list-check"></i> <span>All Requests</span>
     </div>
-    <div class="nav-item">
-        <i class="fas fa-chart-line"></i> <span>Reports</span>
-    </div>
+    <!-- Reports tab removed as requested -->
     <div class="nav-item" style="margin-top: auto;" onclick="location.reload()">
         <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
     </div>
@@ -511,9 +583,14 @@
             <h1 style="margin:0; font-size: 1.5rem; color: var(--primary-navy);">Requisition Overview</h1>
             <div id="syncIndicator"><i class="fas fa-circle pulse" style="color: #2ecc71;"></i> Synced with Live Database</div>
         </div>
-        <button onclick="fetchData()" class="save-btn" style="background: white; color: var(--primary-navy); border: 1px solid #ddd;">
-            <i class="fas fa-sync"></i> Force Refresh
-        </button>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="window.print()" class="save-btn" style="background: #2e7d32; color: white;">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+            <button onclick="fetchData()" class="save-btn" style="background: white; color: var(--primary-navy); border: 1px solid #ddd;">
+                <i class="fas fa-sync"></i> Force Refresh
+            </button>
+        </div>
     </div>
 
     <div class="stats-grid">
@@ -537,9 +614,45 @@
 
     <div class="filters-section">
         <div class="filter-group">
+            <label>Date</label>
+            <input type="date" id="filterDate" onchange="applyFilters()">
+        </div>
+        <div class="filter-group">
             <label>Department</label>
             <select id="filterDept" onchange="applyFilters()">
                 <option value="">All Departments</option>
+                <option value="Accounting">Accounting</option>
+                <option value="Admin">Admin</option>
+                <option value="Admitting">Admitting</option>
+                <option value="APE/YAKAP">APE/YAKAP</option>
+                <option value="Billing">Billing</option>
+                <option value="Cashier">Cashier</option>
+                <option value="CQI">CQI</option>
+                <option value="ER">ER</option>
+                <option value="HMO">HMO</option>
+                <option value="HOMES">HOMES</option>
+                <option value="General Services">General Services</option>
+                <option value="HR">HR</option>
+                <option value="IT">IT</option>
+                <option value="Laboratory">Laboratory</option>
+                <option value="Medical Record">Medical Record</option>
+                <option value="NICU">NICU</option>
+                <option value="NSO">NSO</option>
+                <option value="OH Nurse">OH Nurse</option>
+                <option value="OPD">OPD</option>
+                <option value="OR">OR</option>
+                <option value="Pharmacy">Pharmacy</option>
+                <option value="PhilHealth">PhilHealth</option>
+                <option value="Radiology/XRay">Radiology/XRay</option>
+                <option value="Releasing">Releasing</option>
+                <option value="Security">Security</option>
+                <option value="Social Service">Social Service</option>
+                <option value="Station 3">Station 3</option>
+                <option value="Station 4B">Station 4B</option>
+                <option value="Station 5A">Station 5A</option>
+                <option value="Station 5B">Station 5B</option>
+                <option value="Training & Development">Training & Development</option>
+                <option value="Ultrasound">Ultrasound</option>
             </select>
         </div>
         <div class="filter-group">
@@ -605,7 +718,6 @@
             
             allData.sort((a, b) => b.id - a.id);
             updateStats(allData);
-            populateDeptFilter(allData);
             renderTable(allData);
         } catch (e) {
             console.error(e);
@@ -620,15 +732,6 @@
         document.getElementById('statPending').innerText = data.filter(r => (r.status || 'Pending') === 'Pending').length;
         document.getElementById('statForReleasing').innerText = data.filter(r => r.status === 'For Releasing' || r.status === 'For Release' || r.status === 'Released').length;
         document.getElementById('statCompleted').innerText = data.filter(r => r.status === 'Completed').length;
-    }
-
-    function populateDeptFilter(data) {
-        const depts = [...new Set(data.map(item => item.dept))].sort();
-        const select = document.getElementById('filterDept');
-        const currentVal = select.value;
-        select.innerHTML = '<option value="">All Departments</option>' + 
-            depts.map(d => `<option value="${d}">${d}</option>`).join('');
-        select.value = currentVal;
     }
 
     function viewFullImage(src) {
@@ -679,7 +782,10 @@
             const notes = row.additionalNotes || row.notes || "No notes.";
 
             tr.innerHTML = `
-                <td><strong>#${row.id}</strong></td>
+                <td>
+                    <strong>#${row.id}</strong><br>
+                    <span style="font-size: 10px; color: #888;">${row.date || ''}</span>
+                </td>
                 <td>
                     <div style="font-weight:600">${row.dept || 'N/A'}</div>
                     <div style="font-size:0.75rem; color:#666">${row.reqBy || 'Unknown'}</div>
@@ -734,7 +840,11 @@
         const newStatus = document.getElementById(`act-${id}`).value;
         const newRemark = document.getElementById(`rem-${id}`).value;
         
-        Swal.fire({ title: 'Updating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ 
+            title: 'Updating...', 
+            allowOutsideClick: false, 
+            didOpen: () => Swal.showLoading() 
+        });
         
         try {
             await fetch(SCRIPT_URL, {
@@ -748,27 +858,37 @@
                 })
             });
             
-            Swal.fire({ icon: 'success', title: 'Record Updated', timer: 1000, showConfirmButton: false });
+            Swal.fire({ 
+                icon: 'success', 
+                title: 'Record Updated', 
+                timer: 1000, 
+                showConfirmButton: false 
+            });
+            
             setTimeout(fetchData, 800);
+            
         } catch (e) {
             Swal.fire('Update Failed', 'Connection error', 'error');
         }
     }
 
     function applyFilters() {
+        const date = document.getElementById('filterDate').value;
         const dept = document.getElementById('filterDept').value;
         const priority = document.getElementById('filterPriority').value;
 
         const filtered = allData.filter(item => {
+            const matchDate = !date || item.date === date;
             const matchDept = !dept || item.dept === dept;
             const matchPri = !priority || item.priority === priority;
-            return matchDept && matchPri;
+            return matchDate && matchDept && matchPri;
         });
 
         renderTable(filtered);
     }
 
     function resetFilters() {
+        document.getElementById('filterDate').value = "";
         document.getElementById('filterDept').value = "";
         document.getElementById('filterPriority').value = "";
         renderTable(allData);
