@@ -41,10 +41,7 @@
         body::before {
             content: '';
             position: fixed;
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: url('images/tdmh-background.jpg') no-repeat center center;
             background-size: cover;
             opacity: 0.1;
@@ -55,16 +52,11 @@
         /* --- LOGIN OVERLAY WITH HOSPITAL DESIGN --- */
         #loginOverlay { 
             position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
+            top: 0; left: 0; width: 100%; height: 100%; 
             background: linear-gradient(135deg, rgba(0, 33, 71, 0.85) 0%, rgba(0, 18, 41, 0.95) 100%), 
                         url('https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=2000') no-repeat center center;
             background-size: cover;
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+            display: flex; justify-content: center; align-items: center; 
             z-index: 9999; 
             transition: opacity 0.5s ease, visibility 0.5s ease;
         }
@@ -87,471 +79,128 @@
         }
         
         .login-logo-container {
-            /* Removed white background and box-shadow to blend seamlessly */
             padding: 10px;
             margin-bottom: 15px;
             display: inline-block;
         }
 
         .login-logo {
-            max-width: 240px; /* Slightly larger since background is gone */
+            max-width: 240px; 
             height: auto;
             transition: transform 0.3s ease;
         }
 
-        .login-logo:hover {
-            transform: scale(1.05);
-        }
+        .login-logo:hover { transform: scale(1.05); }
         
-        .login-wrapper h2 {
-            color: #0f172a; 
-            margin: 0 0 8px 0; 
-            font-size: 1.8rem; 
-            font-weight: 800; 
-            letter-spacing: -0.5px;
-        }
+        .login-wrapper h2 { color: #0f172a; margin: 0 0 8px 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
+        .login-wrapper p { color: #64748b; margin: 0 0 35px 0; font-size: 0.95rem; font-weight: 500; }
         
-        .login-wrapper p {
-            color: #64748b; 
-            margin: 0 0 35px 0; 
-            font-size: 0.95rem; 
-            font-weight: 500;
-        }
-        
-        .login-wrapper .input-group { 
-            position: relative; 
-            margin-bottom: 25px; 
-        }
-        
-        .login-wrapper .input-group i {
-            position: absolute; 
-            left: 18px; 
-            top: 50%; 
-            transform: translateY(-50%);
-            color: #94a3b8; 
-            font-size: 18px; 
-            transition: color 0.3s ease;
-            z-index: 2;
-        }
+        .login-wrapper .input-group { position: relative; margin-bottom: 25px; }
+        .login-wrapper .input-group i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px; transition: color 0.3s ease; z-index: 2; }
         
         .login-wrapper input {
-            position: relative; 
-            width: 100%; 
-            padding: 16px 16px 16px 52px;
-            border: 2px solid #e2e8f0; 
-            border-radius: 14px;
-            font-size: 16px; 
-            transition: all 0.3s ease;
-            background: #f8fafc; 
-            font-weight: 500; 
-            color: #0f172a;
+            position: relative; width: 100%; padding: 16px 16px 16px 52px; border: 2px solid #e2e8f0; border-radius: 14px;
+            font-size: 16px; transition: all 0.3s ease; background: #f8fafc; font-weight: 500; color: #0f172a;
         }
-        
-        .login-wrapper input:focus {
-            outline: none; 
-            border-color: var(--primary-navy); 
-            background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(0,33,71,0.1);
-        }
-        
-        .login-wrapper .input-group:focus-within i { 
-            color: var(--primary-navy); 
-        }
+        .login-wrapper input:focus { outline: none; border-color: var(--primary-navy); background: #ffffff; box-shadow: 0 0 0 4px rgba(0,33,71,0.1); }
+        .login-wrapper .input-group:focus-within i { color: var(--primary-navy); }
         
         .login-wrapper button {
-            width: 100%; 
-            padding: 18px;
-            background: linear-gradient(135deg, #002147 0%, #003066 100%);
-            color: white; 
-            border: none; 
-            border-radius: 14px;
-            font-weight: 600; 
-            font-size: 16px; 
-            cursor: pointer;
-            transition: all 0.3s ease; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 10px;
+            width: 100%; padding: 18px; background: linear-gradient(135deg, #002147 0%, #003066 100%);
+            color: white; border: none; border-radius: 14px; font-weight: 600; font-size: 16px; cursor: pointer;
+            transition: all 0.3s ease; display: flex; justify-content: center; align-items: center; gap: 10px;
             box-shadow: 0 8px 16px rgba(0,33,71,0.2);
         }
-        
-        .login-wrapper button:hover {
-            transform: translateY(-2px); 
-            box-shadow: 0 12px 20px rgba(0,33,71,0.3); 
-            background: linear-gradient(135deg, #00152e 0%, #002147 100%);
-        }
+        .login-wrapper button:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(0,33,71,0.3); background: linear-gradient(135deg, #00152e 0%, #002147 100%); }
 
         /* Sidebar */
         .sidebar {
-            width: var(--sidebar-width);
-            background: var(--primary-navy);
-            color: white;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            height: 100vh;
-            z-index: 100;
+            width: var(--sidebar-width); background: var(--primary-navy); color: white; padding: 20px;
+            display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 100;
         }
+        .sidebar-logo { max-width: 100%; background: white; padding: 10px; border-radius: 8px; margin-bottom: 30px; cursor: pointer; transition: 0.3s; }
+        .sidebar-logo:hover { transform: scale(1.03); }
         
-        .sidebar-logo { 
-            max-width: 100%; 
-            background: white; 
-            padding: 10px; 
-            border-radius: 8px; 
-            margin-bottom: 30px; 
-            cursor: pointer; 
-            transition: 0.3s; 
-        }
-        
-        .sidebar-logo:hover { 
-            transform: scale(1.03); 
-        }
-        
-        .nav-item { 
-            padding: 12px 15px; 
-            margin-bottom: 5px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            transition: 0.2s;
-        }
-        
-        .nav-item:hover, .nav-item.active { 
-            background: rgba(255,255,255,0.1); 
-        }
-        
-        .nav-item i { 
-            width: 20px; 
-        }
+        .nav-item { padding: 12px 15px; margin-bottom: 5px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); }
+        .nav-item i { width: 20px; }
 
         /* Main Content */
-        .main-content {
-            margin-left: var(--sidebar-width);
-            flex: 1;
-            padding: 30px;
-            width: calc(100% - var(--sidebar-width));
+        .main-content { margin-left: var(--sidebar-width); flex: 1; padding: 30px; width: calc(100% - var(--sidebar-width)); }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        
+        /* Quota Tracker Box */
+        .quota-box {
+            background: rgba(255,255,255,0.9); border: 1px solid #ddd; padding: 8px 15px; border-radius: 8px;
+            font-size: 0.8rem; color: #444; font-weight: 500; display: flex; flex-direction: column; align-items: flex-end;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
+        .quota-box span.critical { color: #c62828; font-weight: bold; animation: pulse 1s infinite; }
 
-        /* Dashboard Header */
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            border-left: 4px solid var(--primary-navy);
-        }
-        
-        .stat-card h4 { 
-            margin: 0; 
-            color: #666; 
-            font-size: 0.8rem; 
-            text-transform: uppercase; 
-        }
-        
-        .stat-card div { 
-            font-size: 1.5rem; 
-            font-weight: 700; 
-            color: var(--primary-navy); 
-            margin-top: 5px; 
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 4px solid var(--primary-navy); }
+        .stat-card h4 { margin: 0; color: #666; font-size: 0.8rem; text-transform: uppercase; }
+        .stat-card div { font-size: 1.5rem; font-weight: 700; color: var(--primary-navy); margin-top: 5px; }
 
         /* Filter Controls */
-        .filters-section {
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px;
-            margin-bottom: 25px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 15px; 
-            align-items: flex-end;
-        }
-        
-        .filter-group { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 5px; 
-            flex: 1;
-            min-width: 150px;
-        }
-        
-        .filter-group label { 
-            font-size: 0.75rem; 
-            font-weight: 600; 
-            color: #444; 
-        }
-        
-        .filter-group select, .filter-group input { 
-            padding: 10px; 
-            border: 1px solid #ddd; 
-            border-radius: 6px; 
-            font-size: 0.85rem;
-            width: 100%;
-        }
+        .filters-section { background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 150px; }
+        .filter-group label { font-size: 0.75rem; font-weight: 600; color: #444; }
+        .filter-group select, .filter-group input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.85rem; width: 100%; }
 
         /* Table Design */
-        .table-container {
-            background: white; 
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            overflow-x: auto;
-        }
+        .table-container { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { background: #f8f9fa; color: #444; font-weight: 600; padding: 15px; text-align: left; font-size: 0.85rem; border-bottom: 2px solid #eee; white-space: nowrap; }
+        td { padding: 15px; font-size: 0.85rem; border-bottom: 1px solid #eee; vertical-align: middle; }
         
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            min-width: 900px; /* Ensure table doesn't squish too much on mobile */
-        }
-        
-        th { 
-            background: #f8f9fa; 
-            color: #444; 
-            font-weight: 600; 
-            padding: 15px; 
-            text-align: left; 
-            font-size: 0.85rem;
-            border-bottom: 2px solid #eee;
-            white-space: nowrap;
-        }
-        
-        td { 
-            padding: 15px; 
-            font-size: 0.85rem; 
-            border-bottom: 1px solid #eee; 
-            vertical-align: middle; 
-        }
-        
-        .priority-indicator { 
-            width: 8px; 
-            height: 8px; 
-            border-radius: 50%; 
-            display: inline-block; 
-            margin-right: 5px; 
-        }
-        
-        .p-urgent { 
-            background: var(--danger); 
-            box-shadow: 0 0 5px var(--danger); 
-        }
-        
-        .p-regular { 
-            background: #ccc; 
-        }
+        .priority-indicator { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .p-urgent { background: var(--danger); box-shadow: 0 0 5px var(--danger); }
+        .p-regular { background: #ccc; }
 
-        /* Updated Dynamic Status Colors */
-        .status-badge {
-            padding: 5px 12px; 
-            border-radius: 20px; 
-            font-size: 0.75rem; 
-            font-weight: 600; 
-            text-transform: uppercase; 
-            display: inline-block;
-            text-align: center;
-            min-width: 100px;
-        }
-        
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; display: inline-block; text-align: center; min-width: 100px; }
         .st-received { background: #fff3e0; color: var(--color-received); border: 1px solid var(--color-received); }
         .st-forrelease { background: #e0f7fa; color: var(--color-forrelease); border: 1px solid var(--color-forrelease); }
         .st-completed { background: #e8f5e9; color: var(--color-completed); border: 1px solid var(--color-completed); }
         .st-disapproved { background: #ffebee; color: var(--color-disapproved); border: 1px solid var(--color-disapproved); }
 
-        .action-select { 
-            padding: 8px; 
-            border-radius: 6px; 
-            border: 1px solid #ddd; 
-            font-size: 0.85rem; 
-            width: 140px; 
-            background-color: #fff;
-            cursor: pointer;
-        }
-        
-        .remark-input { 
-            padding: 10px; 
-            border-radius: 6px; 
-            border: 1px solid #ddd; 
-            font-size: 0.85rem; 
-            width: 100%; 
-            box-sizing: border-box; 
-        }
-        
-        .save-btn { 
-            background: var(--primary-navy); 
-            color: white; 
-            border: none; 
-            padding: 10px 15px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            justify-content: center; 
-            flex: 1; 
-            font-weight: 500;
-            transition: opacity 0.2s;
-        }
+        .action-select { padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.85rem; width: 140px; background-color: #fff; cursor: pointer; }
+        .remark-input { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.85rem; width: 100%; box-sizing: border-box; }
+        .save-btn { background: var(--primary-navy); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; justify-content: center; flex: 1; font-weight: 500; transition: opacity 0.2s; }
         .save-btn:hover { opacity: 0.9; }
 
         /* Image Display Styles */
-        .thumb-img {
-            width: 70px; 
-            height: 70px; 
-            border-radius: 6px; 
-            object-fit: cover;
-            cursor: pointer; 
-            border: 1px solid #eee; 
-            background: #fff;
-            transition: transform 0.2s;
-            display: block;
-        }
-        
-        .thumb-img:hover { 
-            transform: scale(1.1); 
-        }
-        
-        .sig-preview {
-            width: 100px; 
-            height: 50px; 
-            border: 1px solid #eee;
-            background: #ffffff; 
-            object-fit: contain; 
-            cursor: pointer;
-            display: block; 
-            margin-top: 5px;
-            transition: transform 0.2s;
-        }
-        
-        .sig-preview:hover { 
-            transform: scale(1.05); 
-        }
+        .thumb-img { width: 70px; height: 70px; border-radius: 6px; object-fit: cover; cursor: pointer; border: 1px solid #eee; background: #fff; transition: transform 0.2s; display: block; }
+        .thumb-img:hover { transform: scale(1.1); }
+        .sig-preview { width: 100px; height: 50px; border: 1px solid #eee; background: #ffffff; object-fit: contain; cursor: pointer; display: block; margin-top: 5px; transition: transform 0.2s; }
+        .sig-preview:hover { transform: scale(1.05); }
+        .no-sig-box { width: 100px; height: 50px; border: 1px dashed #ccc; background: #fafafa; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 9px; font-weight: bold; text-align: center; border-radius: 4px; }
+        .notes-text { font-size: 0.75rem; color: #555; font-style: italic; max-width: 200px; white-space: normal; line-height: 1.3; margin-bottom: 10px; }
 
-        .no-sig-box {
-            width: 100px; 
-            height: 50px; 
-            border: 1px dashed #ccc;
-            background: #fafafa; 
-            display: flex; 
-            align-items: center;
-            justify-content: center; 
-            color: #aaa; 
-            font-size: 9px; 
-            font-weight: bold;
-            text-align: center; 
-            border-radius: 4px;
-        }
-
-        .notes-text {
-            font-size: 0.75rem; 
-            color: #555; 
-            font-style: italic;
-            max-width: 200px; 
-            white-space: normal; 
-            line-height: 1.3;
-            margin-bottom: 10px;
-        }
-
-        #syncIndicator { 
-            font-size: 0.75rem; 
-            color: #666; 
-            display: flex; 
-            align-items: center; 
-            gap: 5px; 
-        }
-        
-        .pulse { 
-            animation: pulse-animation 2s infinite; 
-        }
-        
-        @keyframes pulse-animation { 
-            0% { opacity: 1; } 
-            50% { opacity: 0.4; } 
-            100% { opacity: 1; } 
-        }
-
-        /* Responsive Adjustments */
         @media (max-width: 1024px) {
-            .stats-grid { 
-                grid-template-columns: repeat(2, 1fr); 
-            }
-            .sidebar { 
-                width: 70px; 
-            }
-            .sidebar-logo, .sidebar span { 
-                display: none; 
-            }
-            .main-content { 
-                margin-left: 70px;
-                width: calc(100% - 70px);
-            }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .sidebar { width: 70px; }
+            .sidebar-logo, .sidebar span { display: none; }
+            .main-content { margin-left: 70px; width: calc(100% - 70px); }
         }
 
         @media (max-width: 768px) {
-            .stats-grid { 
-                grid-template-columns: 1fr; 
-            }
-            .filters-section {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+            .stats-grid { grid-template-columns: 1fr; }
+            .filters-section { flex-direction: column; align-items: stretch; }
+            .page-header { flex-direction: column; align-items: flex-start; }
         }
 
         /* --- PRINT STYLES --- */
         @media print {
-            body { 
-                background: white; 
-                font-size: 12px; 
-            }
-            body::before { 
-                display: none !important; 
-            }
-            .sidebar { 
-                display: none !important; 
-            }
-            .main-content { 
-                margin-left: 0 !important; 
-                padding: 0 !important;
-                width: 100% !important;
-            }
-            .page-header button, .filters-section, #loginOverlay { 
-                display: none !important; 
-            }
-            .table-container { 
-                box-shadow: none; 
-                border: 1px solid #ddd; 
-                overflow: visible; /* Ensure all rows print */
-            }
-            /* Hide the Action Column entirely when printing */
-            table th:last-child, table td:last-child { 
-                display: none !important; 
-            }
-            .stat-card { 
-                border: 1px solid #ddd; 
-                break-inside: avoid; 
-            }
+            body { background: white; font-size: 12px; }
+            body::before { display: none !important; }
+            .sidebar { display: none !important; }
+            .main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; }
+            .page-header button, .filters-section, #loginOverlay, .quota-box { display: none !important; }
+            .table-container { box-shadow: none; border: 1px solid #ddd; overflow: visible; }
+            table th:last-child, table td:last-child { display: none !important; }
+            .stat-card { border: 1px solid #ddd; break-inside: avoid; }
         }
     </style>
 </head>
@@ -590,10 +239,21 @@
 
 <main class="main-content" id="dashboard" style="display:none;">
     <div class="page-header">
-        <div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
             <h1 style="margin:0; font-size: 1.5rem; color: var(--primary-navy);">Requisition Overview</h1>
-            <div id="syncIndicator"><i class="fas fa-circle pulse" style="color: #2ecc71;"></i> Synced with Live Database</div>
+            
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="font-size: 0.75rem; color: #2e7d32; display: flex; align-items: center; gap: 5px;">
+                    <i class="fas fa-circle" style="animation: pulse 2s infinite;"></i> Synced with Database
+                </div>
+                
+                <div class="quota-box">
+                    <div>Emails Left Today: <b id="quotaCount" style="font-size: 1rem; color: var(--primary-navy);">--</b></div>
+                    <div style="color: #888; font-size: 0.7rem;">Resets in: <span id="resetTimer">--h --m</span></div>
+                </div>
+            </div>
         </div>
+        
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button onclick="window.print()" class="save-btn" style="background: #2e7d32; color: white;">
                 <i class="fas fa-print"></i> Print Report
@@ -715,6 +375,29 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhQwVJTvLo_W4IcxPTdcCDojC92XjS4Y5wb1r_ldwO1jXu7LJ99QBMJ_Ncl4FBek239Q/exec";
     
     let allData = [];
+    
+    // Smooth Non-blocking Toast Notifier for operations
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'bottom-end',
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true
+    });
+
+    // Start Reset Timer (Resets at Midnight Pacific Time)
+    setInterval(() => {
+        let now = new Date();
+        let ptDate = new Date(now.toLocaleString("en-US", {timeZone: "America/Los_Angeles"}));
+        let nextMidnight = new Date(ptDate);
+        nextMidnight.setHours(24, 0, 0, 0);
+        let diff = nextMidnight - ptDate;
+        
+        let h = Math.floor(diff / (1000 * 60 * 60));
+        let m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        let s = Math.floor((diff % (1000 * 60)) / 1000);
+        document.getElementById('resetTimer').innerText = `${h}h ${m}m ${s}s`;
+    }, 1000);
 
     async function login() {
         const passInput = document.getElementById('adminPass').value;
@@ -726,20 +409,29 @@
         Swal.fire({ title: 'Authenticating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         try {
-            // Verify password against the backend
             const res = await fetch(`${SCRIPT_URL}?action=verifyPassword&pass=${encodeURIComponent(passInput)}`);
             const data = await res.json();
 
             if (data.success) {
-                Swal.close();
-                document.getElementById('loginOverlay').style.opacity = '0';
+                // Success Modal
+                Swal.fire({ icon: 'success', title: 'Access Granted!', showConfirmButton: false, timer: 1000 });
+                
+                // Update Quota Visuals
+                updateQuotaDisplay(data.quota);
+
                 setTimeout(() => {
-                    document.getElementById('loginOverlay').style.display = 'none';
-                    document.getElementById('dashboard').style.display = 'block';
-                    fetchData();
-                }, 500);
+                    document.getElementById('loginOverlay').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('loginOverlay').style.display = 'none';
+                        document.getElementById('dashboard').style.display = 'block';
+                        fetchData();
+                    }, 400);
+                }, 1000);
+                
             } else {
-                Swal.fire('Access Denied', 'Incorrect password', 'error');
+                // Invalid Password Notification
+                Swal.fire({ icon: 'error', title: 'Invalid Password', text: 'The credentials provided are incorrect. Please try again.' });
+                document.getElementById('adminPass').value = '';
             }
         } catch (e) {
             console.error("Login error:", e);
@@ -747,21 +439,36 @@
         }
     }
 
+    function updateQuotaDisplay(quota) {
+        const qCount = document.getElementById('quotaCount');
+        qCount.innerText = quota;
+        if(quota <= 10) {
+            qCount.className = "critical";
+            if (quota === 0) {
+                Swal.fire('Email Limit Reached', 'Google has hit the daily limit. You must call departments to update them manually until the timer resets.', 'warning');
+            }
+        } else {
+            qCount.className = "";
+        }
+    }
+
     async function fetchData() {
         document.getElementById('loadingState').style.display = 'block';
         const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = ''; // Clear existing table while loading
+        tbody.innerHTML = ''; 
         
         try {
             const res = await fetch(`${SCRIPT_URL}?action=getRequests`);
-            allData = await res.json();
+            const responseData = await res.json();
+            allData = responseData.data;
             
+            updateQuotaDisplay(responseData.quota);
             allData.sort((a, b) => b.id - a.id);
             updateStats(allData);
             renderTable(allData);
         } catch (e) {
             console.error(e);
-            Swal.fire('Error', 'Could not sync with Google Sheets', 'error');
+            Toast.fire({ icon: 'error', title: 'Failed to load data' });
         } finally {
             document.getElementById('loadingState').style.display = 'none';
         }
@@ -777,12 +484,7 @@
     function viewFullImage(src) {
         if(!src || src.length < 20) return;
         Swal.fire({
-            imageUrl: src, 
-            imageAlt: 'Visual Preview', 
-            width: 'auto', 
-            showCloseButton: true, 
-            showConfirmButton: false, 
-            backdrop: `rgba(0,0,10,0.85)`
+            imageUrl: src, imageAlt: 'Visual Preview', width: 'auto', showCloseButton: true, showConfirmButton: false, backdrop: `rgba(0,0,10,0.85)`
         });
     }
 
@@ -801,7 +503,7 @@
         return null;
     }
 
-    // Dynamic Badge Updater BEFORE Saving
+    // Instantly visually updates the badge color without waiting for the server
     function updateBadge(selectElement, id) {
         const val = selectElement.value;
         const badge = document.getElementById('badge-' + id);
@@ -814,7 +516,7 @@
         tbody.innerHTML = '';
         
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No requests found matching criteria.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No requests found.</td></tr>';
             return;
         }
 
@@ -822,7 +524,7 @@
             const tr = document.createElement('tr');
             
             let status = row.status || 'Received';
-            if (status === 'Pending') status = 'Received'; // Legacy conversion
+            if (status === 'Pending') status = 'Received';
             if (status === 'For Releasing' || status === 'Released') status = 'For Release';
             
             const sClass = "st-" + status.toLowerCase().replace(/\s/g, '');
@@ -833,7 +535,6 @@
             const sigAdmin = getKeyValue(row, ['sigadmin', 'adminsignature', 'signatureadmin', 'signature2']) || "";
             const notes = row.additionalNotes || row.notes || "No notes provided.";
 
-            // Action section logic
             let actionHtml = `
                 <select class="action-select" id="act-${row.id}" style="margin-bottom: 10px;" onchange="handleStatusChange(this, ${row.id})">
                     <option value="Received" ${status === 'Received' ? 'selected' : ''}>Received</option>
@@ -843,14 +544,9 @@
                 </select>
                 <div id="notes-container-${row.id}" style="display: flex; flex-direction: column; gap: 8px;">
                     <input type="text" class="remark-input" id="rem-${row.id}" value="${row.remarks || ''}" placeholder="Optional notes/reason...">
-                    <div style="display: flex; gap: 5px;">
-                        <button class="save-btn" onclick="updateRow(${row.id}, false)" title="Save changes without emailing additional notes">
-                            <i class="fas fa-save"></i> Save
-                        </button>
-                        <button class="save-btn" style="background: #0288d1;" onclick="updateRow(${row.id}, true)" title="Save & Send Note to Requestor">
-                            <i class="fas fa-paper-plane"></i> Send Note
-                        </button>
-                    </div>
+                    <button class="save-btn" onclick="updateRow(${row.id}, true)" title="Save & Send Additional Note to Requestor">
+                        <i class="fas fa-paper-plane"></i> Send Note
+                    </button>
                 </div>
             `;
 
@@ -897,67 +593,64 @@
         });
     }
 
-    // Handles the dropdown change to update badge visually and trigger auto-save if NOT disapproved
-    function handleStatusChange(selectElement, id) {
+    // Smooth, non-blocking auto-save for the dropdown
+    async function handleStatusChange(selectElement, id) {
         updateBadge(selectElement, id);
+        const newStatus = selectElement.value;
+        const newRemark = document.getElementById(`rem-${id}`).value;
         
-        // Automatically save and send standard notification when status changes
-        // UNLESS they chose "Disapproved", in which case they might want to type a note first.
-        if (selectElement.value !== "Disapproved") {
-            // Give a slight delay so they see the badge change before the loading overlay
-            setTimeout(() => {
-                // False means "don't send a custom note email", but the backend WILL send the automatic status update email.
-                updateRow(id, false); 
-            }, 300);
+        Toast.fire({ icon: 'info', title: 'Updating status & notifying...', timerProgressBar: false });
+        
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST', mode: 'no-cors',
+                body: JSON.stringify({
+                    action: 'updateStatus', id: id, status: newStatus, remarks: newRemark,
+                    autoStatusUpdate: true, 
+                    sendCustomNote: false
+                })
+            });
+            Toast.fire({ icon: 'success', title: 'Status updated & Email sent!' });
+            
+            // Subtly refresh data in background to sync quota limits without bothering user
+            fetch(`${SCRIPT_URL}?action=getRequests`).then(r => r.json()).then(d => {
+                 updateQuotaDisplay(d.quota);
+                 allData = d.data;
+            });
+        } catch (e) {
+            Toast.fire({ icon: 'error', title: 'Connection error.' });
         }
     }
 
+    // Heavy blocking save for the Custom Notes button
     async function updateRow(id, sendCustomNote) {
         const newStatus = document.getElementById(`act-${id}`).value;
         const newRemark = document.getElementById(`rem-${id}`).value;
         
-        // Validation: If sending custom note, ensure note is filled
         if (sendCustomNote && !newRemark.trim()) {
              Swal.fire('Note Required', 'Please type a reason/note before hitting Send.', 'warning');
              return;
         }
 
-        let loadText = 'Saving Status & Notifying...';
-        if (sendCustomNote) {
-             loadText = 'Sending Custom Note...';
-        }
-        
-        Swal.fire({ 
-            title: loadText, 
-            allowOutsideClick: false, 
-            didOpen: () => Swal.showLoading() 
-        });
+        Swal.fire({ title: 'Sending Note via Email...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
         try {
             await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
+                method: 'POST', mode: 'no-cors',
                 body: JSON.stringify({
-                    action: 'updateStatus',
-                    id: id,
-                    status: newStatus,
-                    remarks: newRemark,
-                    sendCustomNote: sendCustomNote // true if clicked "Send Note"
+                    action: 'updateStatus', id: id, status: newStatus, remarks: newRemark,
+                    autoStatusUpdate: false, 
+                    sendCustomNote: sendCustomNote 
                 })
             });
             
-            Swal.fire({ 
-                icon: 'success', 
-                title: 'Done!', 
-                timer: 1500, 
-                showConfirmButton: false 
+            Swal.fire({ icon: 'success', title: 'Custom Note Sent!', timer: 1500, showConfirmButton: false });
+            
+            fetch(`${SCRIPT_URL}?action=getRequests`).then(r => r.json()).then(d => {
+                 updateQuotaDisplay(d.quota);
+                 allData = d.data;
             });
-            
-            // Background refresh to keep data perfectly in sync
-            setTimeout(fetchData, 1500);
-            
         } catch (e) {
-            console.error("Update error:", e);
             Swal.fire('Update Failed', 'Connection error. Please try again.', 'error');
         }
     }
@@ -973,13 +666,11 @@
             const matchDept = !dept || item.dept === dept;
             const matchPri = !priority || item.priority === priority;
             
-            // Handle legacy "Pending" converting to "Received"
             let itemStatus = item.status || 'Received';
             if (itemStatus === 'Pending') itemStatus = 'Received';
             if (itemStatus === 'For Releasing' || itemStatus === 'Released') itemStatus = 'For Release';
             
             const matchStatus = !status || itemStatus === status;
-            
             return matchDate && matchDept && matchPri && matchStatus;
         });
 
