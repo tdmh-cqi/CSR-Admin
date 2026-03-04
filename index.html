@@ -49,6 +49,11 @@
             pointer-events: none;
         }
 
+        /* CRITICAL: Forces SweetAlert to appear OVER the #loginOverlay */
+        .swal2-container {
+            z-index: 10000 !important;
+        }
+
         /* --- LOGIN OVERLAY WITH HOSPITAL DESIGN --- */
         #loginOverlay { 
             position: fixed; 
@@ -201,6 +206,7 @@
             .table-container { box-shadow: none; border: 1px solid #ddd; overflow: visible; }
             table th:last-child, table td:last-child { display: none !important; }
             .stat-card { border: 1px solid #ddd; break-inside: avoid; }
+            .remark-input, .action-select { border: none; background: transparent; padding: 0; appearance: none; -webkit-appearance: none; }
         }
     </style>
 </head>
@@ -544,9 +550,14 @@
                 </select>
                 <div id="notes-container-${row.id}" style="display: flex; flex-direction: column; gap: 8px;">
                     <input type="text" class="remark-input" id="rem-${row.id}" value="${row.remarks || ''}" placeholder="Optional notes/reason...">
-                    <button class="save-btn" onclick="updateRow(${row.id}, true)" title="Save & Send Additional Note to Requestor">
-                        <i class="fas fa-paper-plane"></i> Send Note
-                    </button>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="save-btn" onclick="updateRow(${row.id}, false)" title="Save changes without emailing additional notes">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                        <button class="save-btn" style="background: #0288d1;" onclick="updateRow(${row.id}, true)" title="Save & Send Note to Requestor">
+                            <i class="fas fa-paper-plane"></i> Send Note
+                        </button>
+                    </div>
                 </div>
             `;
 
@@ -622,7 +633,7 @@
         }
     }
 
-    // Heavy blocking save for the Custom Notes button
+    // Faster non-blocking save using Toast for the Save / Custom Notes buttons
     async function updateRow(id, sendCustomNote) {
         const newStatus = document.getElementById(`act-${id}`).value;
         const newRemark = document.getElementById(`rem-${id}`).value;
@@ -632,7 +643,8 @@
              return;
         }
 
-        Swal.fire({ title: 'Sending Note via Email...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        let loadText = sendCustomNote ? 'Sending Custom Note...' : 'Saving...';
+        Toast.fire({ icon: 'info', title: loadText, timerProgressBar: false });
         
         try {
             await fetch(SCRIPT_URL, {
@@ -644,14 +656,14 @@
                 })
             });
             
-            Swal.fire({ icon: 'success', title: 'Custom Note Sent!', timer: 1500, showConfirmButton: false });
+            Toast.fire({ icon: 'success', title: sendCustomNote ? 'Custom Note Sent!' : 'Saved successfully!' });
             
             fetch(`${SCRIPT_URL}?action=getRequests`).then(r => r.json()).then(d => {
                  updateQuotaDisplay(d.quota);
                  allData = d.data;
             });
         } catch (e) {
-            Swal.fire('Update Failed', 'Connection error. Please try again.', 'error');
+            Toast.fire({ icon: 'error', title: 'Connection error. Please try again.' });
         }
     }
 
@@ -666,11 +678,13 @@
             const matchDept = !dept || item.dept === dept;
             const matchPri = !priority || item.priority === priority;
             
+            // Handle legacy "Pending" converting to "Received"
             let itemStatus = item.status || 'Received';
             if (itemStatus === 'Pending') itemStatus = 'Received';
             if (itemStatus === 'For Releasing' || itemStatus === 'Released') itemStatus = 'For Release';
             
             const matchStatus = !status || itemStatus === status;
+            
             return matchDate && matchDept && matchPri && matchStatus;
         });
 
