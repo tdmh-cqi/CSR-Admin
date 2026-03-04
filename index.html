@@ -225,8 +225,8 @@
             <div id="statPending">0</div>
         </div>
         <div class="stat-card" style="border-left-color: var(--info);">
-            <h4>Released</h4>
-            <div id="statReleased">0</div>
+            <h4>For Release</h4>
+            <div id="statFor Released">0</div>
         </div>
         <div class="stat-card" style="border-left-color: var(--success);">
             <h4>Completed</h4>
@@ -386,7 +386,7 @@
                         <option value="Pending" ${status === 'Pending' ? 'selected' : ''}>Pending</option>
                         <option value="Approved" ${status === 'Approved' ? 'selected' : ''}>Approved</option>
                         <option value="Disapproved" ${status === 'Disapproved' ? 'selected' : ''}>Disapproved</option>
-                        <option value="Released" ${status === 'Released' ? 'selected' : ''}>Released</option>
+                        <option value="Released" ${status === 'For Release' ? 'selected' : ''}>For Release</option>
                         <option value="Completed" ${status === 'Completed' ? 'selected' : ''}>Completed</option>
                     </select>
                 </td>
@@ -452,3 +452,4 @@
 </script>
 </body>
 </html>
+
