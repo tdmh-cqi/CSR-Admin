@@ -133,7 +133,7 @@
         .filter-group label { font-size: 0.7rem; font-weight: 600; color: #444; text-transform: uppercase; }
         .filter-group select, .filter-group input { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.8rem; width: 100%; box-sizing: border-box; }
 
-        /* Highly Optimized Table Design - Fluid with Scroll */
+        /* Highly Optimized Table Design */
         .table-container { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-x: auto; width: 100%; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background: #f8f9fa; color: #444; font-weight: 600; padding: 12px 10px; text-align: left; font-size: 0.8rem; border-bottom: 2px solid #eee; }
@@ -150,7 +150,6 @@
         .st-completed { background: #e8f5e9; color: var(--color-completed); border: 1px solid #c8e6c9; }
         .st-disapproved { background: #ffebee; color: var(--color-disapproved); border: 1px solid #ffcdd2; }
 
-        /* Compact Action Panel */
         .action-select { padding: 6px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.75rem; width: 100%; background-color: #fff; cursor: pointer; font-weight: 500; }
         .remark-input { padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.75rem; width: 100%; box-sizing: border-box; }
         .save-btn { background: var(--primary-navy); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; justify-content: center; flex: 1; font-weight: 500; font-size: 0.75rem; transition: opacity 0.2s; white-space: nowrap;}
@@ -166,7 +165,11 @@
         .no-sig-box { width: 90px; height: 45px; border: 1px dashed #ccc; background: #fafafa; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 8px; font-weight: bold; text-align: center; border-radius: 4px; line-height: 1.2; }
         .notes-text { font-size: 0.75rem; color: #555; font-style: italic; max-width: 180px; white-space: normal; line-height: 1.3; margin-bottom: 8px; }
 
-        /* NEW Sub-Tab Analytics Styles */
+        /* Checklist Specific Styles */
+        .qf-btn { background: #e2e8f0; color: #475569; border: none; padding: 4px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .qf-btn:hover { background: #cbd5e1; color: var(--primary-navy); }
+
+        /* Analytics Tab Styles */
         .analytics-tabs { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; white-space: nowrap; }
         .analytics-tab-btn { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 700; color: #64748b; transition: 0.3s; border-radius: 8px 8px 0 0; flex-shrink: 0; font-size: 0.85rem; text-transform: uppercase; }
         .analytics-tab-btn.active { color: var(--primary-navy); background: white; border-bottom: 3px solid var(--primary-navy); margin-bottom: -2px; }
@@ -179,6 +182,9 @@
         .analytics-table { width: 100%; font-size: 0.9rem; border-collapse: collapse; }
         .analytics-table th, .analytics-table td { padding: 12px 10px; border-bottom: 1px solid #e2e8f0; }
         .analytics-table th { background: #f8fafc; color: #475569; }
+        
+        .clickable-row { cursor: pointer; transition: background 0.2s; }
+        .clickable-row:hover { background: #f8fafc; }
 
         @media (max-width: 1024px) {
             .main-content { margin-left: 0 !important; width: 100% !important; }
@@ -268,6 +274,9 @@
             <button onclick="window.print()" class="save-btn" style="background: #2e7d32; color: white; flex:none;">
                 <i class="fas fa-print"></i> Print View
             </button>
+            <button onclick="exportFilteredViewToCSV()" class="save-btn" style="background: #0288d1; color: white; flex:none;" id="btnExportActive">
+                <i class="fas fa-file-excel"></i> Export Current View
+            </button>
             <button onclick="fetchData()" class="save-btn" style="background: white; color: var(--primary-navy); border: 1px solid #ddd; flex:none;">
                 <i class="fas fa-sync"></i> Refresh Site
             </button>
@@ -284,6 +293,10 @@
         </div>
 
         <div class="filters-section" id="filtersBlock">
+            <div class="filter-group" style="min-width: 90px; flex: 0.5;">
+                <label>ID Search</label>
+                <input type="number" id="filterId" placeholder="e.g. 45" oninput="applyFilters()">
+            </div>
             <div class="filter-group">
                 <label>Search Items</label>
                 <input type="text" id="filterItem" placeholder="e.g. Alcohol, Gloves..." oninput="applyFilters()">
@@ -305,38 +318,7 @@
                 <label>Department</label>
                 <select id="filterDept" onchange="applyFilters()">
                     <option value="">All Departments</option>
-                    <option value="Accounting">Accounting</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Admitting">Admitting</option>
-                    <option value="APE/YAKAP">APE/YAKAP</option>
-                    <option value="Billing">Billing</option>
-                    <option value="Cashier">Cashier</option>
-                    <option value="CQI">CQI</option>
-                    <option value="ER">ER</option>
-                    <option value="HMO">HMO</option>
-                    <option value="HOMES">HOMES</option>
-                    <option value="General Services">General Services</option>
-                    <option value="HR">HR</option>
-                    <option value="IT">IT</option>
-                    <option value="Laboratory">Laboratory</option>
-                    <option value="Medical Record">Medical Record</option>
-                    <option value="NICU">NICU</option>
-                    <option value="NSO">NSO</option>
-                    <option value="OH Nurse">OH Nurse</option>
-                    <option value="OPD">OPD</option>
-                    <option value="OR">OR</option>
-                    <option value="Pharmacy">Pharmacy</option>
-                    <option value="PhilHealth">PhilHealth</option>
-                    <option value="Radiology/XRay">Radiology/XRay</option>
-                    <option value="Releasing">Releasing</option>
-                    <option value="Security">Security</option>
-                    <option value="Social Service">Social Service</option>
-                    <option value="Station 3">Station 3</option>
-                    <option value="Station 4B">Station 4B</option>
-                    <option value="Station 5A">Station 5A</option>
-                    <option value="Station 5B">Station 5B</option>
-                    <option value="Training & Development">Training & Development</option>
-                    <option value="Ultrasound">Ultrasound</option>
+                    <!-- Filled dynamically -->
                 </select>
             </div>
             <button onclick="resetFilters()" class="remark-input" style="cursor:pointer; background: #eee; width: auto; border: 1px solid #ccc; height: 34px;">Reset</button>
@@ -364,7 +346,7 @@
         </div>
     </div>
 
-    <!-- Redesigned Analytics View Container with Sub-Tabs -->
+    <!-- Analytics View Container with Sub-Tabs -->
     <div id="analyticsSection" style="display:none;">
         <div class="filters-section" style="margin-bottom: 20px; align-items: center;">
             <div class="filter-group" style="flex:none; width: 200px;">
@@ -372,7 +354,7 @@
                 <input type="month" id="analyticsMonth" onchange="renderAnalytics()">
             </div>
             <button class="save-btn" style="background:#2e7d32; flex:none; height:34px; margin-left:auto;" onclick="exportAnalyticsToCSV()">
-                <i class="fas fa-file-excel"></i> Export to Excel
+                <i class="fas fa-file-excel"></i> Export Report to Excel
             </button>
         </div>
         
@@ -385,7 +367,6 @@
         </div>
 
         <div class="analytics-card">
-            <!-- Overall Tab -->
             <div id="ana-overall" class="analytics-tab-content active">
                 <h3>Overall Department Summary</h3>
                 <div class="analytics-table-wrapper">
@@ -396,9 +377,8 @@
                 </div>
             </div>
 
-            <!-- Pending Tab -->
             <div id="ana-pending" class="analytics-tab-content">
-                <h3>Pending Requests per Department</h3>
+                <h3>Pending Requests <span style="font-size: 12px; color: #888; font-weight: normal;">(Click a row to view items)</span></h3>
                 <div class="analytics-table-wrapper">
                     <table class="analytics-table">
                         <thead><tr><th>Department</th><th>Pending Count</th></tr></thead>
@@ -407,9 +387,8 @@
                 </div>
             </div>
 
-            <!-- Completed Tab -->
             <div id="ana-completed" class="analytics-tab-content">
-                <h3>Completed Requests per Department</h3>
+                <h3>Completed Requests <span style="font-size: 12px; color: #888; font-weight: normal;">(Click a row to view items)</span></h3>
                 <div class="analytics-table-wrapper">
                     <table class="analytics-table">
                         <thead><tr><th>Department</th><th>Completed Count</th></tr></thead>
@@ -418,9 +397,8 @@
                 </div>
             </div>
 
-            <!-- Disapproved Tab -->
             <div id="ana-disapproved" class="analytics-tab-content">
-                <h3>Disapproved Requests per Department</h3>
+                <h3>Disapproved Requests <span style="font-size: 12px; color: #888; font-weight: normal;">(Click a row to view items)</span></h3>
                 <div class="analytics-table-wrapper">
                     <table class="analytics-table">
                         <thead><tr><th>Department</th><th>Disapproved Count</th></tr></thead>
@@ -429,7 +407,6 @@
                 </div>
             </div>
 
-            <!-- Top 10 Tab -->
             <div id="ana-top10" class="analytics-tab-content">
                 <h3>Top 10 Most Requested Items</h3>
                 <div class="analytics-table-wrapper">
@@ -447,6 +424,7 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhQwVJTvLo_W4IcxPTdcCDojC92XjS4Y5wb1r_ldwO1jXu7LJ99QBMJ_Ncl4FBek239Q/exec";
     
     let allData = [];
+    let filteredDataCache = []; 
     let currentAdminTab = 'active'; 
     let isMenuLocked = window.innerWidth > 1024; 
     
@@ -458,6 +436,7 @@
     const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 2000, timerProgressBar: true });
 
     window.addEventListener('DOMContentLoaded', () => {
+        fetchDepartments(); 
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
         if (window.innerWidth <= 1024) {
@@ -470,6 +449,37 @@
             isMenuLocked = true;
         }
     });
+
+    async function fetchDepartments() {
+        try {
+            const res = await fetch(`${SCRIPT_URL}?action=getDepartments`);
+            if (!res.ok) throw new Error("Network issue");
+            const text = await res.text();
+            if (!text) throw new Error("Empty response");
+            
+            const depts = JSON.parse(text);
+            const sel = document.getElementById('filterDept');
+            
+            if (sel && Array.isArray(depts) && depts.length > 0) {
+                sel.innerHTML = '<option value="">All Departments</option>';
+                depts.forEach(d => sel.innerHTML += `<option value="${d}">${d}</option>`);
+            }
+        } catch(e) { 
+            const sel = document.getElementById('filterDept');
+            if (sel && sel.options.length <= 1) {
+                const defaults = [
+                    "Accounting", "Admin", "Admitting", "APE/YAKAP", "Billing", "Cashier", 
+                    "CQI", "ER", "HMO", "HOMES", "General Services", "HR", "IT", 
+                    "Laboratory", "Medical Record", "NICU", "NSO", "OH Nurse", "OPD", 
+                    "OR", "Pharmacy", "PhilHealth", "Radiology/XRay", "Releasing", 
+                    "Security", "Social Service", "Station 3", "Station 4B", "Station 5A", 
+                    "Station 5B", "Training & Development", "Ultrasound"
+                ];
+                sel.innerHTML = '<option value="">All Departments</option>';
+                defaults.forEach(d => sel.innerHTML += `<option value="${d}">${d}</option>`);
+            }
+        }
+    }
 
     function toggleSidebarLock() {
         const sidebar = document.getElementById('sidebar');
@@ -557,6 +567,7 @@
             if (title) title.innerText = 'Analytics & Execomm Reports';
             setDisplay('dataViewSection', 'none');
             setDisplay('analyticsSection', 'block');
+            setDisplay('btnExportActive', 'none'); 
             
             const monthEl = document.getElementById('analyticsMonth');
             if(monthEl && !monthEl.value) {
@@ -568,6 +579,7 @@
         } else {
             setDisplay('dataViewSection', 'block');
             setDisplay('analyticsSection', 'none');
+            setDisplay('btnExportActive', 'inline-block');
             
             const title = document.getElementById('pageTitle');
             
@@ -628,6 +640,14 @@
         Swal.fire({ imageUrl: src, imageAlt: 'Visual Preview', width: 'auto', showCloseButton: true, showConfirmButton: false, backdrop: `rgba(0,0,10,0.85)` });
     }
 
+    window.fillNote = function(id, text) {
+        const el = document.getElementById(id);
+        if(el) {
+            el.value = text;
+            Toast.fire({icon: 'success', title: `Note updated: ${text}`});
+        }
+    };
+
     function openItemsChecklist(id) {
         const row = allData.find(r => r.id == id);
         if (!row) return;
@@ -636,6 +656,7 @@
         const qtys = String(row.qtys || '').split('|').map(i => i.trim());
         const photosArr = String(row.photo || '').split('|').map(p => p.trim());
         const checkedArr = row.checkedItems ? String(row.checkedItems).split('|') : new Array(items.length).fill('false');
+        const notesArr = row.itemNotes ? String(row.itemNotes).split('|') : new Array(items.length).fill('');
 
         let priorityColor = row.priority === 'Urgent' ? '#dc2626' : '#64748b';
 
@@ -650,8 +671,8 @@
                 </div>
             </div>
             
-            <div style="text-align:left; max-height:400px; overflow-y:auto; padding-right:5px;">
-                <p style="font-size:15px; color:#0f172a; margin-bottom:15px; font-weight:700;">Select the specific items that are READY to be released:</p>
+            <div style="text-align:left; max-height:450px; overflow-y:auto; padding-right:5px;">
+                <p style="font-size:15px; color:#0f172a; margin-bottom:15px; font-weight:700;">Select READY items and add specific notes if needed:</p>
         `;
         
         items.forEach((item, idx) => {
@@ -660,12 +681,22 @@
                 let imgHtml = photosArr[idx] ? `<img src="${photosArr[idx]}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer; margin-right:15px;" onclick="viewFullImage('${photosArr[idx]}')">` : '';
 
                 html += `
-                    <div style="display:flex; align-items:center; padding:15px; background:#fff; border:2px solid #e2e8f0; border-radius:8px; margin-bottom:10px; transition: 0.2s;">
-                        <input type="checkbox" id="itemchk-${id}-${idx}" style="width:24px; height:24px; cursor:pointer; margin-right:15px;" ${isChecked}>
-                        ${imgHtml}
-                        <label for="itemchk-${id}-${idx}" style="cursor:pointer; flex:1; margin:0; font-size:16px; text-align:left; font-weight:500;">
-                            <strong>${qtys[idx] || '-'}x</strong> ${item}
-                        </label>
+                    <div style="padding:15px; background:#fff; border:2px solid #e2e8f0; border-radius:8px; margin-bottom:10px; transition: 0.2s;">
+                        <div style="display:flex; align-items:center;">
+                            <input type="checkbox" id="itemchk-${id}-${idx}" style="width:24px; height:24px; cursor:pointer; margin-right:15px;" ${isChecked}>
+                            ${imgHtml}
+                            <label for="itemchk-${id}-${idx}" style="cursor:pointer; flex:1; margin:0; font-size:16px; text-align:left; font-weight:500;">
+                                <strong>${qtys[idx] || '-'}x</strong> ${item}
+                            </label>
+                        </div>
+                        <div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">
+                            <input type="text" id="itemnote-${id}-${idx}" placeholder="Specific note for this item (e.g. Out of stock)" value="${notesArr[idx] || ''}" style="padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; width:100%;">
+                            <div style="display:flex; gap:5px;">
+                                <button onclick="fillNote('itemnote-${id}-${idx}', 'Out of Stock')" class="qf-btn">Out of Stock</button>
+                                <button onclick="fillNote('itemnote-${id}-${idx}', 'Wait for Delivery')" class="qf-btn">Wait for Delivery</button>
+                                <button onclick="fillNote('itemnote-${id}-${idx}', 'Substituted brand')" class="qf-btn">Substituted</button>
+                            </div>
+                        </div>
                     </div>
                 `;
             }
@@ -676,7 +707,7 @@
             <div style="margin-top:30px; display:flex; flex-direction:column; gap:12px; border-top: 2px solid #e2e8f0; padding-top: 20px;">
                 <button onclick="saveChecklistAndStatus(${id}, ${items.length}, 'For Release')" class="save-btn" style="background:#0288d1; padding: 18px; font-size: 16px; width: 100%;">✅ SAVE & SET TO "FOR RELEASE (FULL)"</button>
                 <button onclick="saveChecklistAndStatus(${id}, ${items.length}, 'Partial Release')" class="save-btn" style="background:#8b5cf6; padding: 18px; font-size: 16px; width: 100%;">⚠️ SAVE & SET TO "PARTIAL RELEASE"</button>
-                <button onclick="saveChecklistAndStatus(${id}, ${items.length}, null)" class="save-btn" style="background:#002147; padding: 18px; font-size: 16px; width: 100%;">💾 SAVE CHECKLIST ONLY</button>
+                <button onclick="saveChecklistAndStatus(${id}, ${items.length}, null)" class="save-btn" style="background:#002147; padding: 18px; font-size: 16px; width: 100%;">💾 SAVE CHECKLIST & NOTES ONLY</button>
                 <button onclick="Swal.close()" class="save-btn" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding: 15px; font-size: 16px; width: 100%;">Cancel / Close</button>
             </div>
         `;
@@ -690,17 +721,21 @@
 
     window.saveChecklistAndStatus = async function(id, arrayLength, newStatusStr) {
         let newChecked = [];
+        let newNotes = [];
         for(let i=0; i<arrayLength; i++) {
-            let el = document.getElementById(`itemchk-${id}-${i}`);
-            newChecked.push(el && el.checked ? 'true' : 'false');
+            let chk = document.getElementById(`itemchk-${id}-${i}`);
+            let note = document.getElementById(`itemnote-${id}-${i}`);
+            newChecked.push(chk && chk.checked ? 'true' : 'false');
+            newNotes.push(note ? note.value.replace(/\|/g, '') : ''); 
         }
         let checkedStr = newChecked.join('|');
+        let noteStr = newNotes.join('|');
         
         Swal.close();
         Toast.fire({icon: 'info', title: 'Saving & Notifying...'});
         
         try {
-            let payload = { id: id, checkedItems: checkedStr };
+            let payload = { id: id, checkedItems: checkedStr, itemNotes: noteStr };
             
             if (newStatusStr) {
                 payload.action = 'updateStatus';
@@ -713,7 +748,7 @@
 
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
             
-            Toast.fire({icon: 'success', title: newStatusStr ? 'Status Updated & Email Sent!' : 'Checklist saved!'});
+            Toast.fire({icon: 'success', title: newStatusStr ? 'Status Updated & Email Sent!' : 'Checklist & Notes saved!'});
             fetch(`${SCRIPT_URL}?action=getRequests`).then(r => r.json()).then(d => { updateQuotaDisplay(d.quota); allData = d.data; updateStats(allData); applyFilters(); });
         } catch(e) {
             Toast.fire({icon: 'error', title: 'Connection error'});
@@ -726,7 +761,7 @@
         tbody.innerHTML = '';
         
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; font-size:16px;">No requests found matching criteria.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; font-size:15px;">No requests found matching criteria.</td></tr>';
             return;
         }
 
@@ -742,18 +777,22 @@
 
             const itemsArr = String(row.items || '').split('|').map(i => i.trim());
             const qtysArr = String(row.qtys || '').split('|').map(i => i.trim());
+            const notesArr = row.itemNotes ? String(row.itemNotes).split('|') : [];
             
             let itemsHtml = '<ul style="margin:0; padding-left:15px; font-size:0.85rem; line-height:1.5;">';
             let displayCount = Math.min(itemsArr.length, 3);
             for(let i=0; i<displayCount; i++) {
-                if (itemsArr[i]) itemsHtml += `<li><b>${qtysArr[i]||'-'}x</b> ${itemsArr[i]}</li>`;
+                if (itemsArr[i]) {
+                    let n = notesArr[i] ? ` <span style="color:#d97706; font-size:11px;">[${notesArr[i]}]</span>` : '';
+                    itemsHtml += `<li><b>${qtysArr[i]||'-'}x</b> ${itemsArr[i]}${n}</li>`;
+                }
             }
             itemsHtml += '</ul>';
             
             if(itemsArr.length > 3) {
                 itemsHtml += `<div style="font-size:11px; color:#888; margin-top:5px; margin-left:15px;">+ ${itemsArr.length - 3} more...</div>`;
             }
-            itemsHtml += `<button class="btn-items" onclick="openItemsChecklist(${row.id})"><i class="fas fa-list-check"></i> View Full List & Select Items</button>`;
+            itemsHtml += `<button class="btn-items" onclick="openItemsChecklist(${row.id})"><i class="fas fa-list-check"></i> View Full List & Notes</button>`;
 
             const firstPhoto = String(row.photo || "").split('|').find(p => p.trim() !== "");
             const sigHod = row.sigHod || "";
@@ -935,6 +974,7 @@
     }
 
     function applyFilters() {
+        const reqId = document.getElementById('filterId')?.value || "";
         const date = document.getElementById('filterDate')?.value || "";
         const dept = document.getElementById('filterDept')?.value || "";
         const priority = document.getElementById('filterPriority')?.value || "";
@@ -945,11 +985,12 @@
             status = document.getElementById('filterStatusDropdown')?.value || "";
         }
 
-        const filtered = allData.filter(item => {
+        filteredDataCache = allData.filter(item => {
             if (currentAdminTab === 'active' && (item.status === 'Completed' || item.status === 'Disapproved')) return false;
             if (currentAdminTab === 'archive' && item.status !== 'Completed') return false;
             if (currentAdminTab === 'disapproved' && item.status !== 'Disapproved') return false;
 
+            const matchId = !reqId || item.id.toString() === reqId;
             const matchDate = !date || item.date === date;
             const matchDept = !dept || (item.dept && item.dept.toLowerCase().includes(dept.toLowerCase()));
             const matchPri = !priority || item.priority === priority;
@@ -959,13 +1000,14 @@
             if (itemStatus === 'Pending' && item.receivedBy) itemStatus = 'Received';
             
             const matchStatus = !status || itemStatus === status;
-            return matchDate && matchDept && matchPri && matchStatus && matchItemSearch;
+            return matchId && matchDate && matchDept && matchPri && matchStatus && matchItemSearch;
         });
 
-        renderTable(filtered);
+        renderTable(filteredDataCache);
     }
 
     function resetFilters() {
+        if(document.getElementById('filterId')) document.getElementById('filterId').value = "";
         if(document.getElementById('filterItem')) document.getElementById('filterItem').value = "";
         if(document.getElementById('filterDate')) document.getElementById('filterDate').value = "";
         if(document.getElementById('filterDept')) document.getElementById('filterDept').value = "";
@@ -974,7 +1016,32 @@
         applyFilters();
     }
 
-    // --- SUB-TAB EXECOMM ANALYTICS LOGIC ---
+    // --- VIEW CURRENT FILTERED DATA AS CSV ---
+    function exportFilteredViewToCSV() {
+        if(filteredDataCache.length === 0) return Swal.fire('Empty', 'No data to export on this screen.', 'info');
+        
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "ID,Date,Time,Department,Requester,Priority,Status,Received By,Items Requested\r\n";
+        
+        filteredDataCache.forEach(r => {
+            let cleanItems = String(r.items || '').replace(/\|/g, ', ').replace(/"/g, '""');
+            let row = [
+                `"${r.id}"`, `"${r.date}"`, `"${r.time}"`, `"${r.dept}"`, `"${r.reqBy}"`,
+                `"${r.priority}"`, `"${r.status}"`, `"${r.receivedBy || 'Unassigned'}"`, `"${cleanItems}"`
+            ];
+            csvContent += row.join(",") + "\r\n";
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `CSR_Filtered_View_${new Date().getTime()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // --- SUB-TAB EXECOMM ANALYTICS LOGIC WITH DRILL-DOWN ---
     function switchAnalyticsSubTab(subTab) {
         ['overall', 'pending', 'completed', 'disapproved', 'top10'].forEach(t => {
             const btn = document.getElementById('anaBtn-' + t);
@@ -987,6 +1054,72 @@
         const activeContent = document.getElementById('ana-' + subTab);
         if (activeBtn) activeBtn.classList.add('active');
         if (activeContent) activeContent.classList.add('active');
+    }
+
+    // Interactive drill-down logic
+    window.viewDeptAnalytics = function(dept, statusFilter) {
+        const monthVal = document.getElementById('analyticsMonth')?.value; 
+        
+        // FIX 1: Ensure the drill-down filter exactly matches the bucketing logic
+        const filtered = allData.filter(r => {
+            if (!r.date || !r.date.startsWith(monthVal) || r.dept !== dept) return false;
+            
+            if (statusFilter === 'All') return true;
+            if (statusFilter === 'Completed') return r.status === 'Completed';
+            if (statusFilter === 'Disapproved') return r.status === 'Disapproved';
+            
+            // "Pending" in analytics means ALL ACTIVE pipeline requests
+            if (statusFilter === 'Pending') return r.status !== 'Completed' && r.status !== 'Disapproved';
+            
+            return false;
+        });
+        
+        let html = `<div style="text-align:left; max-height:450px; overflow-y:auto; padding:5px;">`;
+        if(filtered.length === 0) {
+            html += `<p style="text-align:center; padding:20px; color:#666;">No items found.</p>`;
+        } else {
+            filtered.forEach(r => {
+                const itemsArr = String(r.items || '').split('|').map(i => i.trim());
+                const qtysArr = String(r.qtys || '').split('|').map(i => i.trim());
+                const photosArr = String(r.photo || '').split('|').map(p => p.trim());
+                const notesArr = r.itemNotes ? String(r.itemNotes).split('|').map(n => n.trim()) : [];
+                
+                let displayStatus = r.status || 'Pending';
+                if (displayStatus === 'Pending' && r.receivedBy) displayStatus = 'Received';
+                
+                html += `<div style="background:#f8fafc; padding:20px; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:20px;">
+                            <h5 style="margin:0 0 12px 0; color:#0f172a; font-size: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                                Request #${r.id} <span style="color:#64748b; font-size:13px; font-weight:normal; margin-left:10px;">${r.date} • <span style="font-weight:bold; color:#0288d1;">${displayStatus}</span></span>
+                            </h5>
+                            <div style="display:flex; flex-direction:column;">`;
+                
+                // FIX 2: Beautifully format the Item Name, Quantity, Picture, and Note!
+                itemsArr.forEach((item, idx) => {
+                    if(item) {
+                        let imgHtml = photosArr[idx] ? `<img src="${photosArr[idx]}" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer; margin-right:15px;" onclick="viewFullImage('${photosArr[idx]}')">` : '';
+                        let noteHtml = notesArr[idx] ? `<div style="color:#d97706; font-size:12px; font-style:italic; margin-top:4px;">Note: ${notesArr[idx]}</div>` : '';
+                        
+                        html += `<div style="display:flex; align-items:center; padding:12px 15px; background:#fff; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px;">
+                                    ${imgHtml}
+                                    <div style="flex:1; text-align:left; line-height:1.4;">
+                                        <span style="font-size:15px; font-weight:500; color:#0f172a;"><strong>${qtysArr[idx] || '-'}x</strong> ${item}</span>
+                                        ${noteHtml}
+                                    </div>
+                                 </div>`;
+                    }
+                });
+                html += `</div></div>`;
+            });
+        }
+        html += `</div>`;
+
+        Swal.fire({
+            title: `${dept} (${statusFilter === 'All' ? 'Overall' : statusFilter})`,
+            html: html,
+            confirmButtonText: 'Close',
+            confirmButtonColor: '#002147',
+            width: '700px'
+        });
     }
 
     function renderAnalytics() {
@@ -1028,11 +1161,12 @@
         } else {
             depts.forEach(d => {
                 const s = deptStats[d];
-                if (dBody) dBody.innerHTML += `<tr><td><b>${d}</b></td><td>${s.pending}</td><td style="color:#2e7d32; font-weight:bold;">${s.completed}</td><td style="color:#c62828;">${s.disapproved}</td><td>${s.pending+s.completed+s.disapproved}</td></tr>`;
+                // Added Clickable Rows for Drill down!
+                if (dBody) dBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'All')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td>${s.pending}</td><td style="color:#2e7d32; font-weight:bold;">${s.completed}</td><td style="color:#c62828;">${s.disapproved}</td><td>${s.pending+s.completed+s.disapproved}</td></tr>`;
                 
-                if (pBody && s.pending > 0) pBody.innerHTML += `<tr><td><b>${d}</b></td><td style="font-weight:bold; color:var(--primary-navy);">${s.pending}</td></tr>`;
-                if (cBody && s.completed > 0) cBody.innerHTML += `<tr><td><b>${d}</b></td><td style="font-weight:bold; color:#2e7d32;">${s.completed}</td></tr>`;
-                if (xBody && s.disapproved > 0) xBody.innerHTML += `<tr><td><b>${d}</b></td><td style="font-weight:bold; color:#c62828;">${s.disapproved}</td></tr>`;
+                if (pBody && s.pending > 0) pBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'Pending')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td style="font-weight:bold; color:var(--primary-navy);">${s.pending}</td></tr>`;
+                if (cBody && s.completed > 0) cBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'Completed')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td style="font-weight:bold; color:#2e7d32;">${s.completed}</td></tr>`;
+                if (xBody && s.disapproved > 0) xBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'Disapproved')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td style="font-weight:bold; color:#c62828;">${s.disapproved}</td></tr>`;
             });
             
             if(pBody && pBody.innerHTML==='') pBody.innerHTML = '<tr><td colspan="2" align="center" style="padding: 20px;">No pending requests.</td></tr>';
