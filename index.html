@@ -678,10 +678,16 @@
         items.forEach((item, idx) => {
             if(item) {
                 const isChecked = checkedArr[idx] === 'true' ? 'checked' : '';
-                let imgHtml = photosArr[idx] ? `<img src="${photosArr[idx]}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer; margin-right:15px;" onclick="viewFullImage('${photosArr[idx]}')">` : '';
+                const bgStyle = checkedArr[idx] === 'true' ? '#f1f5f9' : '#fff';
+                const opacityStyle = checkedArr[idx] === 'true' ? '0.5' : '1';
+                
+                // Enhanced image filtering here - STRICT check for data:image
+                let imgHtml = photosArr[idx] && photosArr[idx].startsWith('data:image') 
+                    ? `<img src="${photosArr[idx]}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer; margin-right:15px;" onclick="viewFullImage('${photosArr[idx]}')">` 
+                    : '';
 
                 html += `
-                    <div style="padding:15px; background:#fff; border:2px solid #e2e8f0; border-radius:8px; margin-bottom:10px; transition: 0.2s;">
+                    <div style="padding:15px; background:${bgStyle}; opacity:${opacityStyle}; border:2px solid #e2e8f0; border-radius:8px; margin-bottom:10px; transition: 0.2s;">
                         <div style="display:flex; align-items:center;">
                             <input type="checkbox" id="itemchk-${id}-${idx}" style="width:24px; height:24px; cursor:pointer; margin-right:15px;" ${isChecked}>
                             ${imgHtml}
@@ -778,25 +784,47 @@
             const itemsArr = String(row.items || '').split('|').map(i => i.trim());
             const qtysArr = String(row.qtys || '').split('|').map(i => i.trim());
             const notesArr = row.itemNotes ? String(row.itemNotes).split('|') : [];
+            const checkedArr = row.checkedItems ? String(row.checkedItems).split('|') : [];
             
             let itemsHtml = '<ul style="margin:0; padding-left:15px; font-size:0.85rem; line-height:1.5;">';
-            let displayCount = Math.min(itemsArr.length, 3);
-            for(let i=0; i<displayCount; i++) {
+            let displayCount = 0;
+            let hiddenCount = 0;
+            let partialHiddenCount = 0;
+            
+            for(let i=0; i<itemsArr.length; i++) {
                 if (itemsArr[i]) {
-                    let n = notesArr[i] ? ` <span style="color:#d97706; font-size:11px;">[${notesArr[i]}]</span>` : '';
-                    itemsHtml += `<li><b>${qtysArr[i]||'-'}x</b> ${itemsArr[i]}${n}</li>`;
+                    // Logic fix: Hide checked items from the main list if Partial Release to prevent clutter
+                    if (status === 'Partial Release' && checkedArr[i] === 'true') {
+                        partialHiddenCount++;
+                        continue;
+                    }
+
+                    if (displayCount < 3) {
+                        let n = notesArr[i] ? ` <span style="color:#d97706; font-size:11px;">[${notesArr[i]}]</span>` : '';
+                        itemsHtml += `<li><b>${qtysArr[i]||'-'}x</b> ${itemsArr[i]}${n}</li>`;
+                        displayCount++;
+                    } else {
+                        hiddenCount++;
+                    }
                 }
             }
             itemsHtml += '</ul>';
             
-            if(itemsArr.length > 3) {
-                itemsHtml += `<div style="font-size:11px; color:#888; margin-top:5px; margin-left:15px;">+ ${itemsArr.length - 3} more...</div>`;
+            if(hiddenCount > 0) {
+                itemsHtml += `<div style="font-size:11px; color:#888; margin-top:5px; margin-left:15px;">+ ${hiddenCount} more pending...</div>`;
             }
+            
+            if(partialHiddenCount > 0) {
+                itemsHtml += `<div style="font-size:11px; color:#2e7d32; margin-top:4px; margin-left:15px;"><i class="fas fa-check-circle"></i> ${partialHiddenCount} item(s) already released</div>`;
+            }
+            
             itemsHtml += `<button class="btn-items" onclick="openItemsChecklist(${row.id})"><i class="fas fa-list-check"></i> View Full List & Notes</button>`;
 
-            const firstPhoto = String(row.photo || "").split('|').find(p => p.trim() !== "");
-            const sigHod = row.sigHod || "";
-            const sigAdmin = row.sigAdmin || "";
+            // Enhanced Image checks
+            const firstPhoto = String(row.photo || "").split('|').map(p => p.trim()).find(p => p.startsWith('data:image'));
+            const sigHod = (row.sigHod && String(row.sigHod).startsWith('data:image')) ? row.sigHod : "";
+            const sigAdmin = (row.sigAdmin && String(row.sigAdmin).startsWith('data:image')) ? row.sigAdmin : "";
+            
             const notes = row.additionalNotes || "No notes provided.";
 
             let actionHtml = '';
@@ -1016,7 +1044,6 @@
         applyFilters();
     }
 
-    // --- VIEW CURRENT FILTERED DATA AS CSV ---
     function exportFilteredViewToCSV() {
         if(filteredDataCache.length === 0) return Swal.fire('Empty', 'No data to export on this screen.', 'info');
         
@@ -1041,7 +1068,6 @@
         document.body.removeChild(link);
     }
 
-    // --- SUB-TAB EXECOMM ANALYTICS LOGIC WITH DRILL-DOWN ---
     function switchAnalyticsSubTab(subTab) {
         ['overall', 'pending', 'completed', 'disapproved', 'top10'].forEach(t => {
             const btn = document.getElementById('anaBtn-' + t);
@@ -1056,11 +1082,9 @@
         if (activeContent) activeContent.classList.add('active');
     }
 
-    // Interactive drill-down logic
     window.viewDeptAnalytics = function(dept, statusFilter) {
         const monthVal = document.getElementById('analyticsMonth')?.value; 
         
-        // FIX 1: Ensure the drill-down filter exactly matches the bucketing logic
         const filtered = allData.filter(r => {
             if (!r.date || !r.date.startsWith(monthVal) || r.dept !== dept) return false;
             
@@ -1068,7 +1092,6 @@
             if (statusFilter === 'Completed') return r.status === 'Completed';
             if (statusFilter === 'Disapproved') return r.status === 'Disapproved';
             
-            // "Pending" in analytics means ALL ACTIVE pipeline requests
             if (statusFilter === 'Pending') return r.status !== 'Completed' && r.status !== 'Disapproved';
             
             return false;
@@ -1093,10 +1116,9 @@
                             </h5>
                             <div style="display:flex; flex-direction:column;">`;
                 
-                // FIX 2: Beautifully format the Item Name, Quantity, Picture, and Note!
                 itemsArr.forEach((item, idx) => {
                     if(item) {
-                        let imgHtml = photosArr[idx] ? `<img src="${photosArr[idx]}" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer; margin-right:15px;" onclick="viewFullImage('${photosArr[idx]}')">` : '';
+                        let imgHtml = photosArr[idx] && photosArr[idx].startsWith('data:image') ? `<img src="${photosArr[idx]}" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer; margin-right:15px;" onclick="viewFullImage('${photosArr[idx]}')">` : '';
                         let noteHtml = notesArr[idx] ? `<div style="color:#d97706; font-size:12px; font-style:italic; margin-top:4px;">Note: ${notesArr[idx]}</div>` : '';
                         
                         html += `<div style="display:flex; align-items:center; padding:12px 15px; background:#fff; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px;">
@@ -1128,7 +1150,6 @@
 
         const filtered = allData.filter(r => r.date && r.date.startsWith(monthVal));
         
-        // 1. Department Summary Logic
         const deptStats = {};
         filtered.forEach(r => {
             let d = r.dept || 'Unknown';
@@ -1161,7 +1182,6 @@
         } else {
             depts.forEach(d => {
                 const s = deptStats[d];
-                // Added Clickable Rows for Drill down!
                 if (dBody) dBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'All')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td>${s.pending}</td><td style="color:#2e7d32; font-weight:bold;">${s.completed}</td><td style="color:#c62828;">${s.disapproved}</td><td>${s.pending+s.completed+s.disapproved}</td></tr>`;
                 
                 if (pBody && s.pending > 0) pBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'Pending')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td style="font-weight:bold; color:var(--primary-navy);">${s.pending}</td></tr>`;
@@ -1174,7 +1194,6 @@
             if(xBody && xBody.innerHTML==='') xBody.innerHTML = '<tr><td colspan="2" align="center" style="padding: 20px;">No disapproved requests.</td></tr>';
         }
 
-        // 2. Most Requested Items Logic (Top 10)
         const itemStats = {};
         filtered.forEach(r => {
             const items = String(r.items||'').split('|');
