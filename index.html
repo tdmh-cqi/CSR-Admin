@@ -7,6 +7,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -38,13 +39,12 @@
 
         body::before {
             content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('images/tdmh-background.jpg') no-repeat center center;
+            background: url('https://raw.githubusercontent.com/tdmh-cqi/csr2026/main/images/tdmh-background.jpg') no-repeat center center;
             background-size: cover; opacity: 0.1; z-index: -1; pointer-events: none;
         }
 
         .swal2-container { z-index: 10000 !important; }
 
-        /* --- LOGIN OVERLAY --- */
         #loginOverlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: linear-gradient(135deg, rgba(0, 33, 71, 0.85) 0%, rgba(0, 18, 41, 0.95) 100%), 
@@ -83,7 +83,6 @@
         }
         .login-wrapper button:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(0,33,71,0.3); }
 
-        /* Sidebar - Pure Click Toggle */
         .sidebar {
             width: var(--sidebar-width); background: var(--primary-navy); color: white; padding: 20px;
             display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100vh; z-index: 1000;
@@ -98,7 +97,6 @@
         .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.15); border-left: 4px solid white; }
         .nav-item i { width: 20px; text-align: center; }
 
-        /* Main Content - Fluid */
         .main-content { 
             margin-left: var(--sidebar-width); flex: 1; padding: 25px; 
             width: calc(100% - var(--sidebar-width)); transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
@@ -121,19 +119,16 @@
         }
         .quota-box span.critical { color: #c62828; font-weight: bold; animation: pulse 1s infinite; }
 
-        /* Responsive Grid for Stats */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--primary-navy); }
-        .stat-card h4 { margin: 0; color: #666; font-size: 0.75rem; text-transform: uppercase; }
-        .stat-card div { font-size: 1.4rem; font-weight: 700; color: var(--primary-navy); margin-top: 5px; }
+        .stat-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--primary-navy); position: relative; overflow: hidden; }
+        .stat-card h4 { margin: 0; color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card div { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin-top: 5px; }
 
-        /* Responsive Filters */
         .filters-section { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
         .filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 130px; }
         .filter-group label { font-size: 0.7rem; font-weight: 600; color: #444; text-transform: uppercase; }
         .filter-group select, .filter-group input { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.8rem; width: 100%; box-sizing: border-box; }
 
-        /* Highly Optimized Table Design */
         .table-container { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-x: auto; width: 100%; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background: #f8f9fa; color: #444; font-weight: 600; padding: 12px 10px; text-align: left; font-size: 0.8rem; border-bottom: 2px solid #eee; }
@@ -165,29 +160,33 @@
         .no-sig-box { width: 90px; height: 45px; border: 1px dashed #ccc; background: #fafafa; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 8px; font-weight: bold; text-align: center; border-radius: 4px; line-height: 1.2; }
         .notes-text { font-size: 0.75rem; color: #555; font-style: italic; max-width: 180px; white-space: normal; line-height: 1.3; margin-bottom: 8px; }
 
-        /* Checklist Specific Styles */
         .qf-btn { background: #e2e8f0; color: #475569; border: none; padding: 4px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.2s; }
         .qf-btn:hover { background: #cbd5e1; color: var(--primary-navy); }
 
-        /* Analytics Tab Styles */
         .analytics-tabs { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; white-space: nowrap; }
         .analytics-tab-btn { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 700; color: #64748b; transition: 0.3s; border-radius: 8px 8px 0 0; flex-shrink: 0; font-size: 0.85rem; text-transform: uppercase; }
         .analytics-tab-btn.active { color: var(--primary-navy); background: white; border-bottom: 3px solid var(--primary-navy); margin-bottom: -2px; }
         .analytics-tab-content { display: none; }
         .analytics-tab-content.active { display: block; }
         
-        .analytics-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #eee; width: 100%; }
-        .analytics-card h3 { margin: 0 0 15px 0; color: var(--primary-navy); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; font-size: 1.2rem; }
+        .analytics-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #eee; width: 100%; display: flex; flex-direction: column; }
+        .analytics-card h3 { margin: 0 0 15px 0; color: var(--primary-navy); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; font-size: 1.1rem; }
+        
+        /* Charts Grid Layout */
+        .charts-container { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 25px; }
+        .chart-wrapper { position: relative; height: 250px; width: 100%; flex: 1; display: flex; justify-content: center; align-items: center; }
+
         .analytics-table-wrapper { overflow-x: auto; width: 100%; }
         .analytics-table { width: 100%; font-size: 0.9rem; border-collapse: collapse; }
         .analytics-table th, .analytics-table td { padding: 12px 10px; border-bottom: 1px solid #e2e8f0; }
         .analytics-table th { background: #f8fafc; color: #475569; }
-        
         .clickable-row { cursor: pointer; transition: background 0.2s; }
         .clickable-row:hover { background: #f8fafc; }
 
         @media (max-width: 1024px) {
             .main-content { margin-left: 0 !important; width: 100% !important; }
+            .charts-container { grid-template-columns: 1fr; }
+            .chart-wrapper { height: 300px; }
         }
         @media (max-width: 768px) {
             .page-header { flex-direction: column; align-items: stretch; }
@@ -198,11 +197,16 @@
             body::before { display: none !important; }
             .sidebar { display: none !important; }
             .main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; }
-            .page-header button, .filters-section, #loginOverlay, .quota-box, .toggle-btn, .analytics-tabs { display: none !important; }
-            .table-container, .analytics-card { box-shadow: none; border: 1px solid #ddd; overflow: visible; }
+            .print-hide, .page-header button, .filters-section, #loginOverlay, .quota-box, .toggle-btn, .analytics-tabs { display: none !important; }
+            
+            /* Enhanced Print Layout for Analytics */
+            #analyticsSection { display: block !important; }
+            .charts-container { display: flex !important; flex-direction: row !important; align-items: center; justify-content: center; gap: 20px; page-break-inside: avoid; margin-bottom: 30px; }
+            .analytics-card { box-shadow: none; border: 1px solid #ddd; margin-bottom: 20px; page-break-inside: avoid; }
+            .analytics-tab-content { display: block !important; margin-bottom: 20px; }
+            
             table th:last-child, table td:last-child { display: none !important; }
             .stat-card { border: 1px solid #ddd; break-inside: avoid; }
-            .analytics-tab-content { display: block !important; margin-bottom: 20px; }
         }
     </style>
 </head>
@@ -211,7 +215,7 @@
 <div id="loginOverlay">
     <div class="login-wrapper">
         <div class="login-logo-container">
-            <img src="images/tdmh-logo.png" class="login-logo" alt="TDMH Logo" onerror="this.style.display='none'">
+            <img src="https://raw.githubusercontent.com/tdmh-cqi/csr2026/main/images/tdmh-logo.png" class="login-logo" alt="TDMH Logo" onerror="this.style.display='none'">
         </div>
         <h2>CSR ADMIN</h2>
         <p>TDMH Procurement Portal 2026</p>
@@ -229,7 +233,7 @@
 
 <aside class="sidebar hidden" id="sidebar">
     <a href="." title="Refresh Dashboard">
-        <img src="images/tdmh-logo.png" class="sidebar-logo" alt="TDMH Logo" onerror="this.style.display='none'">
+        <img src="https://raw.githubusercontent.com/tdmh-cqi/csr2026/main/images/tdmh-logo.png" class="sidebar-logo" alt="TDMH Logo" onerror="this.style.display='none'">
     </a>
     <div class="nav-item active" id="tabBtn-active" onclick="switchAdminTab('active')">
         <i class="fas fa-list-check"></i> <span>Active Requests</span>
@@ -241,7 +245,7 @@
         <i class="fas fa-ban"></i> <span>Disapproved</span>
     </div>
     <div class="nav-item" id="tabBtn-analytics" onclick="switchAdminTab('analytics')">
-        <i class="fas fa-chart-bar"></i> <span>Monthly Reports</span>
+        <i class="fas fa-chart-pie"></i> <span>Exec. Reports</span>
     </div>
     <div class="nav-item" style="margin-top: auto;" onclick="location.reload()">
         <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
@@ -249,7 +253,9 @@
 </aside>
 
 <main class="main-content expanded" id="mainContent" style="display:none;">
-    <div class="page-header">
+    
+    <!-- Header Block -->
+    <div class="page-header print-hide">
         <div style="display: flex; flex-direction: column; gap: 10px;">
             <div style="display: flex; align-items: center; gap: 15px;">
                 <button class="toggle-btn" id="menuToggleBtn" onclick="toggleSidebarLock()">
@@ -283,7 +289,6 @@
         </div>
     </div>
 
-    <!-- Data Views Container -->
     <div id="dataViewSection">
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card"><h4>Total Active</h4><div id="statTotal">0</div></div>
@@ -346,29 +351,69 @@
         </div>
     </div>
 
-    <!-- Analytics View Container with Sub-Tabs -->
     <div id="analyticsSection" style="display:none;">
-        <div class="filters-section" style="margin-bottom: 20px; align-items: center;">
-            <div class="filter-group" style="flex:none; width: 200px;">
+        
+        <!-- Controls -->
+        <div class="filters-section print-hide" style="margin-bottom: 20px; align-items: center;">
+            <div class="filter-group" style="flex:none; width: 220px;">
                 <label>Select Month for Report</label>
                 <input type="month" id="analyticsMonth" onchange="renderAnalytics()">
             </div>
-            <button class="save-btn" style="background:#2e7d32; flex:none; height:34px; margin-left:auto;" onclick="exportAnalyticsToCSV()">
-                <i class="fas fa-file-excel"></i> Export Report to Excel
-            </button>
-        </div>
-        
-        <div class="analytics-tabs">
-            <button class="analytics-tab-btn active" id="anaBtn-overall" onclick="switchAnalyticsSubTab('overall')">Overall Summary</button>
-            <button class="analytics-tab-btn" id="anaBtn-pending" onclick="switchAnalyticsSubTab('pending')">Pending</button>
-            <button class="analytics-tab-btn" id="anaBtn-completed" onclick="switchAnalyticsSubTab('completed')">Completed</button>
-            <button class="analytics-tab-btn" id="anaBtn-disapproved" onclick="switchAnalyticsSubTab('disapproved')">Disapproved</button>
-            <button class="analytics-tab-btn" id="anaBtn-top10" onclick="switchAnalyticsSubTab('top10')">Top 10 Items</button>
+            <div style="margin-left: auto; display: flex; gap: 10px;">
+                <button class="save-btn" style="background: white; color: var(--primary-navy); border: 1px solid #ddd; flex:none; height:34px;" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print Executive PDF
+                </button>
+                <button class="save-btn" style="background:#2e7d32; flex:none; height:34px;" onclick="exportAnalyticsToCSV()">
+                    <i class="fas fa-file-excel"></i> Export Raw Data
+                </button>
+            </div>
         </div>
 
-        <div class="analytics-card">
+        <!-- KPI Cards -->
+        <div class="stats-grid" id="analyticsKpis" style="margin-bottom: 20px;">
+            <div class="stat-card">
+                <h4>Total Requests This Month</h4>
+                <div id="kpiTotalReq">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--color-forrelease);">
+                <h4>Items Processed</h4>
+                <div id="kpiTotalItems">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--color-completed);">
+                <h4>Completion Rate</h4>
+                <div id="kpiCompRate">0%</div>
+            </div>
+        </div>
+        
+        <!-- Visual Charts Grid -->
+        <div class="charts-container">
+            <div class="analytics-card">
+                <h3>Request Outcomes</h3>
+                <div class="chart-wrapper">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+            <div class="analytics-card">
+                <h3>Department Volume Breakdown</h3>
+                <div class="chart-wrapper">
+                    <canvas id="deptChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Tabs -->
+        <div class="analytics-tabs print-hide">
+            <button class="analytics-tab-btn active" id="anaBtn-overall" onclick="switchAnalyticsSubTab('overall')">Overall Summary</button>
+            <button class="analytics-tab-btn" id="anaBtn-pending" onclick="switchAnalyticsSubTab('pending')">Pending List</button>
+            <button class="analytics-tab-btn" id="anaBtn-completed" onclick="switchAnalyticsSubTab('completed')">Completed List</button>
+            <button class="analytics-tab-btn" id="anaBtn-disapproved" onclick="switchAnalyticsSubTab('disapproved')">Disapproved List</button>
+            <button class="analytics-tab-btn" id="anaBtn-top10" onclick="switchAnalyticsSubTab('top10')">Top 10 Fast-Moving Items</button>
+        </div>
+
+        <!-- Detail Tab Contents -->
+        <div class="analytics-card" style="margin-bottom: 40px;">
             <div id="ana-overall" class="analytics-tab-content active">
-                <h3>Overall Department Summary</h3>
+                <h3 class="print-show">Department Summary Data</h3>
                 <div class="analytics-table-wrapper">
                     <table class="analytics-table" id="deptSummaryTable">
                         <thead><tr><th>Department</th><th>Pending</th><th>Completed</th><th>Disapproved</th><th>Total</th></tr></thead>
@@ -378,7 +423,7 @@
             </div>
 
             <div id="ana-pending" class="analytics-tab-content">
-                <h3>Pending Requests <span style="font-size: 12px; color: #888; font-weight: normal;">(Click a row to view items)</span></h3>
+                <h3>Pending Requests <span style="font-size: 12px; color: #888; font-weight: normal; class="print-hide"">(Click a row to view items)</span></h3>
                 <div class="analytics-table-wrapper">
                     <table class="analytics-table">
                         <thead><tr><th>Department</th><th>Pending Count</th></tr></thead>
@@ -388,7 +433,7 @@
             </div>
 
             <div id="ana-completed" class="analytics-tab-content">
-                <h3>Completed Requests <span style="font-size: 12px; color: #888; font-weight: normal;">(Click a row to view items)</span></h3>
+                <h3>Completed Requests <span style="font-size: 12px; color: #888; font-weight: normal;" class="print-hide">(Click a row to view items)</span></h3>
                 <div class="analytics-table-wrapper">
                     <table class="analytics-table">
                         <thead><tr><th>Department</th><th>Completed Count</th></tr></thead>
@@ -398,7 +443,7 @@
             </div>
 
             <div id="ana-disapproved" class="analytics-tab-content">
-                <h3>Disapproved Requests <span style="font-size: 12px; color: #888; font-weight: normal;">(Click a row to view items)</span></h3>
+                <h3>Disapproved Requests <span style="font-size: 12px; color: #888; font-weight: normal;" class="print-hide">(Click a row to view items)</span></h3>
                 <div class="analytics-table-wrapper">
                     <table class="analytics-table">
                         <thead><tr><th>Department</th><th>Disapproved Count</th></tr></thead>
@@ -408,10 +453,10 @@
             </div>
 
             <div id="ana-top10" class="analytics-tab-content">
-                <h3>Top 10 Most Requested Items</h3>
+                <h3>Top 10 Fast-Moving Items</h3>
                 <div class="analytics-table-wrapper">
                     <table class="analytics-table" id="itemSummaryTable">
-                        <thead><tr><th style="width:40%;">Item Description</th><th style="width:20%;">Total Qty</th><th style="width:40%;">Requested By (Depts)</th></tr></thead>
+                        <thead><tr><th style="width:40%;">Item Description</th><th style="width:20%;">Total Qty Requested</th><th style="width:40%;">Requested By (Depts)</th></tr></thead>
                         <tbody id="itemSummaryBody"></tbody>
                     </table>
                 </div>
@@ -427,6 +472,10 @@
     let filteredDataCache = []; 
     let currentAdminTab = 'active'; 
     let isMenuLocked = window.innerWidth > 1024; 
+    
+    // Variables to hold Chart.js instances so they can be destroyed before redrawing
+    let statusChartInst = null;
+    let deptChartInst = null;
     
     function setDisplay(id, val) {
         const el = document.getElementById(id);
@@ -575,7 +624,7 @@
                 let m = String(now.getMonth()+1).padStart(2, '0');
                 monthEl.value = `${now.getFullYear()}-${m}`;
             }
-            renderAnalytics();
+            renderAnalytics(); // Re-render charts when opening tab
         } else {
             setDisplay('dataViewSection', 'block');
             setDisplay('analyticsSection', 'none');
@@ -672,41 +721,61 @@
             </div>
             
             <div style="text-align:left; max-height:450px; overflow-y:auto; padding-right:5px;">
-                <p style="font-size:15px; color:#0f172a; margin-bottom:15px; font-weight:700;">Select READY items and add specific notes if needed:</p>
         `;
         
+        let releasedCount = 0;
+        let interactiveItemsHtml = '';
+
         items.forEach((item, idx) => {
             if(item) {
-                const isChecked = checkedArr[idx] === 'true' ? 'checked' : '';
-                const bgStyle = checkedArr[idx] === 'true' ? '#f1f5f9' : '#fff';
-                const opacityStyle = checkedArr[idx] === 'true' ? '0.5' : '1';
+                // Critical QoL feature: Hide completely if it's already released in a Partial status.
+                let isHidden = (row.status === 'Partial Release' && checkedArr[idx] === 'true');
                 
-                // Enhanced image filtering here - STRICT check for data:image
-                let imgHtml = photosArr[idx] && photosArr[idx].startsWith('data:image') 
-                    ? `<img src="${photosArr[idx]}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer; margin-right:15px;" onclick="viewFullImage('${photosArr[idx]}')">` 
-                    : '';
-
-                html += `
-                    <div style="padding:15px; background:${bgStyle}; opacity:${opacityStyle}; border:2px solid #e2e8f0; border-radius:8px; margin-bottom:10px; transition: 0.2s;">
-                        <div style="display:flex; align-items:center;">
-                            <input type="checkbox" id="itemchk-${id}-${idx}" style="width:24px; height:24px; cursor:pointer; margin-right:15px;" ${isChecked}>
-                            ${imgHtml}
-                            <label for="itemchk-${id}-${idx}" style="cursor:pointer; flex:1; margin:0; font-size:16px; text-align:left; font-weight:500;">
-                                <strong>${qtys[idx] || '-'}x</strong> ${item}
-                            </label>
+                if (isHidden) {
+                    releasedCount++;
+                    // We must retain the hidden inputs so `saveChecklistAndStatus` doesn't clear them out.
+                    interactiveItemsHtml += `
+                        <div style="display: none;">
+                            <input type="checkbox" id="itemchk-${id}-${idx}" checked>
+                            <input type="hidden" id="itemnote-${id}-${idx}" value="${notesArr[idx] || ''}">
                         </div>
-                        <div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">
-                            <input type="text" id="itemnote-${id}-${idx}" placeholder="Specific note for this item (e.g. Out of stock)" value="${notesArr[idx] || ''}" style="padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; width:100%;">
-                            <div style="display:flex; gap:5px;">
-                                <button onclick="fillNote('itemnote-${id}-${idx}', 'Out of Stock')" class="qf-btn">Out of Stock</button>
-                                <button onclick="fillNote('itemnote-${id}-${idx}', 'Wait for Delivery')" class="qf-btn">Wait for Delivery</button>
-                                <button onclick="fillNote('itemnote-${id}-${idx}', 'Substituted brand')" class="qf-btn">Substituted</button>
+                    `;
+                } else {
+                    const isChecked = checkedArr[idx] === 'true' ? 'checked' : '';
+                    let imgHtml = photosArr[idx] && photosArr[idx].startsWith('data:image') 
+                        ? `<img src="${photosArr[idx]}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer; margin-right:15px;" onclick="viewFullImage('${photosArr[idx]}')">` 
+                        : '';
+
+                    interactiveItemsHtml += `
+                        <div style="padding:15px; background:#fff; border:2px solid #e2e8f0; border-radius:8px; margin-bottom:10px; transition: 0.2s;">
+                            <div style="display:flex; align-items:center;">
+                                <input type="checkbox" id="itemchk-${id}-${idx}" style="width:24px; height:24px; cursor:pointer; margin-right:15px;" ${isChecked}>
+                                ${imgHtml}
+                                <label for="itemchk-${id}-${idx}" style="cursor:pointer; flex:1; margin:0; font-size:16px; text-align:left; font-weight:500;">
+                                    <strong>${qtys[idx] || '-'}x</strong> ${item}
+                                </label>
+                            </div>
+                            <div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">
+                                <input type="text" id="itemnote-${id}-${idx}" placeholder="Specific note for this item (e.g. Out of stock)" value="${notesArr[idx] || ''}" style="padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; width:100%;">
+                                <div style="display:flex; gap:5px;">
+                                    <button onclick="fillNote('itemnote-${id}-${idx}', 'Out of Stock')" class="qf-btn">Out of Stock</button>
+                                    <button onclick="fillNote('itemnote-${id}-${idx}', 'Wait for Delivery')" class="qf-btn">Wait for Delivery</button>
+                                    <button onclick="fillNote('itemnote-${id}-${idx}', 'Substituted brand')" class="qf-btn">Substituted</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
             }
         });
+
+        // Show a helpful badge if items were hidden
+        if (releasedCount > 0) {
+            html += `<div style="background: #e8f5e9; border: 1px solid #c8e6c9; color: #2e7d32; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; font-weight: bold;"><i class="fas fa-check-circle"></i> ${releasedCount} item(s) previously marked as released are hidden from this view.</div>`;
+        }
+
+        html += `<p style="font-size:15px; color:#0f172a; margin-bottom:15px; font-weight:700;">Select READY items and add specific notes if needed:</p>`;
+        html += interactiveItemsHtml;
         
         html += `
             </div>
@@ -731,6 +800,7 @@
         for(let i=0; i<arrayLength; i++) {
             let chk = document.getElementById(`itemchk-${id}-${i}`);
             let note = document.getElementById(`itemnote-${id}-${i}`);
+            // Works reliably even if the input is wrapped in display:none
             newChecked.push(chk && chk.checked ? 'true' : 'false');
             newNotes.push(note ? note.value.replace(/\|/g, '') : ''); 
         }
@@ -793,15 +863,15 @@
             
             for(let i=0; i<itemsArr.length; i++) {
                 if (itemsArr[i]) {
-                    // Logic fix: Hide checked items from the main list if Partial Release to prevent clutter
+                    // Logic fix: Hide checked items entirely from main table if Partial Release
                     if (status === 'Partial Release' && checkedArr[i] === 'true') {
                         partialHiddenCount++;
                         continue;
                     }
 
                     if (displayCount < 3) {
-                        let n = notesArr[i] ? ` <span style="color:#d97706; font-size:11px;">[${notesArr[i]}]</span>` : '';
-                        itemsHtml += `<li><b>${qtysArr[i]||'-'}x</b> ${itemsArr[i]}${n}</li>`;
+                        let n = notesArr[i] ? ` <br><span style="color:#d97706; font-size:11px; background: #fffbeb; padding: 2px 4px; border-radius: 3px;">Note: ${notesArr[i]}</span>` : '';
+                        itemsHtml += `<li style="margin-bottom: 4px;"><b>${qtysArr[i]||'-'}x</b> ${itemsArr[i]}${n}</li>`;
                         displayCount++;
                     } else {
                         hiddenCount++;
@@ -814,17 +884,16 @@
                 itemsHtml += `<div style="font-size:11px; color:#888; margin-top:5px; margin-left:15px;">+ ${hiddenCount} more pending...</div>`;
             }
             
+            // Indicator for hidden released items
             if(partialHiddenCount > 0) {
-                itemsHtml += `<div style="font-size:11px; color:#2e7d32; margin-top:4px; margin-left:15px;"><i class="fas fa-check-circle"></i> ${partialHiddenCount} item(s) already released</div>`;
+                itemsHtml += `<div style="font-size:11px; color:#2e7d32; margin-top:6px; margin-left:15px; background: #e8f5e9; padding: 4px 8px; border-radius: 4px; display: inline-block;"><i class="fas fa-check-circle"></i> ${partialHiddenCount} item(s) already released</div>`;
             }
             
             itemsHtml += `<button class="btn-items" onclick="openItemsChecklist(${row.id})"><i class="fas fa-list-check"></i> View Full List & Notes</button>`;
 
-            // Enhanced Image checks
             const firstPhoto = String(row.photo || "").split('|').map(p => p.trim()).find(p => p.startsWith('data:image'));
             const sigHod = (row.sigHod && String(row.sigHod).startsWith('data:image')) ? row.sigHod : "";
             const sigAdmin = (row.sigAdmin && String(row.sigAdmin).startsWith('data:image')) ? row.sigAdmin : "";
-            
             const notes = row.additionalNotes || "No notes provided.";
 
             let actionHtml = '';
@@ -1087,13 +1156,10 @@
         
         const filtered = allData.filter(r => {
             if (!r.date || !r.date.startsWith(monthVal) || r.dept !== dept) return false;
-            
             if (statusFilter === 'All') return true;
             if (statusFilter === 'Completed') return r.status === 'Completed';
             if (statusFilter === 'Disapproved') return r.status === 'Disapproved';
-            
             if (statusFilter === 'Pending') return r.status !== 'Completed' && r.status !== 'Disapproved';
-            
             return false;
         });
         
@@ -1150,16 +1216,39 @@
 
         const filtered = allData.filter(r => r.date && r.date.startsWith(monthVal));
         
+        let totalRequests = filtered.length;
+        let totalItemsProcessed = 0;
+        let totalCompleted = 0;
+        let totalDisapproved = 0;
+        let totalPending = 0;
+        
         const deptStats = {};
+        
+        // Process Main Loops
         filtered.forEach(r => {
             let d = r.dept || 'Unknown';
             if(!deptStats[d]) deptStats[d] = { pending:0, completed:0, disapproved:0 };
             
-            if(r.status === 'Completed') deptStats[d].completed++;
-            else if(r.status === 'Disapproved') deptStats[d].disapproved++;
-            else deptStats[d].pending++;
+            if(r.status === 'Completed') {
+                deptStats[d].completed++;
+                totalCompleted++;
+            }
+            else if(r.status === 'Disapproved') {
+                deptStats[d].disapproved++;
+                totalDisapproved++;
+            }
+            else {
+                deptStats[d].pending++;
+                totalPending++;
+            }
         });
 
+        // Update KPI Cards
+        document.getElementById('kpiTotalReq').innerText = totalRequests;
+        let completionRate = totalRequests > 0 ? Math.round((totalCompleted / totalRequests) * 100) : 0;
+        document.getElementById('kpiCompRate').innerText = `${completionRate}%`;
+
+        // Tables Processing
         const dBody = document.getElementById('deptSummaryBody');
         const pBody = document.getElementById('pendingBody');
         const cBody = document.getElementById('completedBody');
@@ -1172,6 +1261,9 @@
 
         const depts = Object.keys(deptStats).sort();
         
+        let chartDeptLabels = [];
+        let chartDeptData = [];
+
         if(depts.length === 0) {
             const noData = '<tr><td colspan="5" align="center" style="padding: 20px;">No data for this month.</td></tr>';
             const noData2 = '<tr><td colspan="2" align="center" style="padding: 20px;">No data for this month.</td></tr>';
@@ -1182,7 +1274,12 @@
         } else {
             depts.forEach(d => {
                 const s = deptStats[d];
-                if (dBody) dBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'All')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td>${s.pending}</td><td style="color:#2e7d32; font-weight:bold;">${s.completed}</td><td style="color:#c62828;">${s.disapproved}</td><td>${s.pending+s.completed+s.disapproved}</td></tr>`;
+                let t = s.pending + s.completed + s.disapproved;
+                
+                chartDeptLabels.push(d);
+                chartDeptData.push(t);
+
+                if (dBody) dBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'All')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td>${s.pending}</td><td style="color:#2e7d32; font-weight:bold;">${s.completed}</td><td style="color:#c62828;">${s.disapproved}</td><td>${t}</td></tr>`;
                 
                 if (pBody && s.pending > 0) pBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'Pending')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td style="font-weight:bold; color:var(--primary-navy);">${s.pending}</td></tr>`;
                 if (cBody && s.completed > 0) cBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'Completed')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td style="font-weight:bold; color:#2e7d32;">${s.completed}</td></tr>`;
@@ -1194,6 +1291,7 @@
             if(xBody && xBody.innerHTML==='') xBody.innerHTML = '<tr><td colspan="2" align="center" style="padding: 20px;">No disapproved requests.</td></tr>';
         }
 
+        // Most Requested Items Processing
         const itemStats = {};
         filtered.forEach(r => {
             const items = String(r.items||'').split('|');
@@ -1202,11 +1300,15 @@
                 let cleanItem = item.trim().toUpperCase();
                 if(!cleanItem) return;
                 let qty = parseInt(qtys[idx]) || 1;
+                totalItemsProcessed += qty; // Add to global items processed
+                
                 if(!itemStats[cleanItem]) itemStats[cleanItem] = { count: 0, depts: new Set() };
                 itemStats[cleanItem].count += qty;
                 itemStats[cleanItem].depts.add(r.dept);
             });
         });
+
+        document.getElementById('kpiTotalItems').innerText = totalItemsProcessed;
 
         const sortedItems = Object.keys(itemStats).sort((a,b) => itemStats[b].count - itemStats[a].count).slice(0, 10);
         
@@ -1222,6 +1324,69 @@
                 });
             }
         }
+
+        // ------------------------------------
+        // INITIALIZE CHART.JS VISUALS
+        // ------------------------------------
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#475569';
+
+        // Destroy existing instances if they exist
+        if (statusChartInst) statusChartInst.destroy();
+        if (deptChartInst) deptChartInst.destroy();
+
+        // 1. Status Doughnut Chart
+        const ctxStatus = document.getElementById('statusChart').getContext('2d');
+        statusChartInst = new Chart(ctxStatus, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed', 'Pending/Active', 'Disapproved'],
+                datasets: [{
+                    data: [totalCompleted, totalPending, totalDisapproved],
+                    backgroundColor: ['#2e7d32', '#0288d1', '#c62828'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // 2. Department Volume Bar Chart
+        // Sort arrays for the chart so highest volume is at the top
+        let zippedDepts = chartDeptLabels.map((dept, i) => { return {dept: dept, vol: chartDeptData[i]}; });
+        zippedDepts.sort((a,b) => b.vol - a.vol);
+        let sortedChartLabels = zippedDepts.map(v => v.dept);
+        let sortedChartData = zippedDepts.map(v => v.vol);
+
+        const ctxDept = document.getElementById('deptChart').getContext('2d');
+        deptChartInst = new Chart(ctxDept, {
+            type: 'bar',
+            data: {
+                labels: sortedChartLabels,
+                datasets: [{
+                    label: 'Total Requests',
+                    data: sortedChartData,
+                    backgroundColor: '#002147',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false } },
+                    x: { grid: { color: '#f1f5f9' } }
+                }
+            }
+        });
     }
 
     function exportAnalyticsToCSV() {
