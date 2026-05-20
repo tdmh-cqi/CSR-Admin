@@ -8,14 +8,21 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+        /* LIGHT MODE VARIABLES */
         :root {
             --primary-navy: #002147;
             --sidebar-width: 240px;
             --bg-gray: #f8f9fa;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --input-bg: #f8fafc;
             
             --color-pending: #8e8e8e;
             --color-received: #ef6c00;
@@ -25,188 +32,890 @@
             --color-disapproved: #c62828;
         }
 
-        * { box-sizing: border-box; }
+        /* DARK MODE VARIABLES */
+        [data-theme="dark"] {
+            --primary-navy: #38bdf8; 
+            --bg-gray: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+        }
+
+        * { 
+            box-sizing: border-box; 
+        }
         
         body { 
             font-family: 'Inter', sans-serif; 
             margin: 0; 
             background-color: var(--bg-gray); 
-            display: flex;
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
+            color: var(--text-main);
+            display: flex; 
+            min-height: 100vh; 
+            position: relative; 
+            overflow-x: hidden; 
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* View Transitions Setup for Smooth Bidirectional Switch */
+        ::view-transition-old(root), 
+        ::view-transition-new(root) { 
+            animation: none; 
+            mix-blend-mode: normal; 
         }
 
         body::before {
-            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            content: ''; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
             background: url('https://raw.githubusercontent.com/tdmh-cqi/csr2026/main/images/tdmh-background.jpg') no-repeat center center;
-            background-size: cover; opacity: 0.1; z-index: -1; pointer-events: none;
+            background-size: cover; 
+            opacity: 0.1; 
+            z-index: -1; 
+            pointer-events: none;
         }
 
-        .swal2-container { z-index: 10000 !important; }
+        .swal2-container { 
+            z-index: 10000 !important; 
+        }
 
+        /* Login Screen */
         #loginOverlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: linear-gradient(135deg, rgba(0, 33, 71, 0.85) 0%, rgba(0, 18, 41, 0.95) 100%), 
-                        url('https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=2000') no-repeat center center;
-            background-size: cover; display: flex; justify-content: center; align-items: center; 
-            z-index: 9999; transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        
-        .login-wrapper {
-            position: relative; background: rgba(255, 255, 255, 0.98); padding: 50px 40px;
-            border-radius: 24px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1) inset;
-            text-align: center; width: 100%; max-width: 400px; margin: 20px;
-            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: linear-gradient(135deg, rgba(0, 33, 71, 0.85) 0%, rgba(0, 18, 41, 0.95) 100%), url('https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=2000') no-repeat center center; 
+            background-size: cover; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 9999; 
+            transition: opacity 0.5s ease, visibility 0.5s ease; 
         }
 
-        @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
-        
-        .login-logo-container { padding: 10px; margin-bottom: 10px; display: inline-block; }
-        .login-logo { max-width: 240px; width: 100%; height: auto; transition: transform 0.3s ease; }
-        .login-logo:hover { transform: scale(1.05); }
-        
-        .login-wrapper h2 { color: #0f172a; margin: 0 0 8px 0; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
-        .login-wrapper p { color: #64748b; margin: 0 0 30px 0; font-size: 0.9rem; font-weight: 500; }
-        
-        .login-wrapper .input-group { position: relative; margin-bottom: 25px; }
-        .login-wrapper .input-group i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 16px; z-index: 2; }
-        .login-wrapper input {
-            width: 100%; padding: 14px 14px 14px 48px; border: 2px solid #e2e8f0; border-radius: 12px;
-            font-size: 15px; transition: all 0.3s ease; background: #f8fafc; font-weight: 500; color: #0f172a;
+        .login-wrapper { 
+            position: relative; 
+            background: rgba(255, 255, 255, 0.98); 
+            padding: 50px 40px; 
+            border-radius: 24px; 
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1) inset; 
+            text-align: center; 
+            width: 100%; 
+            max-width: 400px; 
+            margin: 20px; 
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
         }
-        .login-wrapper input:focus { outline: none; border-color: var(--primary-navy); background: #ffffff; box-shadow: 0 0 0 4px rgba(0,33,71,0.1); }
-        .login-wrapper button {
-            width: 100%; padding: 16px; background: linear-gradient(135deg, #002147 0%, #003066 100%);
-            color: white; border: none; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer;
-            transition: all 0.3s ease; display: flex; justify-content: center; align-items: center; gap: 10px;
-        }
-        .login-wrapper button:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(0,33,71,0.3); }
 
-        .sidebar {
-            width: var(--sidebar-width); background: var(--primary-navy); color: white; padding: 20px;
-            display: flex; flex-direction: column; position: fixed; left: 0; top: 0; height: 100vh; z-index: 1000;
-            overflow-y: auto; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+        @keyframes slideUpFade { 
+            0% { opacity: 0; transform: translateY(30px); } 
+            100% { opacity: 1; transform: translateY(0); } 
         }
-        .sidebar.hidden { transform: translateX(-100%) !important; }
 
-        .sidebar-logo { max-width: 100%; background: white; padding: 10px; border-radius: 8px; margin-bottom: 25px; cursor: pointer; transition: 0.3s; }
-        .sidebar-logo:hover { transform: scale(1.03); }
-        
-        .nav-item { padding: 10px 15px; margin-bottom: 5px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; font-weight: 500; font-size: 0.9rem; }
-        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.15); border-left: 4px solid white; }
-        .nav-item i { width: 20px; text-align: center; }
+        .login-logo { 
+            max-width: 240px; 
+            width: 100%; 
+            height: auto; 
+            transition: transform 0.3s ease; 
+            margin-bottom: 20px;
+        }
+
+        .login-wrapper h2 { 
+            color: #0f172a; 
+            margin: 0 0 8px 0; 
+            font-size: 1.6rem; 
+            font-weight: 800; 
+        }
+
+        .login-wrapper p { 
+            color: #64748b; 
+            margin: 0 0 30px 0; 
+            font-size: 0.9rem; 
+            font-weight: 500; 
+        }
+
+        .login-wrapper .input-group { 
+            position: relative; 
+            margin-bottom: 25px; 
+        }
+
+        .login-wrapper .input-group i { 
+            position: absolute; 
+            left: 18px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            color: #94a3b8; 
+            font-size: 16px; 
+            z-index: 2; 
+        }
+
+        .login-wrapper input { 
+            width: 100%; 
+            padding: 14px 14px 14px 48px; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 12px; 
+            font-size: 15px; 
+            background: #f8fafc; 
+            color: #0f172a; 
+        }
+
+        .login-wrapper button { 
+            width: 100%; 
+            padding: 16px; 
+            background: linear-gradient(135deg, #002147 0%, #003066 100%); 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            font-size: 15px; 
+            cursor: pointer; 
+        }
+
+        /* Sidebar & Layout */
+        .sidebar { 
+            width: var(--sidebar-width); 
+            background: #002147; 
+            color: white; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            position: fixed; 
+            left: 0; 
+            top: 0; 
+            height: 100vh; 
+            z-index: 1000; 
+            overflow-y: auto; 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1); 
+        }
+
+        .sidebar.hidden { 
+            transform: translateX(-100%) !important; 
+        }
+
+        /* LOGO FIX: Permanently white background and centered so size never shifts */
+        .sidebar-logo-link {
+            display: inline-block; 
+            text-align: center; 
+            margin-bottom: 25px; 
+            cursor: pointer; 
+            transition: 0.3s ease; 
+            padding: 10px; 
+            border-radius: 8px;
+            background-color: #ffffff; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-logo { 
+            max-width: 100%; 
+            width: 100%; 
+            height: auto; 
+            transition: 0.3s ease; 
+            display: block;
+        }
+
+        .sidebar-logo-link:hover { 
+            transform: scale(1.03); 
+        }
+
+        .nav-item { 
+            padding: 10px 15px; 
+            margin-bottom: 5px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            transition: 0.2s; 
+            font-weight: 500; 
+            font-size: 0.9rem; 
+        }
+
+        .nav-item:hover, .nav-item.active { 
+            background: rgba(255,255,255,0.15); 
+            border-left: 4px solid white; 
+        }
 
         .main-content { 
-            margin-left: var(--sidebar-width); flex: 1; padding: 25px; 
-            width: calc(100% - var(--sidebar-width)); transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            margin-left: var(--sidebar-width); 
+            flex: 1; 
+            padding: 25px; 
+            width: calc(100% - var(--sidebar-width)); 
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
         }
-        .main-content.expanded { margin-left: 0 !important; width: 100% !important; }
 
-        .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
-        
-        .toggle-btn {
-            background: #fff; border: 1px solid #ddd; color: var(--primary-navy); padding: 8px 15px;
-            border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; font-size: 0.9rem;
+        .main-content.expanded { 
+            margin-left: 0 !important; 
+            width: 100% !important; 
         }
-        .toggle-btn:hover { background: #f1f5f9; }
 
-        .quota-box {
-            background: rgba(255,255,255,0.9); border: 1px solid #ddd; padding: 6px 12px; border-radius: 8px;
-            font-size: 0.75rem; color: #444; font-weight: 500; display: flex; flex-direction: column; align-items: flex-end;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        .page-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            margin-bottom: 25px; 
+            flex-wrap: wrap; 
+            gap: 15px; 
         }
-        .quota-box span.critical { color: #c62828; font-weight: bold; animation: pulse 1s infinite; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--primary-navy); position: relative; overflow: hidden; }
-        .stat-card h4 { margin: 0; color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-card div { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin-top: 5px; }
-
-        .filters-section { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
-        .filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 130px; }
-        .filter-group label { font-size: 0.7rem; font-weight: 600; color: #444; text-transform: uppercase; }
-        .filter-group select, .filter-group input { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.8rem; width: 100%; box-sizing: border-box; }
-
-        .table-container { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-x: auto; width: 100%; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { background: #f8f9fa; color: #444; font-weight: 600; padding: 12px 10px; text-align: left; font-size: 0.8rem; border-bottom: 2px solid #eee; }
-        td { padding: 12px 10px; font-size: 0.8rem; border-bottom: 1px solid #eee; vertical-align: top; }
-        
-        .row-animating { animation: slideOutRight 0.5s ease forwards; pointer-events: none; }
-        @keyframes slideOutRight { to { opacity: 0; transform: translateX(50px); } }
-
-        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; display: inline-block; text-align: center; min-width: 90px; }
-        .st-pending { background: #f1f5f9; color: var(--color-pending); border: 1px solid #cbd5e1; }
-        .st-received { background: #fff3e0; color: var(--color-received); border: 1px solid var(--color-received); }
-        .st-partialrelease { background: #e0e7ff; color: var(--color-partial); border: 1px solid #c7d2fe; }
-        .st-forrelease { background: #e0f7fa; color: var(--color-forrelease); border: 1px solid #b3e5fc; }
-        .st-completed { background: #e8f5e9; color: var(--color-completed); border: 1px solid #c8e6c9; }
-        .st-disapproved { background: #ffebee; color: var(--color-disapproved); border: 1px solid #ffcdd2; }
-
-        .action-select { padding: 6px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.75rem; width: 100%; background-color: #fff; cursor: pointer; font-weight: 500; }
-        .remark-input { padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.75rem; width: 100%; box-sizing: border-box; }
-        .save-btn { background: var(--primary-navy); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; justify-content: center; flex: 1; font-weight: 500; font-size: 0.75rem; transition: opacity 0.2s; white-space: nowrap;}
-        .save-btn:hover { opacity: 0.9; }
-
-        .btn-items { background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; color: var(--primary-navy); font-weight: bold; width: 100%; margin-top: 5px; text-align: left; }
-        .btn-items:hover { background: #e2e8f0; }
-
-        .thumb-img { width: 60px; height: 60px; border-radius: 6px; object-fit: cover; cursor: pointer; border: 1px solid #eee; background: #fff; transition: transform 0.2s; display: block; margin-bottom: 5px; }
-        .thumb-img:hover { transform: scale(1.1); }
-        .sig-preview { width: 90px; height: 45px; border: 1px solid #eee; background: #ffffff; object-fit: contain; cursor: pointer; display: block; margin-top: 5px; transition: transform 0.2s; }
-        .sig-preview:hover { transform: scale(1.05); }
-        .no-sig-box { width: 90px; height: 45px; border: 1px dashed #ccc; background: #fafafa; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 8px; font-weight: bold; text-align: center; border-radius: 4px; line-height: 1.2; }
-        .notes-text { font-size: 0.75rem; color: #555; font-style: italic; max-width: 180px; white-space: normal; line-height: 1.3; margin-bottom: 8px; }
-
-        .qf-btn { background: #e2e8f0; color: #475569; border: none; padding: 4px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        .qf-btn:hover { background: #cbd5e1; color: var(--primary-navy); }
-
-        .analytics-tabs { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; white-space: nowrap; }
-        .analytics-tab-btn { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 700; color: #64748b; transition: 0.3s; border-radius: 8px 8px 0 0; flex-shrink: 0; font-size: 0.85rem; text-transform: uppercase; }
-        .analytics-tab-btn.active { color: var(--primary-navy); background: white; border-bottom: 3px solid var(--primary-navy); margin-bottom: -2px; }
-        .analytics-tab-content { display: none; }
-        .analytics-tab-content.active { display: block; }
-        
-        .analytics-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #eee; width: 100%; display: flex; flex-direction: column; }
-        .analytics-card h3 { margin: 0 0 15px 0; color: var(--primary-navy); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; font-size: 1.1rem; }
-        
-        /* Charts Grid Layout */
-        .charts-container { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 25px; }
-        .chart-wrapper { position: relative; height: 250px; width: 100%; flex: 1; display: flex; justify-content: center; align-items: center; }
-
-        .analytics-table-wrapper { overflow-x: auto; width: 100%; }
-        .analytics-table { width: 100%; font-size: 0.9rem; border-collapse: collapse; }
-        .analytics-table th, .analytics-table td { padding: 12px 10px; border-bottom: 1px solid #e2e8f0; }
-        .analytics-table th { background: #f8fafc; color: #475569; }
-        .clickable-row { cursor: pointer; transition: background 0.2s; }
-        .clickable-row:hover { background: #f8fafc; }
-
-        @media (max-width: 1024px) {
-            .main-content { margin-left: 0 !important; width: 100% !important; }
-            .charts-container { grid-template-columns: 1fr; }
-            .chart-wrapper { height: 300px; }
+        .toggle-btn { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-color); 
+            color: var(--text-main); 
+            padding: 8px 15px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
         }
+
+        .quota-box { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-color); 
+            padding: 6px 12px; 
+            border-radius: 8px; 
+            font-size: 0.75rem; 
+            color: var(--text-muted); 
+            font-weight: 500; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-end; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+        }
+
+        .quota-box span.critical { 
+            color: var(--color-disapproved); 
+            font-weight: bold; 
+            animation: pulse 1s infinite; 
+        }
+
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 15px; 
+            margin-bottom: 25px; 
+        }
+
+        .stat-card { 
+            background: var(--bg-card); 
+            padding: 15px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            border-left: 4px solid var(--primary-navy); 
+            border-top: 1px solid var(--border-color); 
+            border-right: 1px solid var(--border-color); 
+            border-bottom: 1px solid var(--border-color); 
+        }
+
+        .stat-card h4 { 
+            margin: 0; 
+            color: var(--text-muted); 
+            font-size: 0.8rem; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+        }
+
+        .stat-card div { 
+            font-size: 1.6rem; 
+            font-weight: 800; 
+            color: var(--text-main); 
+            margin-top: 5px; 
+        }
+
+        .filters-section { 
+            background: var(--bg-card); 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            border: 1px solid var(--border-color); 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 12px; 
+            align-items: flex-end; 
+        }
+
+        .filter-group { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 5px; 
+            flex: 1; 
+            min-width: 130px; 
+        }
+
+        .filter-group label { 
+            font-size: 0.7rem; 
+            font-weight: 600; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+        }
+
+        .filter-group select, .filter-group input { 
+            padding: 8px 10px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 6px; 
+            font-size: 0.8rem; 
+            width: 100%; 
+            box-sizing: border-box; 
+            background: var(--input-bg); 
+            color: var(--text-main); 
+        }
+
+        .table-container { 
+            background: var(--bg-card); 
+            border-radius: 10px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            overflow-x: auto; 
+            width: 100%; 
+            border: 1px solid var(--border-color); 
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            min-width: 800px; 
+            color: var(--text-main); 
+        }
+
+        th { 
+            background: var(--input-bg); 
+            color: var(--text-muted); 
+            font-weight: 600; 
+            padding: 12px 10px; 
+            text-align: left; 
+            font-size: 0.8rem; 
+            border-bottom: 2px solid var(--border-color); 
+            position: sticky; 
+            top: 0; 
+            z-index: 10;
+        }
+
+        td { 
+            padding: 12px 10px; 
+            font-size: 0.8rem; 
+            border-bottom: 1px solid var(--border-color); 
+            vertical-align: top; 
+        }
+        
+        .row-animating { 
+            animation: slideOutRight 0.5s ease forwards; 
+            pointer-events: none; 
+        }
+
+        @keyframes slideOutRight { 
+            to { opacity: 0; transform: translateX(50px); } 
+        }
+
+        .status-badge { 
+            padding: 4px 10px; 
+            border-radius: 20px; 
+            font-size: 0.7rem; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            display: inline-block; 
+            text-align: center; 
+            min-width: 90px; 
+        }
+
+        .st-pending { background: rgba(142, 142, 142, 0.1); color: var(--color-pending); border: 1px solid var(--color-pending); }
+        .st-received { background: rgba(239, 108, 0, 0.1); color: var(--color-received); border: 1px solid var(--color-received); }
+        .st-partialrelease { background: rgba(139, 92, 246, 0.1); color: var(--color-partial); border: 1px solid var(--color-partial); }
+        .st-forrelease { background: rgba(2, 136, 209, 0.1); color: var(--color-forrelease); border: 1px solid var(--color-forrelease); }
+        .st-completed { background: rgba(46, 125, 50, 0.1); color: var(--color-completed); border: 1px solid var(--color-completed); }
+        .st-disapproved { background: rgba(198, 40, 40, 0.1); color: var(--color-disapproved); border: 1px solid var(--color-disapproved); }
+
+        .action-select { 
+            padding: 6px; 
+            border-radius: 6px; 
+            border: 1px solid var(--border-color); 
+            font-size: 0.75rem; 
+            width: 100%; 
+            background-color: var(--input-bg); 
+            color: var(--text-main); 
+            cursor: pointer; 
+            font-weight: 500; 
+        }
+
+        .remark-input { 
+            padding: 8px; 
+            border-radius: 6px; 
+            border: 1px solid var(--border-color); 
+            font-size: 0.75rem; 
+            width: 100%; 
+            box-sizing: border-box; 
+            background: var(--input-bg); 
+            color: var(--text-main); 
+        }
+
+        .save-btn { 
+            background: var(--primary-navy); 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            justify-content: center; 
+            flex: 1; 
+            font-weight: 500; 
+            font-size: 0.75rem; 
+            transition: opacity 0.2s; 
+            white-space: nowrap;
+        }
+
+        .save-btn:hover { 
+            filter: brightness(1.2); 
+        }
+        
+        .thumb-img { 
+            width: 60px; 
+            height: 60px; 
+            border-radius: 6px; 
+            object-fit: cover; 
+            cursor: pointer; 
+            border: 1px solid var(--border-color); 
+            background: var(--input-bg); 
+            transition: transform 0.2s; 
+            display: block; 
+            margin-bottom: 5px; 
+        }
+
+        .thumb-img:hover { 
+            transform: scale(1.1); 
+        }
+
+        .sig-preview { 
+            width: 90px; 
+            height: 45px; 
+            border: 1px solid var(--border-color); 
+            background: #ffffff; 
+            object-fit: contain; 
+            cursor: pointer; 
+            display: block; 
+            margin-top: 5px; 
+            transition: transform 0.2s; 
+        }
+
+        .sig-preview:hover { 
+            transform: scale(1.05); 
+        }
+
+        .no-sig-box { 
+            width: 90px; 
+            height: 45px; 
+            border: 1px dashed var(--text-muted); 
+            background: var(--input-bg); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: var(--text-muted); 
+            font-size: 8px; 
+            font-weight: bold; 
+            text-align: center; 
+            border-radius: 4px; 
+            line-height: 1.2; 
+        }
+
+        .notes-text { 
+            font-size: 0.75rem; 
+            color: var(--text-muted); 
+            font-style: italic; 
+            max-width: 180px; 
+            white-space: normal; 
+            line-height: 1.3; 
+            margin-bottom: 8px; 
+        }
+
+        .priority-indicator { 
+            display: inline-block; 
+            width: 8px; 
+            height: 8px; 
+            border-radius: 50%; 
+            margin-right: 5px; 
+        }
+        .p-urgent { background-color: var(--color-disapproved); box-shadow: 0 0 5px var(--color-disapproved); }
+        .p-regular { background-color: var(--color-pending); }
+
+        /* ANALYTICS STYLES */
+        .analytics-tabs { 
+            display: flex; 
+            gap: 5px; 
+            margin-bottom: 20px; 
+            border-bottom: 2px solid var(--border-color); 
+            overflow-x: auto; 
+            white-space: nowrap; 
+        }
+
+        .analytics-tab-btn { 
+            padding: 12px 20px; 
+            cursor: pointer; 
+            border: none; 
+            background: none; 
+            font-weight: 700; 
+            color: var(--text-muted); 
+            transition: 0.3s; 
+            border-radius: 8px 8px 0 0; 
+            flex-shrink: 0; 
+            font-size: 0.85rem; 
+            text-transform: uppercase; 
+        }
+
+        .analytics-tab-btn.active { 
+            color: var(--primary-navy); 
+            background: var(--bg-card); 
+            border-bottom: 3px solid var(--primary-navy); 
+            margin-bottom: -2px; 
+        }
+
+        .analytics-tab-content { 
+            display: none; 
+        }
+
+        .analytics-tab-content.active { 
+            display: block; 
+        }
+        
+        .analytics-card { 
+            background: var(--bg-card); 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+            border: 1px solid var(--border-color); 
+            width: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            margin-bottom: 40px; 
+        }
+
+        .analytics-card h3 { 
+            margin: 0 0 15px 0; 
+            color: var(--text-main); 
+            border-bottom: 2px solid var(--input-bg); 
+            padding-bottom: 10px; 
+            font-size: 1.1rem; 
+        }
+        
+        .charts-container { 
+            display: grid; 
+            grid-template-columns: 1fr 2fr; 
+            gap: 20px; 
+            margin-bottom: 25px; 
+        }
+
+        .chart-wrapper { 
+            position: relative; 
+            height: 250px; 
+            width: 100%; 
+            flex: 1; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+
+        .analytics-table-wrapper { 
+            overflow-x: auto; 
+            width: 100%; 
+        }
+
+        .analytics-table { 
+            width: 100%; 
+            font-size: 0.9rem; 
+            border-collapse: collapse; 
+        }
+
+        .analytics-table th, .analytics-table td { 
+            padding: 12px 10px; 
+            border-bottom: 1px solid var(--border-color); 
+            color: var(--text-main); 
+        }
+
+        .analytics-table th { 
+            background: var(--input-bg); 
+            color: var(--text-muted); 
+        }
+
+        .clickable-row { 
+            cursor: pointer; 
+            transition: background 0.2s; 
+        }
+
+        .clickable-row:hover { 
+            background: var(--input-bg); 
+        }
+
+        /* CQI MASTER TOGGLE STYLES */
+        .cqi-settings-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .switch { 
+            position: relative; 
+            display: inline-block; 
+            width: 60px; 
+            height: 34px; 
+        }
+
+        .switch input { 
+            opacity: 0; 
+            width: 0; 
+            height: 0; 
+        }
+
+        .slider { 
+            position: absolute; 
+            cursor: pointer; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            bottom: 0; 
+            background-color: #ccc; 
+            transition: .4s; 
+            border-radius: 34px; 
+        }
+
+        .slider:before { 
+            position: absolute; 
+            content: ""; 
+            height: 26px; 
+            width: 26px; 
+            left: 4px; 
+            bottom: 4px; 
+            background-color: white; 
+            transition: .4s; 
+            border-radius: 50%; 
+        }
+
+        input:checked + .slider { 
+            background-color: #2e7d32; 
+        }
+
+        input:focus + .slider { 
+            box-shadow: 0 0 1px #2e7d32; 
+        }
+
+        input:checked + .slider:before { 
+            transform: translateX(26px); 
+        }
+
+        /* DOCUMENT PREVIEW THUMBNAILS (NEW) */
+        .preview-thumb {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .preview-thumb:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px -5px rgba(0,0,0,0.2) !important;
+        }
+        
+        .expand-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 33, 71, 0.85);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .preview-thumb:hover .expand-hint {
+            opacity: 1;
+        }
+
+        /* KIOSK MODE & SIMPLIFIED ISSUANCE FORM STYLES */
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.7); 
+            z-index: 2000; 
+            display: none; 
+            justify-content: center; 
+            align-items: flex-start; 
+            overflow-y: auto; 
+            padding: 20px; 
+            transition: 0.3s; 
+        }
+        
+        .modal-overlay.kiosk-locked { 
+            background: #f0f4f8; 
+            padding: 0; 
+            align-items: center; 
+            z-index: 99999; 
+        }
+
+        [data-theme="dark"] .modal-overlay.kiosk-locked { 
+            background: #0f172a; 
+        } 
+        
+        .modal-overlay.kiosk-locked .issuance-form { 
+            max-width: 1000px; 
+            width: 100%; 
+            min-height: 100vh; 
+            border-radius: 0; 
+            padding: 40px 60px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+        }
+        
+        /* The main kiosk form should ALWAYS retain full color for the Original White Copy */
+        .issuance-form { 
+            background: white !important; 
+            width: 100%; 
+            max-width: 850px; 
+            border-radius: 12px; 
+            padding: 40px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3); 
+            font-family: 'Times New Roman', serif; 
+            color: black !important; 
+            margin: auto; 
+            position: relative; 
+        }
+        
+        .kiosk-badge { 
+            display: none; 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            background: #dc2626; 
+            color: white; 
+            padding: 8px 15px; 
+            border-radius: 20px; 
+            font-family: 'Inter', sans-serif; 
+            font-size: 12px; 
+            font-weight: bold; 
+            align-items: center; 
+            gap: 8px; 
+        }
+
+        .modal-overlay.kiosk-locked .kiosk-badge { display: flex; }
+        
+        .unlock-btn { 
+            display: none; 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            background: transparent; 
+            border: 1px solid #ccc; 
+            color: #666; 
+            padding: 8px 15px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-family: 'Inter', sans-serif; 
+            font-size: 12px; 
+        }
+
+        .modal-overlay.kiosk-locked .unlock-btn { display: block; }
+        
+        .iss-header { text-align: center; margin-bottom: 20px; position: relative; }
+        
+        /* Ensure normal logo retains color */
+        .iss-logo { max-height: 70px; margin-bottom: 10px; }
+        .iss-title { font-size: 24px; font-weight: bold; text-transform: uppercase; margin: 0; letter-spacing: 1px; color: black !important; }
+        .iss-subtitle { font-size: 13px; font-style: italic; margin: 5px 0 0 0; color: black !important; }
+        
+        .iss-meta { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 15px; color: black !important; }
+        .iss-meta p { margin: 5px 0; font-weight: bold; }
+        
+        .iss-table { width: 100%; border-collapse: collapse; margin-bottom: 5px; font-size: 15px; color: black !important; }
+        .iss-table th, .iss-table td { border: 1px solid black !important; padding: 10px; text-align: center; }
+        .iss-table th { background-color: white !important; color: black !important; font-family: 'Inter', sans-serif; font-size: 12px; }
+        
+        .iss-table input { 
+            width: 100%; 
+            box-sizing: border-box; 
+            border: 1px dashed #ccc !important; 
+            background: transparent !important; 
+            color: black !important; 
+            text-align: center; 
+            font-family: 'Times New Roman', serif; 
+            font-size: 15px; 
+            padding: 5px; 
+            border-radius: 4px; 
+            transition: 0.2s; 
+        }
+
+        .iss-table input:focus { outline: none; border: 1px solid #000 !important; background: white !important; }
+        
+        .modal-overlay.kiosk-locked .iss-table input { border: none !important; background: transparent !important; pointer-events: none; font-weight: bold; }
+        .modal-overlay.kiosk-locked .remove-row-btn { display: none; }
+        
+        .remove-row-btn { 
+            background: #fee2e2; 
+            color: #dc2626; 
+            border: 1px solid #fca5a5; 
+            border-radius: 4px; 
+            padding: 4px 8px; 
+            cursor: pointer; 
+            font-size: 10px; 
+            font-family: 'Inter', sans-serif; 
+            font-weight: bold; 
+        }
+        
+        .iss-footer { font-size: 15px; margin-top: 15px; color: black !important; display: flex; justify-content: space-between; align-items: flex-end;}
+        .iss-footer select, .iss-footer input[type="text"] { font-family: 'Times New Roman', serif; font-size: 15px; border: none; border-bottom: 1px solid black !important; background: transparent !important; color: black !important; padding: 2px 5px; width: 200px;}
+        
+        .iss-sig-container { border: 1px solid #000; width: 100%; max-width: 300px; height: 100px; margin-top: 5px; position: relative; background: #ffffff !important; overflow: hidden; }
+        .iss-sig-container canvas { width: 100%; height: 100%; cursor: crosshair; }
+        .clear-sig-btn { font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer; border: 1px solid #ccc; background: white; padding: 5px 10px; margin-top: 8px; border-radius: 4px; color: black; }
+
+        .admin-prep-banner { background: #e0f2fe !important; color: #0288d1 !important; padding: 15px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; margin-bottom: 20px; border-left: 4px solid #0288d1 !important; }
+        .modal-overlay.kiosk-locked .admin-prep-banner { display: none; }
+        
+        .prep-controls { display: flex; justify-content: center; gap: 15px; margin-top: 30px; font-family: 'Inter', sans-serif; }
+        .modal-overlay.kiosk-locked .prep-controls { display: none; }
+        
+        .kiosk-controls { display: none; justify-content: center; gap: 15px; margin-top: 40px; font-family: 'Inter', sans-serif; }
+        .modal-overlay.kiosk-locked .kiosk-controls { display: flex; flex-direction: column; align-items: center; }
+
+        :-webkit-full-screen { background-color: var(--bg-gray); }
+
         @media (max-width: 768px) {
-            .page-header { flex-direction: column; align-items: stretch; }
-            .filters-section { flex-direction: column; align-items: stretch; }
+            .issuance-form { padding: 25px !important; }
+            .iss-footer { flex-direction: column; gap: 20px; align-items: flex-start !important; }
+            .iss-footer > div { text-align: left !important; width: 100%; }
         }
+
         @media print {
-            body { background: white; font-size: 12px; }
+            body { background: white; font-size: 12px; color: black; }
             body::before { display: none !important; }
             .sidebar { display: none !important; }
             .main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; }
-            .print-hide, .page-header button, .filters-section, #loginOverlay, .quota-box, .toggle-btn, .analytics-tabs { display: none !important; }
+            .print-hide { display: none !important; }
             
-            /* Enhanced Print Layout for Analytics */
-            #analyticsSection { display: block !important; }
-            .charts-container { display: flex !important; flex-direction: row !important; align-items: center; justify-content: center; gap: 20px; page-break-inside: avoid; margin-bottom: 30px; }
-            .analytics-card { box-shadow: none; border: 1px solid #ddd; margin-bottom: 20px; page-break-inside: avoid; }
-            .analytics-tab-content { display: block !important; margin-bottom: 20px; }
+            #analyticsSection, #cqiSection { display: none !important; }
             
-            table th:last-child, table td:last-child { display: none !important; }
-            .stat-card { border: 1px solid #ddd; break-inside: avoid; }
+            .modal-overlay { position: absolute; top: 0; left: 0; background: white; padding: 0; display: block; z-index: 99999; }
+            .issuance-form { box-shadow: none; padding: 0; max-width: 100%; border: none; }
+            .iss-table input { font-size: 12pt; border: none !important; background: transparent !important; color: black !important; }
         }
     </style>
 </head>
@@ -219,76 +928,242 @@
         </div>
         <h2>CSR ADMIN</h2>
         <p>TDMH Procurement Portal 2026</p>
-        
         <div class="input-group">
             <i class="fas fa-lock"></i>
             <input type="password" id="adminPass" placeholder="Enter System Password" onkeypress="if(event.key==='Enter')login()">
         </div>
+        <button onclick="login()">Secure Login <i class="fas fa-arrow-right"></i></button>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- ISSUANCE FORM MODAL (WHITE PAPER - ORIGINAL COPY)         -->
+<!-- ========================================================= -->
+<div class="modal-overlay" id="issuanceModal">
+    <div class="issuance-form" id="issFormContainer">
         
-        <button onclick="login()">
-            Secure Login <i class="fas fa-arrow-right"></i>
-        </button>
+        <div class="kiosk-badge"><i class="fas fa-lock"></i> KIOSK MODE ACTIVE</div>
+        <button class="unlock-btn" onclick="unlockKiosk()"><i class="fas fa-unlock"></i> Admin Unlock</button>
+
+        <div class="print-hide" style="text-align: right; margin-bottom: 10px;" id="issCloseBtnTop">
+            <button onclick="closeIssuanceForm()" style="background: #e2e8f0; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Inter', sans-serif; color: #333;"><i class="fas fa-times"></i> Close</button>
+        </div>
+        
+        <div class="admin-prep-banner" id="adminBanner">
+            <strong><i class="fas fa-user-shield"></i> STEP 1: ADMIN PREPARATION</strong><br>
+            Please prepare the issuance form. Type the <b>Unit Prices</b> manually for accuracy. Adjust the <b>QTY</b> if this is a partial release. When ready, click "Lock Screen for Signature".
+        </div>
+
+        <div class="iss-header">
+            <img src="https://raw.githubusercontent.com/tdmh-cqi/csr2026/main/images/tdmh-logo.png" alt="TDMH Logo" class="iss-logo" onerror="this.style.display='none'">
+            <h2 class="iss-title">Issuance Form</h2>
+            <p class="iss-subtitle" id="issDisclaimer">(Original White Copy - CSR & Accounting File)</p>
+        </div>
+        
+        <div class="iss-meta">
+            <div>
+                <p>Department: <span id="issDept" style="font-weight: normal; text-decoration: underline;">Loading...</span></p>
+                <p>Request No.: <span id="issReqNo" style="font-weight: normal; text-decoration: underline;">Loading...</span></p>
+            </div>
+            <div style="text-align: right;">
+                <p>No.: <span id="issNo" style="font-weight: bold; color: red;">Loading...</span></p>
+                <p>Date: <span id="issDate" style="font-weight: normal; text-decoration: underline;">Loading...</span></p>
+            </div>
+        </div>
+
+        <div style="overflow-x: auto; width: 100%;">
+            <table class="iss-table" id="currentTable">
+                <thead>
+                    <tr>
+                        <th style="width:12%;">QTY.</th>
+                        <th style="width:15%;">UNIT</th>
+                        <th style="width:38%;">DESCRIPTION</th>
+                        <th style="width:15%;">UNIT PRICE</th>
+                        <th style="width:15%;">AMOUNT</th>
+                        <th style="width:5%;" class="print-hide th-action"></th>
+                    </tr>
+                </thead>
+                <tbody id="issTableBody"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" style="text-align: right; font-weight: bold; border: none; padding-top: 5px; padding-right: 15px;">TOTAL:</td>
+                        <td style="font-weight: bold; border: 2px solid black; padding-top: 5px;" id="issTotalAmount">0.00</td>
+                        <td style="border: none;" class="print-hide th-action"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="iss-footer">
+            <div>
+                <p style="margin:0 0 10px 0;">Prepared by: 
+                    <select id="issPreparedBy">
+                        <option value="Sir Emman">Sir Emman</option>
+                        <option value="Sir Eruel">Sir Eruel</option>
+                    </select>
+                </p>
+                <p style="margin:0; font-style: italic; font-size: 13px;">"Received goods in good condition."</p>
+            </div>
+            <div style="text-align: right;">
+                <p style="margin:0 0 5px 0;">Received by: <input type="text" id="issReceivedBy" placeholder="Type Full Name"></p>
+                <div class="iss-sig-container" style="display: inline-block;">
+                    <canvas id="issSigPad"></canvas>
+                </div><br>
+                <button class="clear-sig-btn print-hide" onclick="issPad.clear()"><i class="fas fa-eraser"></i> Clear</button>
+            </div>
+        </div>
+
+        <div class="prep-controls print-hide" id="prepControls">
+            <button onclick="lockKioskMode()" class="save-btn" style="background: #ef4444; padding: 15px 30px; font-size: 16px;">
+                <i class="fas fa-lock"></i> Lock Screen for Signature
+            </button>
+            <button onclick="window.print()" class="save-btn" style="background: #2e7d32; padding: 15px 30px; font-size: 16px;">
+                <i class="fas fa-print"></i> Print Current Form
+            </button>
+        </div>
+
+        <div class="kiosk-controls print-hide" id="kioskControls">
+            <button onclick="submitIssuanceForm()" class="save-btn" style="background: #002147; padding: 20px 40px; font-size: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,33,71,0.3);">
+                <i class="fas fa-check-circle"></i> SUBMIT SIGNATURE
+            </button>
+            <p style="font-size: 12px; color: #888;">By submitting, you confirm receipt of the items listed above. A digital receipt will be emailed to your department.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- FULL SCREEN PREVIEW MODAL FOR CQI SETTINGS                -->
+<!-- ========================================================= -->
+<div class="modal-overlay" id="docPreviewModal" onclick="closeDocPreview(event)">
+    <div class="issuance-form" id="docPreviewContainer" style="cursor: default;" onclick="event.stopPropagation()">
+        <button class="print-hide" style="position: absolute; top: 15px; right: 15px; background: #e2e8f0; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Inter', sans-serif; color: #333;" onclick="closeDocPreview()"><i class="fas fa-times"></i> Close</button>
+        <div id="docPreviewContent">
+            <!-- Injected via Javascript -->
+        </div>
     </div>
 </div>
 
 <aside class="sidebar hidden" id="sidebar">
-    <a href="." title="Refresh Dashboard">
+    
+    <!-- TRIPLE CLICK LOGO LOGIC INCLUDED HERE -->
+    <a class="sidebar-logo-link" onclick="handleLogoClick()" title="Triple-click for CQI Master Settings">
         <img src="https://raw.githubusercontent.com/tdmh-cqi/csr2026/main/images/tdmh-logo.png" class="sidebar-logo" alt="TDMH Logo" onerror="this.style.display='none'">
     </a>
-    <div class="nav-item active" id="tabBtn-active" onclick="switchAdminTab('active')">
-        <i class="fas fa-list-check"></i> <span>Active Requests</span>
+    
+    <div style="padding: 10px 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8;">Theme</span>
+        <i class="fas fa-moon" id="adminThemeIcon" style="cursor: pointer; font-size: 1.2rem; transition: 0.3s;" onclick="toggleAdminTheme(event)" title="Toggle Dark Mode"></i>
     </div>
-    <div class="nav-item" id="tabBtn-archive" onclick="switchAdminTab('archive')">
-        <i class="fas fa-box-archive"></i> <span>Completed</span>
-    </div>
-    <div class="nav-item" id="tabBtn-disapproved" onclick="switchAdminTab('disapproved')">
-        <i class="fas fa-ban"></i> <span>Disapproved</span>
-    </div>
-    <div class="nav-item" id="tabBtn-analytics" onclick="switchAdminTab('analytics')">
-        <i class="fas fa-chart-pie"></i> <span>Exec. Reports</span>
-    </div>
-    <div class="nav-item" style="margin-top: auto;" onclick="location.reload()">
-        <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
-    </div>
+
+    <div class="nav-item active" id="tabBtn-active" onclick="switchAdminTab('active')"><i class="fas fa-list-check"></i> <span>Active Requests</span></div>
+    <div class="nav-item" id="tabBtn-archive" onclick="switchAdminTab('archive')"><i class="fas fa-box-archive"></i> <span>Completed</span></div>
+    <div class="nav-item" id="tabBtn-disapproved" onclick="switchAdminTab('disapproved')"><i class="fas fa-ban"></i> <span>Disapproved</span></div>
+    <div class="nav-item" id="tabBtn-analytics" onclick="switchAdminTab('analytics')"><i class="fas fa-chart-pie"></i> <span>Exec. Reports</span></div>
+    
+    <!-- Hidden CQI Settings Tab -->
+    <div class="nav-item" id="tabBtn-cqi" onclick="switchAdminTab('cqi')" style="display: none; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px; margin-top: 10px;"><i class="fas fa-cogs"></i> <span>CQI Settings</span></div>
+
+    <div class="nav-item" style="margin-top: auto;" onclick="location.reload()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></div>
 </aside>
 
 <main class="main-content expanded" id="mainContent" style="display:none;">
-    
-    <!-- Header Block -->
     <div class="page-header print-hide">
         <div style="display: flex; flex-direction: column; gap: 10px;">
             <div style="display: flex; align-items: center; gap: 15px;">
-                <button class="toggle-btn" id="menuToggleBtn" onclick="toggleSidebarLock()">
-                    <i class="fas fa-bars" id="menuToggleIcon"></i> <span>Toggle Menu</span>
-                </button>
+                <button class="toggle-btn" id="menuToggleBtn" onclick="toggleSidebarLock()"><i class="fas fa-bars" id="menuToggleIcon"></i> <span>Toggle Menu</span></button>
                 <h1 style="margin:0; font-size: 1.6rem; color: var(--primary-navy);" id="pageTitle">Active Requisitions</h1>
             </div>
-            
             <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 5px;">
-                <div style="font-size: 0.75rem; color: #2e7d32; display: flex; align-items: center; gap: 5px;">
-                    <i class="fas fa-circle" style="animation: pulse 2s infinite;"></i> Synced with Database
-                </div>
-                
-                <div class="quota-box" id="quotaDisplayBox">
-                    <div>Emails Left Today: <b id="quotaCount" style="font-size: 0.9rem; color: var(--primary-navy);">--</b></div>
-                    <div style="color: #888; font-size: 0.65rem;">Resets in: <span id="resetTimer">--h --m</span></div>
-                </div>
+                <div style="font-size: 0.75rem; color: var(--color-completed); display: flex; align-items: center; gap: 5px;"><i class="fas fa-circle" style="animation: pulse 2s infinite;"></i> Synced with Database</div>
+                <div class="quota-box" id="quotaDisplayBox"><div>Emails Left Today: <b id="quotaCount" style="font-size: 0.9rem; color: var(--primary-navy);">--</b></div></div>
             </div>
         </div>
-        
         <div style="display: flex; gap: 8px; flex-wrap: wrap; height: fit-content;" id="headerButtons">
-            <button onclick="window.print()" class="save-btn" style="background: #2e7d32; color: white; flex:none;">
-                <i class="fas fa-print"></i> Print View
-            </button>
-            <button onclick="exportFilteredViewToCSV()" class="save-btn" style="background: #0288d1; color: white; flex:none;" id="btnExportActive">
-                <i class="fas fa-file-excel"></i> Export Current View
-            </button>
-            <button onclick="fetchData()" class="save-btn" style="background: white; color: var(--primary-navy); border: 1px solid #ddd; flex:none;">
-                <i class="fas fa-sync"></i> Refresh Site
-            </button>
+            <button onclick="window.print()" class="save-btn" style="background: var(--color-completed); color: white; flex:none;"><i class="fas fa-print"></i> Print View</button>
+            <button onclick="exportFilteredViewToCSV()" class="save-btn" style="background: var(--color-forrelease); color: white; flex:none;" id="btnExportActive"><i class="fas fa-file-excel"></i> Export View</button>
+            <button onclick="fetchData()" class="save-btn" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); flex:none;"><i class="fas fa-sync"></i> Refresh Site</button>
         </div>
     </div>
 
+    <!-- CQI MASTER SETTINGS SECTION -->
+    <div id="cqiSection" style="display:none;">
+        <div class="cqi-settings-card">
+            <h2 style="margin: 0 0 20px 0; color: var(--primary-navy); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;"><i class="fas fa-user-shield"></i> CQI Master Controls</h2>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <div>
+                    <h3 style="margin: 0 0 5px 0;">Digital Issuance Form Feature</h3>
+                    <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">Enable or disable the digital issuance form workflow across the hospital. Disable this while the CSR team is finishing physical paper stock.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="issuanceMasterToggle" onchange="toggleIssuanceFeature(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="cqi-settings-card" style="margin-top: 20px;">
+            <h3 style="margin: 0 0 15px 0; color: var(--primary-navy);">Form Disclaimers (Receipt Text)</h3>
+            <p style="margin: 0 0 20px 0; font-size: 0.9rem; color: var(--text-muted);">Edit the text that appears under the Issuance Form title. This updates both the Admin printout and the automated Pink Copy email.</p>
+            
+            <div class="form-group">
+                <label>Pink Form Disclaimer (For Requestor's Email)</label>
+                <input type="text" id="pinkDisclaimerInput" class="remark-input" style="padding: 12px; font-size: 14px;" value="(Digital Pink Copy - Department Receiving Copy)" onkeyup="document.getElementById('prevPinkDisclaimerThumb').innerText = this.value;">
+            </div>
+            
+            <div class="form-group" style="margin-top: 15px;">
+                <label>White Form Disclaimer (For CSR Printout)</label>
+                <input type="text" id="whiteDisclaimerInput" class="remark-input" style="padding: 12px; font-size: 14px;" value="(Original White Copy - CSR & Accounting File)" onkeyup="document.getElementById('prevWhiteDisclaimerThumb').innerText = this.value;">
+            </div>
+            
+            <button class="save-btn" style="margin-top: 20px; padding: 12px 25px; width: auto; font-size: 14px;" onclick="saveDisclaimers()">
+                <i class="fas fa-save"></i> Save Disclaimers to Database
+            </button>
+        </div>
+
+        <!-- NEW: LIVE DOCUMENT PREVIEWS BUILT STRAIGHT INTO THE CQI TAB -->
+        <div class="cqi-settings-card" style="margin-top: 20px; background: var(--bg-gray);">
+            <h3 style="margin: 0 0 15px 0; color: var(--primary-navy);">Live Document Previews</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">Click either document below to expand it to full screen.</p>
+
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;">
+                
+                <!-- White Copy Preview Thumb -->
+                <div class="preview-thumb" onclick="openDocPreview('white')" style="flex: 1; min-width: 300px; background: #ffffff; border: 1px solid #cbd5e1; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); color: black; font-family: 'Times New Roman', Times, serif;">
+                    <div class="expand-hint"><i class="fas fa-expand"></i> Click to Enlarge</div>
+                    <div style="background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-bottom: 15px;"><i class="fas fa-desktop"></i> Original Form (CSR Printout)</div>
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <img src="https://raw.githubusercontent.com/tdmh-cqi/csr2026/main/images/tdmh-logo.png" style="max-height: 40px; margin-bottom: 5px;">
+                        <h4 style="margin: 0; text-transform: uppercase;">Issuance Form</h4>
+                        <p id="prevWhiteDisclaimerThumb" style="font-size: 10px; font-style: italic; margin: 3px 0 0 0;">(Original White Copy - CSR & Accounting File)</p>
+                    </div>
+                    <div style="font-size: 11px; display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+                        <div>Dept: Station 3</div>
+                        <div style="color: red; font-weight: bold;">ISS-2026-0005</div>
+                    </div>
+                </div>
+
+                <!-- Pink Copy Preview Thumb -->
+                <div class="preview-thumb" onclick="openDocPreview('pink')" style="flex: 1; min-width: 300px; background: #ffcdd2; border: 1px solid #ef9a9a; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); color: black; font-family: 'Times New Roman', Times, serif;">
+                    <div class="expand-hint"><i class="fas fa-expand"></i> Click to Enlarge</div>
+                    <div style="background-color: #ec4899; color: white; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-bottom: 15px;"><i class="fas fa-envelope"></i> Digital Receipt (Email to Dept)</div>
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <img src="https://raw.githubusercontent.com/tdmh-cqi/csr2026/main/images/tdmh-logo.png" style="max-height: 40px; margin-bottom: 5px; filter: grayscale(100%) brightness(0);">
+                        <h4 style="margin: 0; text-transform: uppercase;">Issuance Form</h4>
+                        <p id="prevPinkDisclaimerThumb" style="font-size: 10px; font-style: italic; margin: 3px 0 0 0;">(Digital Pink Copy - Department Receiving Copy)</p>
+                    </div>
+                    <div style="font-size: 11px; display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding-bottom: 5px;">
+                        <div>Dept: Station 3</div>
+                        <div style="color: red; font-weight: bold;">ISS-2026-0005</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MAIN DATA VIEW -->
     <div id="dataViewSection">
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card"><h4>Total Active</h4><div id="statTotal">0</div></div>
@@ -300,15 +1175,11 @@
         <div class="filters-section" id="filtersBlock">
             <div class="filter-group" style="min-width: 90px; flex: 0.5;">
                 <label>ID Search</label>
-                <input type="number" id="filterId" placeholder="e.g. 45" oninput="applyFilters()">
+                <input type="number" id="filterId" placeholder="e.g. 45" oninput="debouncedApplyFilters()">
             </div>
             <div class="filter-group">
                 <label>Search Items</label>
-                <input type="text" id="filterItem" placeholder="e.g. Alcohol, Gloves..." oninput="applyFilters()">
-            </div>
-            <div class="filter-group">
-                <label>Date</label>
-                <input type="date" id="filterDate" onchange="applyFilters()">
+                <input type="text" id="filterItem" placeholder="e.g. Gloves..." oninput="debouncedApplyFilters()">
             </div>
             <div class="filter-group" id="filterStatusGroup">
                 <label>Status</label>
@@ -323,10 +1194,9 @@
                 <label>Department</label>
                 <select id="filterDept" onchange="applyFilters()">
                     <option value="">All Departments</option>
-                    <!-- Filled dynamically -->
                 </select>
             </div>
-            <button onclick="resetFilters()" class="remark-input" style="cursor:pointer; background: #eee; width: auto; border: 1px solid #ccc; height: 34px;">Reset</button>
+            <button onclick="resetFilters()" class="remark-input" style="cursor:pointer; background: var(--bg-gray); width: auto; border: 1px solid var(--border-color); height: 34px;">Reset</button>
         </div>
 
         <div class="table-container">
@@ -335,82 +1205,78 @@
                     <tr>
                         <th style="width: 12%;">ID & Requestor</th>
                         <th style="width: 25%;">Items & Qty</th>
-                        <th style="width: 8%;">Photo</th>
-                        <th style="width: 20%;">Notes & Signatures</th>
+                        <th style="width: 25%;">Notes & Signatures</th>
                         <th style="width: 15%; text-align: center;">Status</th>
                         <th style="width: 20%; min-width: 200px;">Action Panel</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody">
-                    <!-- Data will be injected here -->
-                </tbody>
+                <tbody id="tableBody"></tbody>
             </table>
-            <div id="loadingState" style="text-align:center; padding: 40px; color: #666; display:none;">
+            <div id="loadingState" style="text-align:center; padding: 40px; color: var(--text-muted); display:none;">
                 <i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Fetching Live Data...
             </div>
         </div>
     </div>
 
+    <!-- ANALYTICS SECTION -->
     <div id="analyticsSection" style="display:none;">
-        
-        <!-- Controls -->
-        <div class="filters-section print-hide" style="margin-bottom: 20px; align-items: center;">
-            <div class="filter-group" style="flex:none; width: 220px;">
-                <label>Select Month for Report</label>
-                <input type="month" id="analyticsMonth" onchange="renderAnalytics()">
+        <div class="filters-section print-hide" style="margin-bottom: 20px; justify-content: space-between; align-items: flex-end;">
+            
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="filter-group" style="flex:none; width: auto;">
+                    <label>Report Period: Month</label>
+                    <select id="analyticsMonthSelect" onchange="renderAnalytics()" style="min-width: 120px;">
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+                <div class="filter-group" style="flex:none; width: auto;">
+                    <label>Year</label>
+                    <select id="analyticsYearSelect" onchange="renderAnalytics()" style="min-width: 90px;">
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                    </select>
+                </div>
             </div>
-            <div style="margin-left: auto; display: flex; gap: 10px;">
-                <button class="save-btn" style="background: white; color: var(--primary-navy); border: 1px solid #ddd; flex:none; height:34px;" onclick="window.print()">
-                    <i class="fas fa-print"></i> Print Executive PDF
-                </button>
-                <button class="save-btn" style="background:#2e7d32; flex:none; height:34px;" onclick="exportAnalyticsToCSV()">
-                    <i class="fas fa-file-excel"></i> Export Raw Data
-                </button>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="save-btn" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); flex:none; height:34px;" onclick="window.print()"><i class="fas fa-print"></i> Print Exec PDF</button>
+                <button class="save-btn" style="background:var(--color-completed); flex:none; height:34px;" onclick="exportAnalyticsToCSV()"><i class="fas fa-file-excel"></i> Export Raw Data</button>
             </div>
         </div>
 
-        <!-- KPI Cards -->
         <div class="stats-grid" id="analyticsKpis" style="margin-bottom: 20px;">
-            <div class="stat-card">
-                <h4>Total Requests This Month</h4>
-                <div id="kpiTotalReq">0</div>
-            </div>
-            <div class="stat-card" style="border-left-color: var(--color-forrelease);">
-                <h4>Items Processed</h4>
-                <div id="kpiTotalItems">0</div>
-            </div>
-            <div class="stat-card" style="border-left-color: var(--color-completed);">
-                <h4>Completion Rate</h4>
-                <div id="kpiCompRate">0%</div>
-            </div>
+            <div class="stat-card"><h4>Total Requests This Period</h4><div id="kpiTotalReq">0</div></div>
+            <div class="stat-card" style="border-left-color: var(--color-forrelease);"><h4>Items Processed</h4><div id="kpiTotalItems">0</div></div>
+            <div class="stat-card" style="border-left-color: var(--color-completed);"><h4>Completion Rate</h4><div id="kpiCompRate">0%</div></div>
         </div>
         
-        <!-- Visual Charts Grid -->
-        <div class="charts-container">
-            <div class="analytics-card">
-                <h3>Request Outcomes</h3>
-                <div class="chart-wrapper">
-                    <canvas id="statusChart"></canvas>
-                </div>
-            </div>
-            <div class="analytics-card">
-                <h3>Department Volume Breakdown</h3>
-                <div class="chart-wrapper">
-                    <canvas id="deptChart"></canvas>
-                </div>
-            </div>
+        <div class="charts-container" id="monthlyChartsContainer">
+            <div class="analytics-card"><h3>Request Outcomes</h3><div class="chart-wrapper"><canvas id="statusChart"></canvas></div></div>
+            <div class="analytics-card"><h3>Department Volume</h3><div class="chart-wrapper"><canvas id="deptChart"></canvas></div></div>
         </div>
 
-        <!-- Detail Tabs -->
         <div class="analytics-tabs print-hide">
             <button class="analytics-tab-btn active" id="anaBtn-overall" onclick="switchAnalyticsSubTab('overall')">Overall Summary</button>
             <button class="analytics-tab-btn" id="anaBtn-pending" onclick="switchAnalyticsSubTab('pending')">Pending List</button>
             <button class="analytics-tab-btn" id="anaBtn-completed" onclick="switchAnalyticsSubTab('completed')">Completed List</button>
             <button class="analytics-tab-btn" id="anaBtn-disapproved" onclick="switchAnalyticsSubTab('disapproved')">Disapproved List</button>
-            <button class="analytics-tab-btn" id="anaBtn-top10" onclick="switchAnalyticsSubTab('top10')">Top 10 Fast-Moving Items</button>
+            <button class="analytics-tab-btn" id="anaBtn-top10" onclick="switchAnalyticsSubTab('top10')">Top 10 Items</button>
+            <button class="analytics-tab-btn" id="anaBtn-yearly" onclick="switchAnalyticsSubTab('yearly')" style="color: var(--color-forrelease); border-left: 2px solid var(--border-color);">Yearly Comparison</button>
         </div>
 
-        <!-- Detail Tab Contents -->
         <div class="analytics-card" style="margin-bottom: 40px;">
             <div id="ana-overall" class="analytics-tab-content active">
                 <h3 class="print-show">Department Summary Data</h3>
@@ -421,43 +1287,61 @@
                     </table>
                 </div>
             </div>
-
+            
             <div id="ana-pending" class="analytics-tab-content">
-                <h3>Pending Requests <span style="font-size: 12px; color: #888; font-weight: normal; class="print-hide"">(Click a row to view items)</span></h3>
+                <h3>Pending Requests</h3>
                 <div class="analytics-table-wrapper">
-                    <table class="analytics-table">
-                        <thead><tr><th>Department</th><th>Pending Count</th></tr></thead>
-                        <tbody id="pendingBody"></tbody>
-                    </table>
+                    <table class="analytics-table"><thead><tr><th>Department</th><th>Pending Count</th></tr></thead><tbody id="pendingBody"></tbody></table>
                 </div>
             </div>
-
+            
             <div id="ana-completed" class="analytics-tab-content">
-                <h3>Completed Requests <span style="font-size: 12px; color: #888; font-weight: normal;" class="print-hide">(Click a row to view items)</span></h3>
+                <h3>Completed Requests</h3>
                 <div class="analytics-table-wrapper">
-                    <table class="analytics-table">
-                        <thead><tr><th>Department</th><th>Completed Count</th></tr></thead>
-                        <tbody id="completedBody"></tbody>
-                    </table>
+                    <table class="analytics-table"><thead><tr><th>Department</th><th>Completed Count</th></tr></thead><tbody id="completedBody"></tbody></table>
                 </div>
             </div>
-
+            
             <div id="ana-disapproved" class="analytics-tab-content">
-                <h3>Disapproved Requests <span style="font-size: 12px; color: #888; font-weight: normal;" class="print-hide">(Click a row to view items)</span></h3>
+                <h3>Disapproved Requests</h3>
                 <div class="analytics-table-wrapper">
-                    <table class="analytics-table">
-                        <thead><tr><th>Department</th><th>Disapproved Count</th></tr></thead>
-                        <tbody id="disappBody"></tbody>
-                    </table>
+                    <table class="analytics-table"><thead><tr><th>Department</th><th>Disapproved Count</th></tr></thead><tbody id="disappBody"></tbody></table>
                 </div>
             </div>
-
+            
             <div id="ana-top10" class="analytics-tab-content">
                 <h3>Top 10 Fast-Moving Items</h3>
                 <div class="analytics-table-wrapper">
                     <table class="analytics-table" id="itemSummaryTable">
                         <thead><tr><th style="width:40%;">Item Description</th><th style="width:20%;">Total Qty Requested</th><th style="width:40%;">Requested By (Depts)</th></tr></thead>
                         <tbody id="itemSummaryBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- YEARLY COMPARISON SUB-TAB -->
+            <div id="ana-yearly" class="analytics-tab-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                    <h3 style="margin:0; border:none; padding:0;">Annual Performance Comparison</h3>
+                    <div class="filter-group" style="flex:none; width: auto; flex-direction:row; align-items:center; gap:10px;">
+                        <label style="margin:0;">Select Year:</label>
+                        <select id="yearlyCompareYearSelect" onchange="renderYearlyAnalytics()" style="min-width: 100px;">
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="chart-wrapper" style="height: 300px; margin-bottom: 30px;">
+                    <canvas id="yearlyChart"></canvas>
+                </div>
+                
+                <div class="analytics-table-wrapper">
+                    <table class="analytics-table">
+                        <thead><tr><th>Month</th><th>Total Requests</th><th>Completed</th><th>Pending / Active</th><th>Disapproved</th></tr></thead>
+                        <tbody id="yearlySummaryBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -471,177 +1355,392 @@
     let allData = [];
     let filteredDataCache = []; 
     let currentAdminTab = 'active'; 
-    let isMenuLocked = window.innerWidth > 1024; 
-    
-    // Variables to hold Chart.js instances so they can be destroyed before redrawing
+    let issPad = null;
+    let currentlyProcessingReqNo = null;
+    let currentReqEmail = null;
+    let filterTimeout; 
     let statusChartInst = null;
     let deptChartInst = null;
+    let yearlyChartInst = null; 
     
-    function setDisplay(id, val) {
-        const el = document.getElementById(id);
-        if (el) el.style.display = val;
+    // Master Settings States
+    let issuanceFeatureEnabled = false;
+    let g_whiteDisclaimer = "(Original White Copy - CSR & Accounting File)";
+    let g_pinkDisclaimer = "(Digital Pink Copy - Department Receiving Copy)";
+
+    function setDisplay(id, val) { 
+        const el = document.getElementById(id); 
+        if (el) el.style.display = val; 
     }
     
-    const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 2000, timerProgressBar: true });
+    const Toast = Swal.mixin({ 
+        toast: true, 
+        position: 'bottom-end', 
+        showConfirmButton: false, 
+        timer: 2000, 
+        timerProgressBar: true 
+    });
+
+    // --- SECRET TRIPLE CLICK LOGIC ---
+    let logoClickCount = 0;
+    let logoClickTimer;
+
+    function handleLogoClick() {
+        logoClickCount++;
+        clearTimeout(logoClickTimer);
+        
+        if (logoClickCount === 3) {
+            logoClickCount = 0;
+            promptCqiAdmin();
+        } else {
+            logoClickTimer = setTimeout(() => { 
+                logoClickCount = 0; 
+            }, 1000);
+        }
+    }
+
+    async function promptCqiAdmin() {
+        const { value: password } = await Swal.fire({
+            title: 'CQI Master Access',
+            input: 'password',
+            inputLabel: 'Enter Admin Key',
+            inputPlaceholder: 'Password required',
+            showCancelButton: true
+        });
+
+        if (password === 'CQI2026APPRVD') {
+            document.getElementById('tabBtn-cqi').style.display = 'flex';
+            switchAdminTab('cqi');
+            Swal.fire({ icon: 'success', title: 'Unlocked', text: 'CQI Master Settings accessible.', timer: 1500, showConfirmButton: false });
+        } else if (password) {
+            Swal.fire('Access Denied', 'Incorrect master key.', 'error');
+        }
+    }
+
+    async function toggleIssuanceFeature(isEnabled) {
+        issuanceFeatureEnabled = isEnabled;
+        Toast.fire({ icon: 'info', title: 'Updating system settings...' });
+        try {
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', mode: 'no-cors', 
+                body: JSON.stringify({ action: 'updateCQISettings', issuanceEnabled: isEnabled }) 
+            });
+            Toast.fire({ icon: 'success', title: `Issuance Form is now ${isEnabled ? 'ON' : 'OFF'}` });
+        } catch(e) {
+            Swal.fire('Error', 'Could not save setting to database.', 'error');
+        }
+    }
+
+    async function saveDisclaimers() {
+        const pText = document.getElementById('pinkDisclaimerInput').value;
+        const wText = document.getElementById('whiteDisclaimerInput').value;
+        
+        g_pinkDisclaimer = pText;
+        g_whiteDisclaimer = wText;
+
+        Toast.fire({ icon: 'info', title: 'Saving disclaimers...' });
+        try {
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', mode: 'no-cors', 
+                body: JSON.stringify({ 
+                    action: 'updateCQISettings', 
+                    pinkDisclaimer: pText,
+                    whiteDisclaimer: wText
+                }) 
+            });
+            Toast.fire({ icon: 'success', title: `Disclaimers updated!` });
+        } catch(e) {
+            Swal.fire('Error', 'Could not save setting to database.', 'error');
+        }
+    }
+
+    // --- FULL SCREEN DOCUMENT PREVIEW LOGIC ---
+    function openDocPreview(type) {
+        const modal = document.getElementById('docPreviewModal');
+        const container = document.getElementById('docPreviewContainer');
+        const content = document.getElementById('docPreviewContent');
+        
+        let titleHtml = "";
+        let logoFilter = "";
+        let disclaimerText = "";
+        let borderStyle = "";
+        
+        if (type === 'white') {
+            container.style.backgroundColor = "#ffffff";
+            container.style.border = "1px solid #cbd5e1";
+            logoFilter = "";
+            borderStyle = "1px solid black";
+            disclaimerText = g_whiteDisclaimer;
+            titleHtml = `<div style="background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: bold; padding: 6px 15px; border-radius: 4px; display: inline-block; margin-top: 25px; margin-bottom: 20px;"><i class="fas fa-desktop"></i> Original Form Preview (CSR Printout)</div>`;
+        } else {
+            container.style.backgroundColor = "#ffcdd2";
+            container.style.border = "1px solid #ef9a9a";
+            logoFilter = "grayscale(100%) brightness(0)";
+            borderStyle = "1px solid #000000";
+            disclaimerText = g_pinkDisclaimer;
+            titleHtml = `<div style="background-color: #ec4899; color: white; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: bold; padding: 6px 15px; border-radius: 4px; display: inline-block; margin-top: 25px; margin-bottom: 20px;"><i class="fas fa-envelope"></i> Digital Receipt Preview (Email)</div>`;
+        }
+        
+        content.innerHTML = `
+            ${titleHtml}
+            <div class="iss-header">
+                <img src="https://raw.githubusercontent.com/tdmh-cqi/csr2026/main/images/tdmh-logo.png" style="max-height: 70px; margin-bottom: 10px; filter: ${logoFilter};">
+                <h2 class="iss-title">Issuance Form</h2>
+                <p class="iss-subtitle" style="color: black !important;">${disclaimerText}</p>
+            </div>
+            
+            <div class="iss-meta" style="color: black !important;">
+                <div>
+                    <p>Department: <span style="font-weight: normal; text-decoration: underline;">Station 3</span></p>
+                    <p>Request No.: <span style="font-weight: normal; text-decoration: underline;">REQ-2026-0042</span></p>
+                </div>
+                <div style="text-align: right;">
+                    <p>No.: <span style="font-weight: bold; color: red;">ISS-2026-0005</span></p>
+                    <p>Date: <span style="font-weight: normal; text-decoration: underline;">05/20/2026</span></p>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto; width: 100%; margin-bottom: 30px;">
+                <table class="iss-table" style="width: 100%; border-collapse: collapse; min-width: 600px; font-size: 15px; color: black !important;">
+                    <thead>
+                        <tr>
+                            <th style="border: ${borderStyle}; padding: 10px; text-align: center; width:10%;">QTY.</th>
+                            <th style="border: ${borderStyle}; padding: 10px; text-align: center; width:15%;">UNIT</th>
+                            <th style="border: ${borderStyle}; padding: 10px; text-align: left; width:45%;">DESCRIPTION</th>
+                            <th style="border: ${borderStyle}; padding: 10px; text-align: center; width:15%;">UNIT PRICE</th>
+                            <th style="border: ${borderStyle}; padding: 10px; text-align: center; width:15%;">AMOUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="border: ${borderStyle}; padding: 10px; text-align: center;">5</td>
+                            <td style="border: ${borderStyle}; padding: 10px; text-align: center;">box</td>
+                            <td style="border: ${borderStyle}; padding: 10px; text-align: left;">Surgical Face Masks</td>
+                            <td style="border: ${borderStyle}; padding: 10px; text-align: center;">50.00</td>
+                            <td style="border: ${borderStyle}; padding: 10px; text-align: center;">250.00</td>
+                        </tr>
+                        <tr>
+                            <td style="border: ${borderStyle}; padding: 10px; text-align: center;">10</td>
+                            <td style="border: ${borderStyle}; padding: 10px; text-align: center;">pcs</td>
+                            <td style="border: ${borderStyle}; padding: 10px; text-align: left;">IV Cannula G20</td>
+                            <td style="border: ${borderStyle}; padding: 10px; text-align: center;">35.00</td>
+                            <td style="border: ${borderStyle}; padding: 10px; text-align: center;">350.00</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="text-align: right; font-weight: bold; border: none; padding-top: 15px; padding-right: 15px;">TOTAL:</td>
+                            <td style="font-weight: bold; border: 2px solid black; padding-top: 15px; text-align: center;">600.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <div class="iss-footer" style="color: black !important;">
+                <div>
+                    <p style="margin:0 0 10px 0;">Prepared by: <span style="text-decoration: underline;">Sir Emman</span></p>
+                    <p style="margin:0; font-style: italic; font-size: 13px;">"Received goods in good condition."</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin:0 0 5px 0;">Received by: <span style="text-decoration: underline;">Nurse Joy</span></p>
+                    <p style="margin: 5px 0 0 0; font-size: 12px; font-style: italic;">(Signed Electronically)</p>
+                    <div style="border: 1px solid #000; width: 250px; height: 80px; margin-top: 5px; position: relative; background: transparent; display: inline-block;">
+                        <span style="font-family: 'Brush Script MT', cursive; font-size: 32px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-5deg); color: #000080;">Nurse Joy</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'flex';
+    }
+
+    function closeDocPreview(event) {
+        if (event && event.target.id !== 'docPreviewModal' && event.target.tagName !== 'BUTTON' && event.target.tagName !== 'I') {
+            return;
+        }
+        document.getElementById('docPreviewModal').style.display = 'none';
+    }
+
+    // --- OPTIMIZED SMOOTH "PEEL AWAY" DARK MODE (BIDIRECTIONAL FIX) ---
+    function initAdminTheme() {
+        const savedTheme = localStorage.getItem('csrAdminTheme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.getElementById('adminThemeIcon').classList.replace('fa-moon', 'fa-sun');
+        }
+    }
+
+    function toggleAdminTheme(event) {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        if (!document.startViewTransition) { 
+            executeThemeSwitch(!isDark); 
+            return; 
+        }
+        
+        const x = event?.clientX ?? window.innerWidth / 2;
+        const y = event?.clientY ?? window.innerHeight / 2;
+        const endRadius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+        
+        const transition = document.startViewTransition(() => executeThemeSwitch(!isDark));
+        
+        transition.ready.then(() => {
+            const clipPath = [ 
+                `circle(0px at ${x}px ${y}px)`, 
+                `circle(${endRadius}px at ${x}px ${y}px)` 
+            ];
+            
+            // Fix: ensure the new theme always expands outwards from the click
+            document.documentElement.animate(
+                { clipPath: clipPath },
+                { 
+                    duration: 500, 
+                    easing: 'ease-in-out', 
+                    pseudoElement: '::view-transition-new(root)' 
+                }
+            );
+        });
+    }
+
+    function executeThemeSwitch(toDark) {
+        const icon = document.getElementById('adminThemeIcon');
+        if (toDark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('csrAdminTheme', 'dark');
+            icon.classList.replace('fa-moon', 'fa-sun');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('csrAdminTheme', 'light');
+            icon.classList.replace('fa-sun', 'fa-moon');
+        }
+        if(currentAdminTab === 'analytics') {
+            setTimeout(() => { renderAnalytics(); renderYearlyAnalytics(); }, 10);
+        }
+    }
 
     window.addEventListener('DOMContentLoaded', () => {
-        fetchDepartments(); 
+        initAdminTheme();
+        fetchDepartments();
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
         if (window.innerWidth <= 1024) {
             if (sidebar) sidebar.classList.add('hidden');
             if (mainContent) mainContent.classList.add('expanded');
-            isMenuLocked = false;
-        } else {
-            if (sidebar) sidebar.classList.remove('hidden');
-            if (mainContent) mainContent.classList.remove('expanded');
-            isMenuLocked = true;
         }
+        const canvas = document.getElementById('issSigPad');
+        if(canvas) issPad = new SignaturePad(canvas, { backgroundColor: 'rgb(255, 255, 255)' }); 
     });
 
     async function fetchDepartments() {
         try {
             const res = await fetch(`${SCRIPT_URL}?action=getDepartments`);
-            if (!res.ok) throw new Error("Network issue");
+            if(!res.ok) return;
             const text = await res.text();
-            if (!text) throw new Error("Empty response");
-            
             const depts = JSON.parse(text);
             const sel = document.getElementById('filterDept');
-            
             if (sel && Array.isArray(depts) && depts.length > 0) {
                 sel.innerHTML = '<option value="">All Departments</option>';
                 depts.forEach(d => sel.innerHTML += `<option value="${d}">${d}</option>`);
             }
-        } catch(e) { 
-            const sel = document.getElementById('filterDept');
-            if (sel && sel.options.length <= 1) {
-                const defaults = [
-                    "Accounting", "Admin", "Admitting", "APE/YAKAP", "Billing", "Cashier", 
-                    "CQI", "ER", "HMO", "HOMES", "General Services", "HR", "IT", 
-                    "Laboratory", "Medical Record", "NICU", "NSO", "OH Nurse", "OPD", 
-                    "OR", "Pharmacy", "PhilHealth", "Radiology/XRay", "Releasing", 
-                    "Security", "Social Service", "Station 3", "Station 4B", "Station 5A", 
-                    "Station 5B", "Training & Development", "Ultrasound"
-                ];
-                sel.innerHTML = '<option value="">All Departments</option>';
-                defaults.forEach(d => sel.innerHTML += `<option value="${d}">${d}</option>`);
-            }
-        }
+        } catch(e) {}
     }
 
     function toggleSidebarLock() {
         const sidebar = document.getElementById('sidebar');
         const main = document.getElementById('mainContent');
-        
         if (sidebar && sidebar.classList.contains('hidden')) {
             sidebar.classList.remove('hidden');
             if(main) main.classList.remove('expanded');
-            isMenuLocked = true;
         } else {
             if(sidebar) sidebar.classList.add('hidden');
             if(main) main.classList.add('expanded');
-            isMenuLocked = false;
         }
     }
 
-    setInterval(() => {
-        let ptDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Los_Angeles"}));
-        let nextMidnight = new Date(ptDate);
-        nextMidnight.setHours(24, 0, 0, 0);
-        let diff = nextMidnight - ptDate;
-        let h = Math.floor(diff / (1000 * 60 * 60));
-        let m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        let s = Math.floor((diff % (1000 * 60)) / 1000);
-        const timerEl = document.getElementById('resetTimer');
-        if (timerEl) timerEl.innerText = `${h}h ${m}m ${s}s`;
-    }, 1000);
-
     async function login() {
         const passInput = document.getElementById('adminPass')?.value;
-        if (!passInput) return Swal.fire('Required', 'Please enter a password', 'warning');
-
+        if (!passInput) return;
         Swal.fire({ title: 'Authenticating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
         try {
             const res = await fetch(`${SCRIPT_URL}?action=verifyPassword&pass=${encodeURIComponent(passInput)}`);
             const data = await res.json();
-
             if (data.success) {
                 Swal.fire({ icon: 'success', title: 'Access Granted!', showConfirmButton: false, timer: 1000 });
                 updateQuotaDisplay(data.quota);
-
                 setTimeout(() => {
-                    const overlay = document.getElementById('loginOverlay');
-                    if (overlay) overlay.style.opacity = '0';
-                    setTimeout(() => {
-                        setDisplay('loginOverlay', 'none');
-                        setDisplay('mainContent', 'block');
-                        fetchData();
-                    }, 400);
+                    document.getElementById('loginOverlay').style.opacity = '0';
+                    setTimeout(() => { setDisplay('loginOverlay', 'none'); setDisplay('mainContent', 'block'); fetchData(); }, 400);
                 }, 1000);
             } else {
-                Swal.fire({ icon: 'error', title: 'Invalid Password', text: 'The credentials provided are incorrect. Please try again.' });
-                const passField = document.getElementById('adminPass');
-                if (passField) passField.value = '';
+                Swal.fire({ icon: 'error', title: 'Invalid Password' });
+                document.getElementById('adminPass').value = '';
             }
-        } catch (e) {
-            Swal.fire('Error', 'Could not connect to server.', 'error');
-        }
+        } catch (e) { Swal.fire('Error', 'Could not connect.', 'error'); }
     }
 
     function updateQuotaDisplay(quota) {
         const qCount = document.getElementById('quotaCount');
-        if(qCount) {
-            qCount.innerText = quota;
-            qCount.className = quota <= 10 ? "critical" : "";
-            if (quota === 0) Swal.fire('Email Limit Reached', 'Google has hit the daily limit. You must call departments manually until the timer resets.', 'warning');
+        if(qCount) { 
+            qCount.innerText = quota; 
+            qCount.className = quota <= 10 ? "critical" : ""; 
         }
     }
 
     function switchAdminTab(tab) {
         currentAdminTab = tab;
-        ['active', 'archive', 'disapproved', 'analytics'].forEach(t => {
+        ['active', 'archive', 'disapproved', 'analytics', 'cqi'].forEach(t => {
             const btn = document.getElementById('tabBtn-' + t);
             if (btn) btn.classList.remove('active');
         });
         
         const activeBtn = document.getElementById('tabBtn-' + tab);
-        if (activeBtn) activeBtn.classList.add('active');
-
+        if(activeBtn) activeBtn.classList.add('active');
+        
         if(window.innerWidth <= 1024) toggleSidebarLock();
 
+        const title = document.getElementById('pageTitle');
+        
+        setDisplay('dataViewSection', 'none');
+        setDisplay('analyticsSection', 'none');
+        setDisplay('cqiSection', 'none');
+        
         if(tab === 'analytics') {
-            const title = document.getElementById('pageTitle');
-            if (title) title.innerText = 'Analytics & Execomm Reports';
-            setDisplay('dataViewSection', 'none');
+            title.innerText = 'Analytics & Execomm Reports';
             setDisplay('analyticsSection', 'block');
             setDisplay('btnExportActive', 'none'); 
             
-            const monthEl = document.getElementById('analyticsMonth');
-            if(monthEl && !monthEl.value) {
+            const mSel = document.getElementById('analyticsMonthSelect');
+            const ySel = document.getElementById('analyticsYearSelect');
+            const yCompSel = document.getElementById('yearlyCompareYearSelect');
+            if(mSel && !mSel.dataset.init) {
                 let now = new Date();
-                let m = String(now.getMonth()+1).padStart(2, '0');
-                monthEl.value = `${now.getFullYear()}-${m}`;
+                mSel.value = String(now.getMonth()+1).padStart(2, '0');
+                ySel.value = String(now.getFullYear());
+                yCompSel.value = String(now.getFullYear());
+                mSel.dataset.init = "true";
             }
-            renderAnalytics(); // Re-render charts when opening tab
-        } else {
+            renderAnalytics(); 
+            renderYearlyAnalytics();
+        } 
+        else if (tab === 'cqi') {
+            title.innerText = 'CQI Master Setup';
+            setDisplay('cqiSection', 'block');
+            setDisplay('btnExportActive', 'none');
+        }
+        else {
             setDisplay('dataViewSection', 'block');
-            setDisplay('analyticsSection', 'none');
             setDisplay('btnExportActive', 'inline-block');
-            
-            const title = document.getElementById('pageTitle');
-            
             if(tab === 'archive') {
-                if (title) title.innerText = 'Completed Requisitions';
+                title.innerText = 'Completed Requisitions';
                 setDisplay('statsGrid', 'none');
                 setDisplay('filterStatusGroup', 'none');
             } else if (tab === 'disapproved') {
-                if (title) title.innerText = 'Disapproved Requisitions';
+                title.innerText = 'Disapproved Requisitions';
                 setDisplay('statsGrid', 'none');
                 setDisplay('filterStatusGroup', 'none');
             } else {
-                if (title) title.innerText = 'Active Requisitions';
+                title.innerText = 'Active Requisitions';
                 setDisplay('statsGrid', 'grid');
                 setDisplay('filterStatusGroup', 'flex');
             }
@@ -653,193 +1752,71 @@
         setDisplay('loadingState', 'block');
         const tbody = document.getElementById('tableBody');
         if (tbody) tbody.innerHTML = ''; 
-        
         try {
             const res = await fetch(`${SCRIPT_URL}?action=getRequests`);
             const responseData = await res.json();
-            allData = responseData.data;
-            updateQuotaDisplay(responseData.quota);
-            allData.sort((a, b) => b.id - a.id);
+            
+            // Set the master toggle state and disclaimers from backend
+            issuanceFeatureEnabled = responseData.issuanceEnabled === true;
+            document.getElementById('issuanceMasterToggle').checked = issuanceFeatureEnabled;
+
+            if (responseData.pinkDisclaimer) {
+                g_pinkDisclaimer = responseData.pinkDisclaimer;
+                document.getElementById('pinkDisclaimerInput').value = g_pinkDisclaimer;
+                document.getElementById('prevPinkDisclaimerThumb').innerText = g_pinkDisclaimer;
+            }
+            if (responseData.whiteDisclaimer) {
+                g_whiteDisclaimer = responseData.whiteDisclaimer;
+                document.getElementById('whiteDisclaimerInput').value = g_whiteDisclaimer;
+                document.getElementById('prevWhiteDisclaimerThumb').innerText = g_whiteDisclaimer;
+            }
+
+            allData = responseData.data.sort((a, b) => b.id - a.id);
+            if(document.getElementById('quotaCount')) document.getElementById('quotaCount').innerText = responseData.quota;
+            
             updateStats(allData);
-            if(currentAdminTab === 'analytics') renderAnalytics();
-            else applyFilters();
-        } catch (e) {
-            Toast.fire({ icon: 'error', title: 'Failed to load data' });
-        } finally {
-            setDisplay('loadingState', 'none');
-        }
+            
+            if(currentAdminTab === 'analytics') {
+                renderAnalytics();
+                renderYearlyAnalytics();
+            } else if (currentAdminTab !== 'cqi') {
+                applyFilters();
+            }
+        } catch (e) {} finally { setDisplay('loadingState', 'none'); }
     }
 
     function updateStats(data) {
         const active = data.filter(r => r.status !== 'Completed' && r.status !== 'Disapproved');
-        
-        const elTotal = document.getElementById('statTotal');
-        const elPending = document.getElementById('statPending');
-        const elPartial = document.getElementById('statPartial');
-        const elForRel = document.getElementById('statForReleasing');
-        
-        if (elTotal) elTotal.innerText = active.length;
-        if (elPending) elPending.innerText = active.filter(r => r.status === 'Pending' || r.receivedBy !== '').length;
-        if (elPartial) elPartial.innerText = active.filter(r => r.status === 'Partial Release').length;
-        if (elForRel) elForRel.innerText = active.filter(r => r.status === 'For Release').length;
+        if (document.getElementById('statTotal')) document.getElementById('statTotal').innerText = active.length;
+        if (document.getElementById('statPending')) document.getElementById('statPending').innerText = active.filter(r => r.status === 'Pending' || r.receivedBy !== '').length;
+        if (document.getElementById('statPartial')) document.getElementById('statPartial').innerText = active.filter(r => r.status === 'Partial Release').length;
+        if (document.getElementById('statForReleasing')) document.getElementById('statForReleasing').innerText = active.filter(r => r.status === 'For Release').length;
     }
 
     function viewFullImage(src) {
         if(!src || src.length < 20) return;
-        Swal.fire({ imageUrl: src, imageAlt: 'Visual Preview', width: 'auto', showCloseButton: true, showConfirmButton: false, backdrop: `rgba(0,0,10,0.85)` });
+        Swal.fire({ imageUrl: src, imageAlt: 'Preview', width: 'auto', showCloseButton: true, showConfirmButton: false, backdrop: `rgba(0,0,10,0.85)` });
     }
 
     window.fillNote = function(id, text) {
         const el = document.getElementById(id);
-        if(el) {
-            el.value = text;
-            Toast.fire({icon: 'success', title: `Note updated: ${text}`});
+        if(el) { 
+            el.value = text; 
+            Toast.fire({icon: 'success', title: `Note updated`}); 
         }
     };
-
-    function openItemsChecklist(id) {
-        const row = allData.find(r => r.id == id);
-        if (!row) return;
-        
-        const items = String(row.items || '').split('|').map(i => i.trim());
-        const qtys = String(row.qtys || '').split('|').map(i => i.trim());
-        const photosArr = String(row.photo || '').split('|').map(p => p.trim());
-        const checkedArr = row.checkedItems ? String(row.checkedItems).split('|') : new Array(items.length).fill('false');
-        const notesArr = row.itemNotes ? String(row.itemNotes).split('|') : new Array(items.length).fill('');
-
-        let priorityColor = row.priority === 'Urgent' ? '#dc2626' : '#64748b';
-
-        let html = `
-            <div style="display:flex; flex-wrap:wrap; gap:15px; text-align:left; margin-bottom:20px; background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #e2e8f0;">
-                <div style="flex:1; font-size:15px; line-height:1.6; min-width:250px;">
-                    <h4 style="margin:0 0 10px 0; color:#0f172a; font-size:18px;">Request #${row.id}</h4>
-                    <div><strong>Requester:</strong> ${row.reqBy}</div>
-                    <div><strong>Dept:</strong> ${row.dept}</div>
-                    <div><strong>Priority:</strong> <span style="color:${priorityColor}; font-weight:bold;">${row.priority}</span></div>
-                    <div style="margin-top:10px; color:#475569; font-style:italic; background:#fff; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">Notes: ${row.additionalNotes || 'None'}</div>
-                </div>
-            </div>
-            
-            <div style="text-align:left; max-height:450px; overflow-y:auto; padding-right:5px;">
-        `;
-        
-        let releasedCount = 0;
-        let interactiveItemsHtml = '';
-
-        items.forEach((item, idx) => {
-            if(item) {
-                // Critical QoL feature: Hide completely if it's already released in a Partial status.
-                let isHidden = (row.status === 'Partial Release' && checkedArr[idx] === 'true');
-                
-                if (isHidden) {
-                    releasedCount++;
-                    // We must retain the hidden inputs so `saveChecklistAndStatus` doesn't clear them out.
-                    interactiveItemsHtml += `
-                        <div style="display: none;">
-                            <input type="checkbox" id="itemchk-${id}-${idx}" checked>
-                            <input type="hidden" id="itemnote-${id}-${idx}" value="${notesArr[idx] || ''}">
-                        </div>
-                    `;
-                } else {
-                    const isChecked = checkedArr[idx] === 'true' ? 'checked' : '';
-                    let imgHtml = photosArr[idx] && photosArr[idx].startsWith('data:image') 
-                        ? `<img src="${photosArr[idx]}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer; margin-right:15px;" onclick="viewFullImage('${photosArr[idx]}')">` 
-                        : '';
-
-                    interactiveItemsHtml += `
-                        <div style="padding:15px; background:#fff; border:2px solid #e2e8f0; border-radius:8px; margin-bottom:10px; transition: 0.2s;">
-                            <div style="display:flex; align-items:center;">
-                                <input type="checkbox" id="itemchk-${id}-${idx}" style="width:24px; height:24px; cursor:pointer; margin-right:15px;" ${isChecked}>
-                                ${imgHtml}
-                                <label for="itemchk-${id}-${idx}" style="cursor:pointer; flex:1; margin:0; font-size:16px; text-align:left; font-weight:500;">
-                                    <strong>${qtys[idx] || '-'}x</strong> ${item}
-                                </label>
-                            </div>
-                            <div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">
-                                <input type="text" id="itemnote-${id}-${idx}" placeholder="Specific note for this item (e.g. Out of stock)" value="${notesArr[idx] || ''}" style="padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; width:100%;">
-                                <div style="display:flex; gap:5px;">
-                                    <button onclick="fillNote('itemnote-${id}-${idx}', 'Out of Stock')" class="qf-btn">Out of Stock</button>
-                                    <button onclick="fillNote('itemnote-${id}-${idx}', 'Wait for Delivery')" class="qf-btn">Wait for Delivery</button>
-                                    <button onclick="fillNote('itemnote-${id}-${idx}', 'Substituted brand')" class="qf-btn">Substituted</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-        });
-
-        // Show a helpful badge if items were hidden
-        if (releasedCount > 0) {
-            html += `<div style="background: #e8f5e9; border: 1px solid #c8e6c9; color: #2e7d32; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; font-weight: bold;"><i class="fas fa-check-circle"></i> ${releasedCount} item(s) previously marked as released are hidden from this view.</div>`;
-        }
-
-        html += `<p style="font-size:15px; color:#0f172a; margin-bottom:15px; font-weight:700;">Select READY items and add specific notes if needed:</p>`;
-        html += interactiveItemsHtml;
-        
-        html += `
-            </div>
-            <div style="margin-top:30px; display:flex; flex-direction:column; gap:12px; border-top: 2px solid #e2e8f0; padding-top: 20px;">
-                <button onclick="saveChecklistAndStatus(${id}, ${items.length}, 'For Release')" class="save-btn" style="background:#0288d1; padding: 18px; font-size: 16px; width: 100%;">✅ SAVE & SET TO "FOR RELEASE (FULL)"</button>
-                <button onclick="saveChecklistAndStatus(${id}, ${items.length}, 'Partial Release')" class="save-btn" style="background:#8b5cf6; padding: 18px; font-size: 16px; width: 100%;">⚠️ SAVE & SET TO "PARTIAL RELEASE"</button>
-                <button onclick="saveChecklistAndStatus(${id}, ${items.length}, null)" class="save-btn" style="background:#002147; padding: 18px; font-size: 16px; width: 100%;">💾 SAVE CHECKLIST & NOTES ONLY</button>
-                <button onclick="Swal.close()" class="save-btn" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding: 15px; font-size: 16px; width: 100%;">Cancel / Close</button>
-            </div>
-        `;
-
-        Swal.fire({
-            html: html,
-            showConfirmButton: false,
-            width: '850px' 
-        });
-    }
-
-    window.saveChecklistAndStatus = async function(id, arrayLength, newStatusStr) {
-        let newChecked = [];
-        let newNotes = [];
-        for(let i=0; i<arrayLength; i++) {
-            let chk = document.getElementById(`itemchk-${id}-${i}`);
-            let note = document.getElementById(`itemnote-${id}-${i}`);
-            // Works reliably even if the input is wrapped in display:none
-            newChecked.push(chk && chk.checked ? 'true' : 'false');
-            newNotes.push(note ? note.value.replace(/\|/g, '') : ''); 
-        }
-        let checkedStr = newChecked.join('|');
-        let noteStr = newNotes.join('|');
-        
-        Swal.close();
-        Toast.fire({icon: 'info', title: 'Saving & Notifying...'});
-        
-        try {
-            let payload = { id: id, checkedItems: checkedStr, itemNotes: noteStr };
-            
-            if (newStatusStr) {
-                payload.action = 'updateStatus';
-                payload.status = newStatusStr;
-                payload.autoStatusUpdate = true;
-                payload.sendCustomNote = false;
-            } else {
-                payload.action = 'updateChecklist';
-            }
-
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            
-            Toast.fire({icon: 'success', title: newStatusStr ? 'Status Updated & Email Sent!' : 'Checklist & Notes saved!'});
-            fetch(`${SCRIPT_URL}?action=getRequests`).then(r => r.json()).then(d => { updateQuotaDisplay(d.quota); allData = d.data; updateStats(allData); applyFilters(); });
-        } catch(e) {
-            Toast.fire({icon: 'error', title: 'Connection error'});
-        }
-    }
 
     function renderTable(data) {
         const tbody = document.getElementById('tableBody');
         if (!tbody) return;
-        tbody.innerHTML = '';
+        tbody.innerHTML = ''; 
         
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; font-size:15px;">No requests found matching criteria.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; font-size:15px; color: var(--text-muted);">No requests found matching criteria.</td></tr>';
             return;
         }
+
+        const frag = document.createDocumentFragment();
 
         data.forEach(row => {
             const tr = document.createElement('tr');
@@ -853,43 +1830,13 @@
 
             const itemsArr = String(row.items || '').split('|').map(i => i.trim());
             const qtysArr = String(row.qtys || '').split('|').map(i => i.trim());
-            const notesArr = row.itemNotes ? String(row.itemNotes).split('|') : [];
-            const checkedArr = row.checkedItems ? String(row.checkedItems).split('|') : [];
             
             let itemsHtml = '<ul style="margin:0; padding-left:15px; font-size:0.85rem; line-height:1.5;">';
-            let displayCount = 0;
-            let hiddenCount = 0;
-            let partialHiddenCount = 0;
-            
-            for(let i=0; i<itemsArr.length; i++) {
-                if (itemsArr[i]) {
-                    // Logic fix: Hide checked items entirely from main table if Partial Release
-                    if (status === 'Partial Release' && checkedArr[i] === 'true') {
-                        partialHiddenCount++;
-                        continue;
-                    }
-
-                    if (displayCount < 3) {
-                        let n = notesArr[i] ? ` <br><span style="color:#d97706; font-size:11px; background: #fffbeb; padding: 2px 4px; border-radius: 3px;">Note: ${notesArr[i]}</span>` : '';
-                        itemsHtml += `<li style="margin-bottom: 4px;"><b>${qtysArr[i]||'-'}x</b> ${itemsArr[i]}${n}</li>`;
-                        displayCount++;
-                    } else {
-                        hiddenCount++;
-                    }
-                }
+            for(let i=0; i<Math.min(itemsArr.length, 3); i++) {
+                if (itemsArr[i]) itemsHtml += `<li><b>${qtysArr[i]||'-'}x</b> ${itemsArr[i]}</li>`;
             }
             itemsHtml += '</ul>';
-            
-            if(hiddenCount > 0) {
-                itemsHtml += `<div style="font-size:11px; color:#888; margin-top:5px; margin-left:15px;">+ ${hiddenCount} more pending...</div>`;
-            }
-            
-            // Indicator for hidden released items
-            if(partialHiddenCount > 0) {
-                itemsHtml += `<div style="font-size:11px; color:#2e7d32; margin-top:6px; margin-left:15px; background: #e8f5e9; padding: 4px 8px; border-radius: 4px; display: inline-block;"><i class="fas fa-check-circle"></i> ${partialHiddenCount} item(s) already released</div>`;
-            }
-            
-            itemsHtml += `<button class="btn-items" onclick="openItemsChecklist(${row.id})"><i class="fas fa-list-check"></i> View Full List & Notes</button>`;
+            if(itemsArr.length > 3) itemsHtml += `<div style="font-size:11px; color:var(--text-muted); margin-left:15px;">+ ${itemsArr.length - 3} more...</div>`;
 
             const firstPhoto = String(row.photo || "").split('|').map(p => p.trim()).find(p => p.startsWith('data:image'));
             const sigHod = (row.sigHod && String(row.sigHod).startsWith('data:image')) ? row.sigHod : "";
@@ -901,6 +1848,8 @@
             if (currentAdminTab === 'active') {
                 actionHtml = `
                     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 12px;">
+                        <button onclick="openIssuanceForm(${row.id})" class="save-btn" style="background:var(--primary-navy); padding: 12px;"><i class="fas fa-file-invoice"></i> Prep Issuance Form</button>
+                        
                         <select class="action-select" id="rec-${row.id}" onchange="updateReceiver(this, ${row.id})">
                             <option value="">-- Assign Receiver --</option>
                             <option value="Sir Emman" ${row.receivedBy === 'Sir Emman' ? 'selected' : ''}>Received by Sir Emman</option>
@@ -920,7 +1869,7 @@
                             <button class="save-btn" onclick="updateRowNote(${row.id}, false)" title="Save note without email">
                                 <i class="fas fa-save"></i> Save
                             </button>
-                            <button class="save-btn" style="background: #0288d1;" onclick="updateRowNote(${row.id}, true)" title="Save & Send Note Email">
+                            <button class="save-btn" style="background: var(--color-forrelease);" onclick="updateRowNote(${row.id}, true)" title="Save & Send Note Email">
                                 <i class="fas fa-paper-plane"></i> Send
                             </button>
                         </div>
@@ -928,10 +1877,10 @@
                 `;
             } else {
                 actionHtml = `
-                    <div style="font-size:14px; color:${currentAdminTab==='archive'?'#2e7d32':'#c62828'}; margin-bottom:15px; font-weight:bold;">
+                    <div style="font-size:14px; color:${currentAdminTab==='archive'?'var(--color-completed)':'var(--color-disapproved)'}; margin-bottom:15px; font-weight:bold;">
                         <i class="fas ${currentAdminTab==='archive'?'fa-check-circle':'fa-ban'}"></i> ${currentAdminTab==='archive'?'Completed':'Disapproved'} Request
                     </div>
-                    <button class="save-btn" style="background: #64748b; padding: 12px;" onclick="restoreRequest(${row.id})" title="Send back to Active panel">
+                    <button class="save-btn" style="background: var(--text-muted); padding: 12px;" onclick="restoreRequest(${row.id})" title="Send back to Active panel">
                         <i class="fas fa-undo"></i> Restore Request
                     </button>
                 `;
@@ -939,25 +1888,20 @@
             
             let displayStatus = status;
             let sClass = "st-" + status.toLowerCase().replace(/\s/g, '');
-            if (status === 'Pending') {
-                if (row.receivedBy) {
-                    displayStatus = "Received";
-                    sClass = "st-received";
-                }
+            if (status === 'Pending' && row.receivedBy) { 
+                displayStatus = "Received"; 
+                sClass = "st-received"; 
             }
 
             tr.innerHTML = `
                 <td>
-                    <strong style="font-size:1.1rem;">#${row.id}</strong><br>
-                    <span style="font-size: 11px; color: #888;">${row.date || ''}</span><br>
-                    <span style="font-size: 11px; color: #888;">${displayTime}</span><br>
+                    <strong style="font-size:1.1rem; color:var(--text-main);">#${row.id}</strong><br>
+                    <span style="font-size: 11px; color: var(--text-muted);">${row.date || ''}</span><br>
+                    <span style="font-size: 11px; color: var(--text-muted);">${displayTime}</span><br>
                     <div style="margin-top:8px; font-weight:700; font-size:0.9rem;">${row.dept || 'N/A'}</div>
-                    <div style="font-size:0.8rem; color:#666">${row.reqBy || 'Unknown'}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">${row.reqBy || 'Unknown'}</div>
                 </td>
                 <td>${itemsHtml}</td>
-                <td>
-                    ${firstPhoto ? `<img src="${firstPhoto}" class="thumb-img" onclick="viewFullImage('${firstPhoto}')">` : '<div class="no-sig-box">NO PHOTO</div>'}
-                </td>
                 <td>
                     <div class="notes-text">"${notes}"</div>
                     <div style="display:flex; flex-wrap: wrap; gap:10px; margin-top:8px; align-items: flex-end;">
@@ -968,27 +1912,31 @@
                 <td style="text-align: center;">
                     <span class="priority-indicator ${row.priority === 'Urgent' ? 'p-urgent' : 'p-regular'}"></span><br>
                     <span id="badge-${row.id}" class="status-badge ${sClass}" style="margin-top: 5px;">${displayStatus}</span><br>
-                    <div id="recv-badge-${row.id}" style="font-size:10px; color:#666; margin-top:6px; font-weight:bold; text-transform:uppercase;">${row.receivedBy ? row.receivedBy : ''}</div>
+                    <div id="recv-badge-${row.id}" style="font-size:10px; color:var(--text-muted); margin-top:6px; font-weight:bold; text-transform:uppercase;">${row.receivedBy ? row.receivedBy : ''}</div>
                 </td>
                 <td>${actionHtml}</td>
             `;
-            tbody.appendChild(tr);
+            frag.appendChild(tr);
         });
+        tbody.appendChild(frag);
     }
 
     async function updateReceiver(selectElement, id) {
         const val = selectElement.value;
         const badge = document.getElementById(`recv-badge-${id}`);
         if(badge) badge.innerText = val || '';
-        Toast.fire({ icon: 'info', title: 'Assigning & notifying...' });
+        Toast.fire({ icon: 'info', title: 'Assigning...' });
         try {
-            await fetch(SCRIPT_URL, {
-                method: 'POST', mode: 'no-cors',
-                body: JSON.stringify({ action: 'updateReceiver', id: id, receivedBy: val })
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ action: 'updateReceiver', id: id, receivedBy: val }) 
             });
             Toast.fire({ icon: 'success', title: 'Receiver assigned & Email sent!' });
-            fetch(`${SCRIPT_URL}?action=getRequests`).then(r => r.json()).then(d => { updateQuotaDisplay(d.quota); allData = d.data; applyFilters(); });
-        } catch (e) { Toast.fire({ icon: 'error', title: 'Connection error.' }); }
+            fetchData();
+        } catch (e) { 
+            Toast.fire({ icon: 'error', title: 'Connection error.' }); 
+        }
     }
 
     async function handleStatusChange(selectElement, id) {
@@ -997,35 +1945,31 @@
         const newRemark = noteEl ? noteEl.value : '';
         
         const badge = document.getElementById('badge-' + id);
-        if(badge) {
-            badge.innerText = newStatus;
-            badge.className = 'status-badge st-' + newStatus.toLowerCase().replace(/\s/g, '');
+        if(badge) { 
+            badge.innerText = newStatus; 
+            badge.className = 'status-badge st-' + newStatus.toLowerCase().replace(/\s/g, ''); 
         }
 
         if (newStatus === 'Completed' || newStatus === 'Disapproved') {
             const tr = document.getElementById(`row-${id}`);
-            if (tr) {
-                tr.classList.add('row-animating');
-                setTimeout(() => { tr.style.display = 'none'; }, 500);
+            if (tr) { 
+                tr.classList.add('row-animating'); 
+                setTimeout(() => { tr.style.display = 'none'; }, 500); 
             }
-            Toast.fire({ icon: 'info', title: `Moving to ${newStatus}...` });
-        } else {
-            Toast.fire({ icon: 'info', title: 'Updating status & notifying...' });
         }
         
+        Toast.fire({ icon: 'info', title: 'Updating status...' });
         try {
-            await fetch(SCRIPT_URL, {
-                method: 'POST', mode: 'no-cors',
-                body: JSON.stringify({ action: 'updateStatus', id: id, status: newStatus, remarks: newRemark, autoStatusUpdate: true, sendCustomNote: false })
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ action: 'updateStatus', id: id, status: newStatus, remarks: newRemark, autoStatusUpdate: true, sendCustomNote: false }) 
             });
-            
-            let successMsg = 'Status updated & Email sent!';
-            if(newStatus === 'Completed') successMsg = 'Request Completed & Archived!';
-            if(newStatus === 'Disapproved') successMsg = 'Request Disapproved & Archived!';
-            
-            Toast.fire({ icon: 'success', title: successMsg });
-            fetch(`${SCRIPT_URL}?action=getRequests`).then(r => r.json()).then(d => { updateQuotaDisplay(d.quota); allData = d.data; updateStats(allData); applyFilters(); });
-        } catch (e) { Toast.fire({ icon: 'error', title: 'Connection error.' }); }
+            Toast.fire({ icon: 'success', title: 'Status updated & Email sent!' });
+            fetchData();
+        } catch (e) { 
+            Toast.fire({ icon: 'error', title: 'Connection error.' }); 
+        }
     }
 
     async function updateRowNote(id, sendCustomNote) {
@@ -1034,52 +1978,60 @@
         const remEl = document.getElementById(`rem-${id}`);
         const newRemark = remEl ? remEl.value : '';
         
-        if (sendCustomNote && !newRemark.trim()) {
-             Swal.fire('Note Required', 'Please type a reason/note before hitting Send.', 'warning');
-             return;
+        if (sendCustomNote && !newRemark.trim()) { 
+            Swal.fire('Note Required', 'Please type a note before hitting Send.', 'warning'); 
+            return; 
         }
 
-        Toast.fire({ icon: 'info', title: sendCustomNote ? 'Sending Custom Note...' : 'Saving Note...' });
-        
+        Toast.fire({ icon: 'info', title: 'Saving Note...' });
         try {
-            await fetch(SCRIPT_URL, {
-                method: 'POST', mode: 'no-cors',
-                body: JSON.stringify({ action: 'updateStatus', id: id, status: newStatus, remarks: newRemark, autoStatusUpdate: false, sendCustomNote: sendCustomNote })
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ action: 'updateStatus', id: id, status: newStatus, remarks: newRemark, autoStatusUpdate: false, sendCustomNote: sendCustomNote }) 
             });
-            Toast.fire({ icon: 'success', title: sendCustomNote ? 'Custom Note Sent!' : 'Saved successfully!' });
+            Toast.fire({ icon: 'success', title: sendCustomNote ? 'Note Sent!' : 'Saved successfully!' });
             let row = allData.find(r => r.id == id);
             if(row) row.remarks = newRemark;
-        } catch (e) { Toast.fire({ icon: 'error', title: 'Connection error.' }); }
+        } catch (e) { 
+            Toast.fire({ icon: 'error', title: 'Connection error.' }); 
+        }
     }
 
     async function restoreRequest(id) {
         const tr = document.getElementById(`row-${id}`);
-        if(tr) {
-            tr.classList.add('row-animating');
-            setTimeout(() => { tr.style.display = 'none'; }, 500);
+        if(tr) { 
+            tr.classList.add('row-animating'); 
+            setTimeout(() => { tr.style.display = 'none'; }, 500); 
         }
-        Toast.fire({ icon: 'info', title: 'Restoring request...' });
-        
+        Toast.fire({ icon: 'info', title: 'Restoring...' });
         try {
-            await fetch(SCRIPT_URL, {
-                method: 'POST', mode: 'no-cors',
-                body: JSON.stringify({ action: 'restoreRequest', id: id })
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ action: 'restoreRequest', id: id }) 
             });
-            Toast.fire({ icon: 'success', title: 'Request Restored to Active panel.' });
-            fetch(`${SCRIPT_URL}?action=getRequests`).then(r => r.json()).then(d => { updateQuotaDisplay(d.quota); allData = d.data; updateStats(allData); applyFilters(); });
-        } catch (e) { Toast.fire({ icon: 'error', title: 'Connection error.' }); }
+            Toast.fire({ icon: 'success', title: 'Restored to Active panel.' });
+            fetchData();
+        } catch (e) { 
+            Toast.fire({ icon: 'error', title: 'Connection error.' }); 
+        }
+    }
+
+    function debouncedApplyFilters() { 
+        clearTimeout(filterTimeout); 
+        filterTimeout = setTimeout(applyFilters, 300); 
     }
 
     function applyFilters() {
         const reqId = document.getElementById('filterId')?.value || "";
         const date = document.getElementById('filterDate')?.value || "";
         const dept = document.getElementById('filterDept')?.value || "";
-        const priority = document.getElementById('filterPriority')?.value || "";
         const itemSearch = (document.getElementById('filterItem')?.value || "").toLowerCase();
         
         let status = "";
-        if (currentAdminTab === 'active') {
-            status = document.getElementById('filterStatusDropdown')?.value || "";
+        if (currentAdminTab === 'active') { 
+            status = document.getElementById('filterStatusDropdown')?.value || ""; 
         }
 
         filteredDataCache = allData.filter(item => {
@@ -1090,69 +2042,274 @@
             const matchId = !reqId || item.id.toString() === reqId;
             const matchDate = !date || item.date === date;
             const matchDept = !dept || (item.dept && item.dept.toLowerCase().includes(dept.toLowerCase()));
-            const matchPri = !priority || item.priority === priority;
             const matchItemSearch = !itemSearch || (item.items && item.items.toLowerCase().includes(itemSearch));
             
             let itemStatus = item.status || 'Pending';
             if (itemStatus === 'Pending' && item.receivedBy) itemStatus = 'Received';
             
             const matchStatus = !status || itemStatus === status;
-            return matchId && matchDate && matchDept && matchPri && matchStatus && matchItemSearch;
+            return matchId && matchDate && matchDept && matchStatus && matchItemSearch;
         });
 
         renderTable(filteredDataCache);
     }
 
-    function resetFilters() {
-        if(document.getElementById('filterId')) document.getElementById('filterId').value = "";
-        if(document.getElementById('filterItem')) document.getElementById('filterItem').value = "";
-        if(document.getElementById('filterDate')) document.getElementById('filterDate').value = "";
-        if(document.getElementById('filterDept')) document.getElementById('filterDept').value = "";
-        if(document.getElementById('filterPriority')) document.getElementById('filterPriority').value = "";
-        if(document.getElementById('filterStatusDropdown')) document.getElementById('filterStatusDropdown').value = "";
-        applyFilters();
+    function resetFilters() { 
+        document.getElementById('filterId').value = ""; 
+        document.getElementById('filterItem').value = ""; 
+        document.getElementById('filterDate').value = ""; 
+        document.getElementById('filterDept').value = ""; 
+        document.getElementById('filterStatusDropdown').value = ""; 
+        applyFilters(); 
     }
 
     function exportFilteredViewToCSV() {
-        if(filteredDataCache.length === 0) return Swal.fire('Empty', 'No data to export on this screen.', 'info');
+        if(filteredDataCache.length === 0) return Swal.fire('Empty', 'No data to export.', 'info');
         
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "ID,Date,Time,Department,Requester,Priority,Status,Received By,Items Requested\r\n";
-        
+        let csvContent = "data:text/csv;charset=utf-8,ID,Date,Time,Department,Requester,Priority,Status,Received By,Items Requested\r\n";
         filteredDataCache.forEach(r => {
             let cleanItems = String(r.items || '').replace(/\|/g, ', ').replace(/"/g, '""');
-            let row = [
-                `"${r.id}"`, `"${r.date}"`, `"${r.time}"`, `"${r.dept}"`, `"${r.reqBy}"`,
-                `"${r.priority}"`, `"${r.status}"`, `"${r.receivedBy || 'Unassigned'}"`, `"${cleanItems}"`
-            ];
-            csvContent += row.join(",") + "\r\n";
+            csvContent += `"${r.id}","${r.date}","${r.time}","${r.dept}","${r.reqBy}","${r.priority}","${r.status}","${r.receivedBy || 'Unassigned'}","${cleanItems}"\r\n`;
         });
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
+        
+        const link = document.createElement("a"); 
+        link.setAttribute("href", encodeURI(csvContent)); 
         link.setAttribute("download", `CSR_Filtered_View_${new Date().getTime()}.csv`);
-        document.body.appendChild(link);
-        link.click();
+        document.body.appendChild(link); 
+        link.click(); 
         document.body.removeChild(link);
     }
 
-    function switchAnalyticsSubTab(subTab) {
-        ['overall', 'pending', 'completed', 'disapproved', 'top10'].forEach(t => {
-            const btn = document.getElementById('anaBtn-' + t);
-            const content = document.getElementById('ana-' + t);
-            if (btn) btn.classList.remove('active');
-            if (content) content.classList.remove('active');
+    // ==========================================
+    // SMART ISSUANCE FORM LOGIC (WITH AUTO-FILL PRICING & MASTER TOGGLE GUARD)
+    // ==========================================
+    async function openIssuanceForm(id) {
+        if (!issuanceFeatureEnabled) {
+            return Swal.fire({
+                icon: 'info',
+                title: 'Feature Unavailable',
+                text: 'The digital Issuance Form feature is currently disabled by CQI Administration. Please deplete physical paper stocks first.',
+                confirmButtonColor: '#002147'
+            });
+        }
+
+        const row = allData.find(r => r.id == id);
+        if (!row) return;
+
+        const reqNoStr = `REQ-${new Date().getFullYear()}-${row.id.toString().padStart(4,'0')}`;
+        currentlyProcessingReqNo = reqNoStr;
+        currentReqEmail = row.email || "";
+
+        Swal.fire({ title: 'Preparing Form...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+        try {
+            const res = await fetch(`${SCRIPT_URL}?action=getIssuanceData&reqNo=${reqNoStr}`);
+            const issData = await res.json();
+            Swal.close();
+
+            document.getElementById('issNo').innerText = issData.newIssuanceNo;
+            document.getElementById('issDept').innerText = row.dept;
+            document.getElementById('issReqNo').innerText = reqNoStr;
+            document.getElementById('issDate').innerText = new Date().toLocaleDateString();
+            
+            // Set the dynamic white disclaimer
+            document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
+            
+            const tbody = document.getElementById('issTableBody');
+            tbody.innerHTML = '';
+
+            const originalItems = String(row.items || '').split('|').map(i => i.trim());
+            const originalQtys = String(row.qtys || '').split('|').map(i => parseInt(i.trim()) || 0);
+
+            originalItems.forEach((item, idx) => {
+                if(item) {
+                    let cleanDesc = item.toUpperCase();
+                    let alreadyIssued = issData.issuedQtyMap[cleanDesc] || 0;
+                    let remainingQty = originalQtys[idx] - alreadyIssued;
+
+                    // Automatically fetch the saved price if we have it
+                    let savedPrice = issData.priceMap[cleanDesc] || "";
+
+                    if (remainingQty > 0) {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><input type="number" class="iss-qty" value="${remainingQty}" min="1" max="${remainingQty}" oninput="calcIssuanceTotal()"></td>
+                            <td><input type="text" class="iss-unit" placeholder="unit"></td>
+                            <td style="text-align: left;">${item}</td>
+                            <td><input type="number" class="iss-price" placeholder="0.00" value="${savedPrice}" oninput="calcIssuanceTotal()"></td>
+                            <td><input type="text" class="iss-amt" value="0.00" readonly style="font-weight:bold; background: transparent; border: none;"></td>
+                            <td class="print-hide th-action"><button class="remove-row-btn" onclick="this.parentElement.parentElement.remove(); calcIssuanceTotal();"><i class="fas fa-trash"></i></button></td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+                }
+            });
+
+            if(tbody.innerHTML === '') { 
+                Swal.fire('Fully Issued', 'All items for this request have already been issued on previous forms.', 'info'); 
+                return; 
+            }
+
+            const prepSel = document.getElementById('issPreparedBy');
+            if (row.receivedBy && (row.receivedBy.includes("Emman") || row.receivedBy.includes("Eruel"))) { 
+                prepSel.value = row.receivedBy; 
+            }
+
+            document.getElementById('issReceivedBy').value = "";
+            if (issPad) issPad.clear();
+            calcIssuanceTotal();
+
+            const modal = document.getElementById('issuanceModal');
+            modal.classList.remove('kiosk-locked');
+            modal.style.display = 'flex';
+            resizeCanvas();
+            
+        } catch(e) { 
+            Swal.fire('Error', 'Failed to generate Form.', 'error'); 
+        }
+    }
+
+    function closeIssuanceForm() {
+        document.getElementById('issuanceModal').style.display = 'none';
+        document.getElementById('issuanceModal').classList.remove('kiosk-locked');
+        if (document.fullscreenElement) document.exitFullscreen().catch(err => console.log(err));
+    }
+
+    function calcIssuanceTotal() {
+        let total = 0;
+        const rows = document.getElementById('issTableBody').querySelectorAll('tr');
+        rows.forEach(tr => {
+            const qty = parseFloat(tr.querySelector('.iss-qty').value) || 0;
+            const price = parseFloat(tr.querySelector('.iss-price').value) || 0;
+            const amt = qty * price;
+            tr.querySelector('.iss-amt').value = amt.toFixed(2);
+            total += amt;
+        });
+        document.getElementById('issTotalAmount').innerText = total.toFixed(2);
+    }
+
+    function resizeCanvas() {
+        const canvas = document.getElementById('issSigPad');
+        if (!canvas || canvas.offsetWidth === 0) return;
+        const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.parentElement.offsetWidth * ratio;
+        canvas.height = canvas.parentElement.offsetHeight * ratio;
+        canvas.getContext("2d").scale(ratio, ratio);
+        
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if(issPad) issPad.clear();
+    }
+    
+    window.addEventListener("resize", () => { 
+        if(document.getElementById('issuanceModal').style.display === 'flex') resizeCanvas(); 
+    });
+
+    function lockKioskMode() {
+        const rows = document.getElementById('issTableBody').querySelectorAll('tr');
+        if (rows.length === 0) return Swal.fire('Empty Form', 'There are no items left on this form.', 'warning');
+        
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) elem.requestFullscreen().catch(err => console.log(err));
+
+        document.getElementById('issuanceModal').classList.add('kiosk-locked');
+        setTimeout(resizeCanvas, 300);
+    }
+
+    async function unlockKiosk() {
+        const { value: password } = await Swal.fire({ 
+            title: 'Admin Unlock Required', 
+            input: 'password', 
+            inputPlaceholder: 'Enter PIN', 
+            showCancelButton: true 
         });
         
-        const activeBtn = document.getElementById('anaBtn-' + subTab);
-        const activeContent = document.getElementById('ana-' + subTab);
-        if (activeBtn) activeBtn.classList.add('active');
-        if (activeContent) activeContent.classList.add('active');
+        if (password) {
+            Swal.fire({ title: 'Verifying...', didOpen: () => Swal.showLoading() });
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=verifyPassword&pass=${encodeURIComponent(password)}`);
+                const data = await res.json();
+                if (data.success) { 
+                    Swal.close(); 
+                    closeIssuanceForm(); 
+                } else { 
+                    Swal.fire('Incorrect PIN', 'Device remains locked.', 'error'); 
+                }
+            } catch (e) { 
+                Swal.fire('Error', 'Connection issue. Try again.', 'error'); 
+            }
+        }
+    }
+
+    async function submitIssuanceForm() {
+        if (!issPad || issPad.isEmpty()) return Swal.fire('Missing Signature', 'Please sign the pad to confirm receipt.', 'warning');
+        
+        const receivedBy = document.getElementById('issReceivedBy').value;
+        if (!receivedBy.trim()) return Swal.fire('Missing Name', 'Please type your full name.', 'warning');
+
+        Swal.fire({ title: 'Processing Receipt...', html: 'Please wait...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+        let itemsData = [];
+        const rows = document.getElementById('issTableBody').querySelectorAll('tr');
+        rows.forEach(tr => {
+            itemsData.push({
+                qty: tr.querySelector('.iss-qty').value,
+                unit: tr.querySelector('.iss-unit').value,
+                desc: tr.cells[2].innerText,
+                price: tr.querySelector('.iss-price').value,
+                amount: tr.querySelector('.iss-amt').value
+            });
+        });
+
+        const payload = {
+            action: 'saveIssuance',
+            issuanceNo: document.getElementById('issNo').innerText,
+            reqNo: currentlyProcessingReqNo,
+            reqEmail: currentReqEmail,
+            date: document.getElementById('issDate').innerText,
+            dept: document.getElementById('issDept').innerText,
+            preparedBy: document.getElementById('issPreparedBy').value,
+            receivedBy: receivedBy,
+            totalAmount: document.getElementById('issTotalAmount').innerText,
+            itemsJson: JSON.stringify(itemsData),
+            signature: issPad.toDataURL()
+        };
+
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            Swal.fire({ 
+                icon: 'success', 
+                title: 'Thank You!', 
+                text: 'Receipt saved. A digital copy has been sent to your department.', 
+                timer: 3000, 
+                showConfirmButton: false 
+            }).then(() => { closeIssuanceForm(); });
+        } catch(e) { 
+            Swal.fire('Error', 'Could not save the issuance form.', 'error'); 
+        }
+    }
+
+    // ==========================================
+    // ANALYTICS LOGIC 
+    // ==========================================
+    function switchAnalyticsSubTab(subTab) {
+        ['overall', 'pending', 'completed', 'disapproved', 'top10', 'yearly'].forEach(t => {
+            document.getElementById('anaBtn-' + t)?.classList.remove('active');
+            document.getElementById('ana-' + t)?.classList.remove('active');
+        });
+        document.getElementById('anaBtn-' + subTab).classList.add('active');
+        document.getElementById('ana-' + subTab).classList.add('active');
+        
+        if(subTab === 'yearly') {
+            renderYearlyAnalytics();
+        }
     }
 
     window.viewDeptAnalytics = function(dept, statusFilter) {
-        const monthVal = document.getElementById('analyticsMonth')?.value; 
+        const m = document.getElementById('analyticsMonthSelect').value;
+        const y = document.getElementById('analyticsYearSelect').value;
+        const monthVal = `${y}-${m}`; 
         
         const filtered = allData.filter(r => {
             if (!r.date || !r.date.startsWith(monthVal) || r.dept !== dept) return false;
@@ -1164,36 +2321,34 @@
         });
         
         let html = `<div style="text-align:left; max-height:450px; overflow-y:auto; padding:5px;">`;
+        
         if(filtered.length === 0) {
-            html += `<p style="text-align:center; padding:20px; color:#666;">No items found.</p>`;
+            html += `<p style="text-align:center; padding:20px; color:var(--text-muted);">No items found.</p>`;
         } else {
             filtered.forEach(r => {
                 const itemsArr = String(r.items || '').split('|').map(i => i.trim());
                 const qtysArr = String(r.qtys || '').split('|').map(i => i.trim());
-                const photosArr = String(r.photo || '').split('|').map(p => p.trim());
-                const notesArr = r.itemNotes ? String(r.itemNotes).split('|').map(n => n.trim()) : [];
-                
                 let displayStatus = r.status || 'Pending';
+                
                 if (displayStatus === 'Pending' && r.receivedBy) displayStatus = 'Received';
                 
-                html += `<div style="background:#f8fafc; padding:20px; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:20px;">
-                            <h5 style="margin:0 0 12px 0; color:#0f172a; font-size: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
-                                Request #${r.id} <span style="color:#64748b; font-size:13px; font-weight:normal; margin-left:10px;">${r.date} • <span style="font-weight:bold; color:#0288d1;">${displayStatus}</span></span>
-                            </h5>
-                            <div style="display:flex; flex-direction:column;">`;
+                html += `
+                    <div style="background:var(--input-bg); padding:20px; border:1px solid var(--border-color); border-radius:12px; margin-bottom:20px;">
+                        <h5 style="margin:0 0 12px 0; color:var(--text-main); font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                            Request #${r.id} <span style="color:var(--text-muted); font-size:13px; font-weight:normal; margin-left:10px;">${r.date} • <span style="font-weight:bold; color:var(--color-forrelease);">${displayStatus}</span></span>
+                        </h5>
+                        <div style="display:flex; flex-direction:column;">
+                `;
                 
                 itemsArr.forEach((item, idx) => {
                     if(item) {
-                        let imgHtml = photosArr[idx] && photosArr[idx].startsWith('data:image') ? `<img src="${photosArr[idx]}" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer; margin-right:15px;" onclick="viewFullImage('${photosArr[idx]}')">` : '';
-                        let noteHtml = notesArr[idx] ? `<div style="color:#d97706; font-size:12px; font-style:italic; margin-top:4px;">Note: ${notesArr[idx]}</div>` : '';
-                        
-                        html += `<div style="display:flex; align-items:center; padding:12px 15px; background:#fff; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px;">
-                                    ${imgHtml}
-                                    <div style="flex:1; text-align:left; line-height:1.4;">
-                                        <span style="font-size:15px; font-weight:500; color:#0f172a;"><strong>${qtysArr[idx] || '-'}x</strong> ${item}</span>
-                                        ${noteHtml}
-                                    </div>
-                                 </div>`;
+                        html += `
+                            <div style="display:flex; align-items:center; padding:12px 15px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; margin-bottom:8px;">
+                                <div style="flex:1; text-align:left; line-height:1.4;">
+                                    <span style="font-size:15px; font-weight:500; color:var(--text-main);"><strong>${qtysArr[idx] || '-'}x</strong> ${item}</span>
+                                </div>
+                             </div>
+                        `;
                     }
                 });
                 html += `</div></div>`;
@@ -1202,230 +2357,321 @@
         html += `</div>`;
 
         Swal.fire({
-            title: `${dept} (${statusFilter === 'All' ? 'Overall' : statusFilter})`,
+            title: `<span style="color: var(--text-main);">${dept} (${statusFilter === 'All' ? 'Overall' : statusFilter})</span>`,
             html: html,
+            background: 'var(--bg-card)',
             confirmButtonText: 'Close',
-            confirmButtonColor: '#002147',
+            confirmButtonColor: 'var(--primary-navy)',
             width: '700px'
         });
     }
 
     function renderAnalytics() {
-        const monthVal = document.getElementById('analyticsMonth')?.value; 
-        if(!monthVal) return;
+        const m = document.getElementById('analyticsMonthSelect').value;
+        const y = document.getElementById('analyticsYearSelect').value;
+        const monthVal = `${y}-${m}`; 
 
         const filtered = allData.filter(r => r.date && r.date.startsWith(monthVal));
         
-        let totalRequests = filtered.length;
-        let totalItemsProcessed = 0;
-        let totalCompleted = 0;
-        let totalDisapproved = 0;
+        let totalRequests = filtered.length; 
+        let totalItemsProcessed = 0; 
+        let totalCompleted = 0; 
+        let totalDisapproved = 0; 
         let totalPending = 0;
         
         const deptStats = {};
         
-        // Process Main Loops
         filtered.forEach(r => {
             let d = r.dept || 'Unknown';
             if(!deptStats[d]) deptStats[d] = { pending:0, completed:0, disapproved:0 };
             
-            if(r.status === 'Completed') {
-                deptStats[d].completed++;
-                totalCompleted++;
-            }
-            else if(r.status === 'Disapproved') {
-                deptStats[d].disapproved++;
-                totalDisapproved++;
-            }
-            else {
-                deptStats[d].pending++;
-                totalPending++;
-            }
+            if(r.status === 'Completed') { deptStats[d].completed++; totalCompleted++; }
+            else if(r.status === 'Disapproved') { deptStats[d].disapproved++; totalDisapproved++; }
+            else { deptStats[d].pending++; totalPending++; }
         });
 
-        // Update KPI Cards
         document.getElementById('kpiTotalReq').innerText = totalRequests;
         let completionRate = totalRequests > 0 ? Math.round((totalCompleted / totalRequests) * 100) : 0;
         document.getElementById('kpiCompRate').innerText = `${completionRate}%`;
 
-        // Tables Processing
-        const dBody = document.getElementById('deptSummaryBody');
-        const pBody = document.getElementById('pendingBody');
-        const cBody = document.getElementById('completedBody');
+        const dBody = document.getElementById('deptSummaryBody'); 
+        const pBody = document.getElementById('pendingBody'); 
+        const cBody = document.getElementById('completedBody'); 
         const xBody = document.getElementById('disappBody');
         
-        if (dBody) dBody.innerHTML = '';
-        if (pBody) pBody.innerHTML = '';
-        if (cBody) cBody.innerHTML = '';
+        if (dBody) dBody.innerHTML = ''; 
+        if (pBody) pBody.innerHTML = ''; 
+        if (cBody) cBody.innerHTML = ''; 
         if (xBody) xBody.innerHTML = '';
 
         const depts = Object.keys(deptStats).sort();
-        
-        let chartDeptLabels = [];
+        let chartDeptLabels = []; 
         let chartDeptData = [];
 
         if(depts.length === 0) {
             const noData = '<tr><td colspan="5" align="center" style="padding: 20px;">No data for this month.</td></tr>';
             const noData2 = '<tr><td colspan="2" align="center" style="padding: 20px;">No data for this month.</td></tr>';
-            if(dBody) dBody.innerHTML = noData;
-            if(pBody) pBody.innerHTML = noData2;
-            if(cBody) cBody.innerHTML = noData2;
+            if(dBody) dBody.innerHTML = noData; 
+            if(pBody) pBody.innerHTML = noData2; 
+            if(cBody) cBody.innerHTML = noData2; 
             if(xBody) xBody.innerHTML = noData2;
         } else {
+            const dFrag = document.createDocumentFragment(); 
+            const pFrag = document.createDocumentFragment(); 
+            const cFrag = document.createDocumentFragment(); 
+            const xFrag = document.createDocumentFragment();
+            
             depts.forEach(d => {
-                const s = deptStats[d];
+                const s = deptStats[d]; 
                 let t = s.pending + s.completed + s.disapproved;
-                
-                chartDeptLabels.push(d);
+                chartDeptLabels.push(d); 
                 chartDeptData.push(t);
-
-                if (dBody) dBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'All')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td>${s.pending}</td><td style="color:#2e7d32; font-weight:bold;">${s.completed}</td><td style="color:#c62828;">${s.disapproved}</td><td>${t}</td></tr>`;
                 
-                if (pBody && s.pending > 0) pBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'Pending')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td style="font-weight:bold; color:var(--primary-navy);">${s.pending}</td></tr>`;
-                if (cBody && s.completed > 0) cBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'Completed')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td style="font-weight:bold; color:#2e7d32;">${s.completed}</td></tr>`;
-                if (xBody && s.disapproved > 0) xBody.innerHTML += `<tr class="clickable-row" onclick="viewDeptAnalytics('${d}', 'Disapproved')"><td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:#ccc;"></i></td><td style="font-weight:bold; color:#c62828;">${s.disapproved}</td></tr>`;
+                let trD = document.createElement('tr'); 
+                trD.className = 'clickable-row'; 
+                trD.onclick = () => viewDeptAnalytics(d, 'All');
+                trD.innerHTML = `<td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:var(--text-muted);"></i></td><td>${s.pending}</td><td style="color:var(--color-completed); font-weight:bold;">${s.completed}</td><td style="color:var(--color-disapproved);">${s.disapproved}</td><td>${t}</td>`;
+                dFrag.appendChild(trD);
+                
+                if (s.pending > 0) { 
+                    let tr = document.createElement('tr'); 
+                    tr.className = 'clickable-row'; 
+                    tr.onclick = () => viewDeptAnalytics(d, 'Pending'); 
+                    tr.innerHTML = `<td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:var(--text-muted);"></i></td><td style="font-weight:bold; color:var(--primary-navy);">${s.pending}</td>`; 
+                    pFrag.appendChild(tr); 
+                }
+                if (s.completed > 0) { 
+                    let tr = document.createElement('tr'); 
+                    tr.className = 'clickable-row'; 
+                    tr.onclick = () => viewDeptAnalytics(d, 'Completed'); 
+                    tr.innerHTML = `<td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:var(--text-muted);"></i></td><td style="font-weight:bold; color:var(--color-completed);">${s.completed}</td>`; 
+                    cFrag.appendChild(tr); 
+                }
+                if (s.disapproved > 0) { 
+                    let tr = document.createElement('tr'); 
+                    tr.className = 'clickable-row'; 
+                    tr.onclick = () => viewDeptAnalytics(d, 'Disapproved'); 
+                    tr.innerHTML = `<td><b>${d}</b> <i class="fas fa-search" style="font-size:10px; color:var(--text-muted);"></i></td><td style="font-weight:bold; color:var(--color-disapproved);">${s.disapproved}</td>`; 
+                    xFrag.appendChild(tr); 
+                }
             });
             
-            if(pBody && pBody.innerHTML==='') pBody.innerHTML = '<tr><td colspan="2" align="center" style="padding: 20px;">No pending requests.</td></tr>';
-            if(cBody && cBody.innerHTML==='') cBody.innerHTML = '<tr><td colspan="2" align="center" style="padding: 20px;">No completed requests.</td></tr>';
-            if(xBody && xBody.innerHTML==='') xBody.innerHTML = '<tr><td colspan="2" align="center" style="padding: 20px;">No disapproved requests.</td></tr>';
+            if(dBody) dBody.appendChild(dFrag);
+            if(pBody) pFrag.children.length ? pBody.appendChild(pFrag) : pBody.innerHTML = '<tr><td colspan="2" align="center" style="padding: 20px;">No pending requests.</td></tr>';
+            if(cBody) cFrag.children.length ? cBody.appendChild(cFrag) : cBody.innerHTML = '<tr><td colspan="2" align="center" style="padding: 20px;">No completed requests.</td></tr>';
+            if(xBody) xFrag.children.length ? xBody.appendChild(xFrag) : xBody.innerHTML = '<tr><td colspan="2" align="center" style="padding: 20px;">No disapproved requests.</td></tr>';
         }
 
-        // Most Requested Items Processing
         const itemStats = {};
         filtered.forEach(r => {
-            const items = String(r.items||'').split('|');
+            const items = String(r.items||'').split('|'); 
             const qtys = String(r.qtys||'').split('|');
+            
             items.forEach((item, idx) => {
                 let cleanItem = item.trim().toUpperCase();
                 if(!cleanItem) return;
-                let qty = parseInt(qtys[idx]) || 1;
-                totalItemsProcessed += qty; // Add to global items processed
+                
+                let qty = parseInt(qtys[idx]) || 1; 
+                totalItemsProcessed += qty; 
                 
                 if(!itemStats[cleanItem]) itemStats[cleanItem] = { count: 0, depts: new Set() };
-                itemStats[cleanItem].count += qty;
+                itemStats[cleanItem].count += qty; 
                 itemStats[cleanItem].depts.add(r.dept);
             });
         });
 
         document.getElementById('kpiTotalItems').innerText = totalItemsProcessed;
-
-        const sortedItems = Object.keys(itemStats).sort((a,b) => itemStats[b].count - itemStats[a].count).slice(0, 10);
         
+        const sortedItems = Object.keys(itemStats).sort((a,b) => itemStats[b].count - itemStats[a].count).slice(0, 10);
         const iBody = document.getElementById('itemSummaryBody');
         if (iBody) {
             iBody.innerHTML = '';
-            if(sortedItems.length === 0) {
-                 iBody.innerHTML = '<tr><td colspan="3" align="center" style="padding: 20px;">No data for this month.</td></tr>';
+            if(sortedItems.length === 0) { 
+                iBody.innerHTML = '<tr><td colspan="3" align="center" style="padding: 20px;">No data for this month.</td></tr>'; 
             } else {
+                const iFrag = document.createDocumentFragment();
                 sortedItems.forEach(i => {
                     const deptsList = Array.from(itemStats[i].depts).join(', ');
-                    iBody.innerHTML += `<tr><td><b>${i}</b></td><td style="font-weight:bold; color:var(--primary-navy); font-size: 15px;">${itemStats[i].count}</td><td style="font-size:11px; color:#666;">${deptsList}</td></tr>`;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td><b>${i}</b></td><td style="font-weight:bold; color:var(--primary-navy); font-size: 15px;">${itemStats[i].count}</td><td style="font-size:11px; color:var(--text-muted);">${deptsList}</td>`;
+                    iFrag.appendChild(tr);
                 });
+                iBody.appendChild(iFrag);
             }
         }
 
-        // ------------------------------------
-        // INITIALIZE CHART.JS VISUALS
-        // ------------------------------------
         Chart.defaults.font.family = "'Inter', sans-serif";
-        Chart.defaults.color = '#475569';
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        Chart.defaults.color = isDark ? '#94a3b8' : '#475569';
 
-        // Destroy existing instances if they exist
-        if (statusChartInst) statusChartInst.destroy();
+        if (statusChartInst) statusChartInst.destroy(); 
         if (deptChartInst) deptChartInst.destroy();
 
-        // 1. Status Doughnut Chart
         const ctxStatus = document.getElementById('statusChart').getContext('2d');
         statusChartInst = new Chart(ctxStatus, {
             type: 'doughnut',
-            data: {
-                labels: ['Completed', 'Pending/Active', 'Disapproved'],
-                datasets: [{
-                    data: [totalCompleted, totalPending, totalDisapproved],
-                    backgroundColor: ['#2e7d32', '#0288d1', '#c62828'],
-                    borderWidth: 0,
-                    hoverOffset: 4
-                }]
+            data: { 
+                labels: ['Completed', 'Pending/Active', 'Disapproved'], 
+                datasets: [{ 
+                    data: [totalCompleted, totalPending, totalDisapproved], 
+                    backgroundColor: ['#2e7d32', '#0288d1', '#c62828'], 
+                    borderWidth: 0, 
+                    hoverOffset: 4 
+                }] 
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } }
-                },
-                cutout: '70%'
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } }, 
+                cutout: '70%' 
             }
         });
 
-        // 2. Department Volume Bar Chart
-        // Sort arrays for the chart so highest volume is at the top
-        let zippedDepts = chartDeptLabels.map((dept, i) => { return {dept: dept, vol: chartDeptData[i]}; });
-        zippedDepts.sort((a,b) => b.vol - a.vol);
-        let sortedChartLabels = zippedDepts.map(v => v.dept);
-        let sortedChartData = zippedDepts.map(v => v.vol);
-
+        let zippedDepts = chartDeptLabels.map((dept, i) => { return {dept: dept, vol: chartDeptData[i]}; }).sort((a,b) => b.vol - a.vol);
         const ctxDept = document.getElementById('deptChart').getContext('2d');
         deptChartInst = new Chart(ctxDept, {
             type: 'bar',
+            data: { 
+                labels: zippedDepts.map(v => v.dept), 
+                datasets: [{ 
+                    label: 'Total Requests', 
+                    data: zippedDepts.map(v => v.vol), 
+                    backgroundColor: isDark ? '#38bdf8' : '#002147', 
+                    borderRadius: 4 
+                }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } }, 
+                scales: { 
+                    y: { beginAtZero: true, grid: { color: isDark ? '#334155' : '#f1f5f9' } }, 
+                    x: { grid: { display: false } } 
+                } 
+            }
+        });
+    }
+
+    function renderYearlyAnalytics() {
+        const y = document.getElementById('yearlyCompareYearSelect').value;
+        const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        
+        let monthlyData = months.map(() => ({ total: 0, completed: 0, pending: 0, disapproved: 0 }));
+
+        allData.forEach(r => {
+            if(r.date && r.date.startsWith(y)) {
+                const mStr = r.date.split('-')[1]; 
+                const mIdx = parseInt(mStr, 10) - 1; 
+                
+                if(mIdx >= 0 && mIdx < 12) {
+                    monthlyData[mIdx].total++;
+                    if(r.status === 'Completed') monthlyData[mIdx].completed++;
+                    else if(r.status === 'Disapproved') monthlyData[mIdx].disapproved++;
+                    else monthlyData[mIdx].pending++;
+                }
+            }
+        });
+
+        const yBody = document.getElementById('yearlySummaryBody');
+        yBody.innerHTML = '';
+        
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const frag = document.createDocumentFragment();
+        
+        monthlyData.forEach((d, i) => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${monthNames[i]}</b></td>
+                <td>${d.total}</td>
+                <td style="color:var(--color-completed); font-weight:bold;">${d.completed}</td>
+                <td style="color:var(--primary-navy); font-weight:bold;">${d.pending}</td>
+                <td style="color:var(--color-disapproved);">${d.disapproved}</td>
+            `;
+            frag.appendChild(tr);
+        });
+        yBody.appendChild(frag);
+
+        if (yearlyChartInst) yearlyChartInst.destroy();
+        const ctxYearly = document.getElementById('yearlyChart').getContext('2d');
+        yearlyChartInst = new Chart(ctxYearly, {
+            type: 'line',
             data: {
-                labels: sortedChartLabels,
-                datasets: [{
-                    label: 'Total Requests',
-                    data: sortedChartData,
-                    backgroundColor: '#002147',
-                    borderRadius: 4
-                }]
+                labels: monthNames,
+                datasets: [
+                    { 
+                        label: 'Total Requests', 
+                        data: monthlyData.map(d => d.total), 
+                        borderColor: isDark ? '#38bdf8' : '#002147', 
+                        backgroundColor: isDark ? 'rgba(56, 189, 248, 0.1)' : 'rgba(0, 33, 71, 0.1)', 
+                        fill: true, 
+                        tension: 0.3 
+                    },
+                    { 
+                        label: 'Completed', 
+                        data: monthlyData.map(d => d.completed), 
+                        borderColor: '#2e7d32', 
+                        backgroundColor: 'transparent', 
+                        borderDash: [5, 5], 
+                        tension: 0.3 
+                    }
+                ]
             },
             options: {
-                responsive: true,
+                responsive: true, 
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: { 
+                    legend: { position: 'top', labels: { color: isDark ? '#94a3b8' : '#475569' } } 
+                },
                 scales: {
-                    y: { beginAtZero: true, grid: { display: false } },
-                    x: { grid: { color: '#f1f5f9' } }
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: isDark ? '#334155' : '#f1f5f9' }, 
+                        ticks: { color: isDark ? '#94a3b8' : '#475569' } 
+                    },
+                    x: { 
+                        grid: { display: false }, 
+                        ticks: { color: isDark ? '#94a3b8' : '#475569' } 
+                    }
                 }
             }
         });
     }
 
     function exportAnalyticsToCSV() {
-        const monthVal = document.getElementById('analyticsMonth')?.value;
-        if(!monthVal) return Swal.fire('Error', 'Please select a month first.', 'warning');
+        const m = document.getElementById('analyticsMonthSelect').value;
+        const y = document.getElementById('analyticsYearSelect').value;
+        const monthVal = `${y}-${m}`; 
         
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += `TDMH CSR Monthly Report,${monthVal}\r\n\r\n`;
-        
-        csvContent += "DEPARTMENT SUMMARY (OVERALL)\r\n";
+        let csvContent = "data:text/csv;charset=utf-8,TDMH CSR Monthly Report," + monthVal + "\r\n\r\nDEPARTMENT SUMMARY (OVERALL)\r\n";
         const dTable = document.getElementById('deptSummaryTable');
-        if (dTable) {
-            for (let i = 0; i < dTable.rows.length; i++) {
-                let rowData = [];
-                for (let j = 0; j < dTable.rows[i].cells.length; j++) {
-                    rowData.push('"' + dTable.rows[i].cells[j].textContent.trim().replace(/"/g, '""') + '"');
-                }
-                csvContent += rowData.join(",") + "\r\n";
-            }
+        if (dTable) { 
+            for (let i = 0; i < dTable.rows.length; i++) { 
+                let rowData = []; 
+                for (let j = 0; j < dTable.rows[i].cells.length; j++) { 
+                    rowData.push('"' + dTable.rows[i].cells[j].textContent.trim().replace(/"/g, '""') + '"'); 
+                } 
+                csvContent += rowData.join(",") + "\r\n"; 
+            } 
         }
         
         csvContent += "\r\nTOP 10 MOST REQUESTED ITEMS\r\n";
         const iTable = document.getElementById('itemSummaryTable');
-        if (iTable) {
-            for (let i = 0; i < iTable.rows.length; i++) {
-                let rowData = [];
-                for (let j = 0; j < iTable.rows[i].cells.length; j++) {
-                    rowData.push('"' + iTable.rows[i].cells[j].textContent.trim().replace(/"/g, '""') + '"');
-                }
-                csvContent += rowData.join(",") + "\r\n";
-            }
+        if (iTable) { 
+            for (let i = 0; i < iTable.rows.length; i++) { 
+                let rowData = []; 
+                for (let j = 0; j < iTable.rows[i].cells.length; j++) { 
+                    rowData.push('"' + iTable.rows[i].cells[j].textContent.trim().replace(/"/g, '""') + '"'); 
+                } 
+                csvContent += rowData.join(",") + "\r\n"; 
+            } 
         }
 
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
+        const link = document.createElement("a"); 
+        link.setAttribute("href", encodeURI(csvContent)); 
         link.setAttribute("download", `CSR_Report_${monthVal}.csv`);
-        document.body.appendChild(link);
-        link.click();
+        document.body.appendChild(link); 
+        link.click(); 
         document.body.removeChild(link);
     }
 </script>
