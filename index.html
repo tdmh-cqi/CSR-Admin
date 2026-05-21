@@ -199,7 +199,6 @@
             transform: translateX(-100%) !important; 
         }
 
-        /* LOGO FIX: Permanently white background and centered so size never shifts */
         .sidebar-logo-link {
             display: inline-block; 
             text-align: center; 
@@ -477,6 +476,24 @@
         .save-btn:hover { 
             filter: brightness(1.2); 
         }
+
+        .btn-items { 
+            background: var(--input-bg); 
+            border: 1px solid var(--border-color); 
+            padding: 6px 10px; 
+            border-radius: 6px; 
+            font-size: 0.75rem; 
+            cursor: pointer; 
+            color: var(--primary-navy); 
+            font-weight: bold; 
+            width: 100%; 
+            margin-top: 5px; 
+            text-align: left; 
+            transition: 0.2s;
+        }
+        .btn-items:hover { filter: brightness(0.95); }
+        .qf-btn { background: var(--bg-gray); color: var(--text-muted); border: 1px solid var(--border-color); padding: 4px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .qf-btn:hover { background: var(--border-color); color: var(--text-main); }
         
         .thumb-img { 
             width: 60px; 
@@ -713,7 +730,7 @@
             transform: translateX(26px); 
         }
 
-        /* DOCUMENT PREVIEW THUMBNAILS (NEW) */
+        /* DOCUMENT PREVIEW THUMBNAILS */
         .preview-thumb {
             position: relative;
             cursor: pointer;
@@ -837,7 +854,6 @@
         
         .iss-header { text-align: center; margin-bottom: 20px; position: relative; }
         
-        /* Ensure normal logo retains color */
         .iss-logo { max-height: 70px; margin-bottom: 10px; }
         .iss-title { font-size: 24px; font-weight: bold; text-transform: uppercase; margin: 0; letter-spacing: 1px; color: black !important; }
         .iss-subtitle { font-size: 13px; font-style: italic; margin: 5px 0 0 0; color: black !important; }
@@ -1121,7 +1137,6 @@
             </button>
         </div>
 
-        <!-- NEW: LIVE DOCUMENT PREVIEWS BUILT STRAIGHT INTO THE CQI TAB -->
         <div class="cqi-settings-card" style="margin-top: 20px; background: var(--bg-gray);">
             <h3 style="margin: 0 0 15px 0; color: var(--primary-navy);">Live Document Previews</h3>
             <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">Click either document below to expand it to full screen.</p>
@@ -1350,6 +1365,7 @@
 </main>
 
 <script>
+    // MAKE SURE TO UPDATE THIS TO YOUR LATEST SCRIPT URL ONCE YOU DEPLOY THE NEW CODE.GS
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhQwVJTvLo_W4IcxPTdcCDojC92XjS4Y5wb1r_ldwO1jXu7LJ99QBMJ_Ncl4FBek239Q/exec";
     
     let allData = [];
@@ -1806,13 +1822,148 @@
         }
     };
 
+    // ITEM CHECKLIST FUNCTIONALITY
+    function openItemsChecklist(id) {
+        const row = allData.find(r => r.id == id);
+        if (!row) return;
+        
+        const items = String(row.items || '').split('|').map(i => i.trim());
+        const qtys = String(row.qtys || '').split('|').map(i => i.trim());
+        const photosArr = String(row.photo || '').split('|').map(p => p.trim());
+        const checkedArr = row.checkedItems ? String(row.checkedItems).split('|') : new Array(items.length).fill('false');
+        const notesArr = row.itemNotes ? String(row.itemNotes).split('|') : new Array(items.length).fill('');
+
+        let priorityColor = row.priority === 'Urgent' ? 'var(--color-disapproved)' : 'var(--text-muted)';
+
+        let html = `
+            <div style="display:flex; flex-wrap:wrap; gap:15px; text-align:left; margin-bottom:20px; background:var(--input-bg); padding:20px; border-radius:12px; border:1px solid var(--border-color); color:var(--text-main);">
+                <div style="flex:1; font-size:15px; line-height:1.6; min-width:250px;">
+                    <h4 style="margin:0 0 10px 0; color:var(--primary-navy); font-size:18px;">Request #${row.id}</h4>
+                    <div><strong>Requester:</strong> ${row.reqBy}</div>
+                    <div><strong>Dept:</strong> ${row.dept}</div>
+                    <div><strong>Priority:</strong> <span style="color:${priorityColor}; font-weight:bold;">${row.priority}</span></div>
+                    <div style="margin-top:10px; color:var(--text-muted); font-style:italic; background:var(--bg-card); padding:10px; border-radius:6px; border:1px solid var(--border-color);">Notes: ${row.additionalNotes || 'None'}</div>
+                </div>
+            </div>
+            
+            <div style="text-align:left; max-height:450px; overflow-y:auto; padding-right:5px;">
+        `;
+        
+        let releasedCount = 0;
+        let interactiveItemsHtml = '';
+
+        items.forEach((item, idx) => {
+            if(item) {
+                // Critical QoL feature: Hide completely if it's already released in a Partial status.
+                let isHidden = (row.status === 'Partial Release' && checkedArr[idx] === 'true');
+                
+                if (isHidden) {
+                    releasedCount++;
+                    // Retain the hidden inputs so `saveChecklistAndStatus` doesn't clear them out.
+                    interactiveItemsHtml += `
+                        <div style="display: none;">
+                            <input type="checkbox" id="itemchk-${id}-${idx}" checked>
+                            <input type="hidden" id="itemnote-${id}-${idx}" value="${notesArr[idx] || ''}">
+                        </div>
+                    `;
+                } else {
+                    const isChecked = checkedArr[idx] === 'true' ? 'checked' : '';
+                    let imgHtml = photosArr[idx] && photosArr[idx].startsWith('data:image') 
+                        ? `<img src="${photosArr[idx]}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid var(--border-color); cursor:pointer; margin-right:15px;" onclick="viewFullImage('${photosArr[idx]}')">` 
+                        : '';
+
+                    interactiveItemsHtml += `
+                        <div style="padding:15px; background:var(--bg-card); color:var(--text-main); border:2px solid var(--border-color); border-radius:8px; margin-bottom:10px; transition: 0.2s;">
+                            <div style="display:flex; align-items:center;">
+                                <input type="checkbox" id="itemchk-${id}-${idx}" style="width:24px; height:24px; cursor:pointer; margin-right:15px;" ${isChecked}>
+                                ${imgHtml}
+                                <label for="itemchk-${id}-${idx}" style="cursor:pointer; flex:1; margin:0; font-size:16px; text-align:left; font-weight:500; color:var(--text-main);">
+                                    <strong>${qtys[idx] || '-'}x</strong> ${item}
+                                </label>
+                            </div>
+                            <div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">
+                                <input type="text" id="itemnote-${id}-${idx}" placeholder="Specific note for this item (e.g. Out of stock)" value="${notesArr[idx] || ''}" style="padding:8px; background:var(--input-bg); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px; font-size:13px; width:100%;">
+                                <div style="display:flex; gap:5px;">
+                                    <button onclick="fillNote('itemnote-${id}-${idx}', 'Out of Stock')" class="qf-btn">Out of Stock</button>
+                                    <button onclick="fillNote('itemnote-${id}-${idx}', 'Wait for Delivery')" class="qf-btn">Wait for Delivery</button>
+                                    <button onclick="fillNote('itemnote-${id}-${idx}', 'Substituted brand')" class="qf-btn">Substituted</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        });
+
+        if (releasedCount > 0) {
+            html += `<div style="background: rgba(46, 125, 50, 0.1); border: 1px solid var(--color-completed); color: var(--color-completed); padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; font-weight: bold;"><i class="fas fa-check-circle"></i> ${releasedCount} item(s) previously marked as released are hidden from this view.</div>`;
+        }
+
+        html += `<p style="font-size:15px; color:var(--text-main); margin-bottom:15px; font-weight:700;">Select READY items and add specific notes if needed:</p>`;
+        html += interactiveItemsHtml;
+        
+        html += `
+            </div>
+            <div style="margin-top:30px; display:flex; flex-direction:column; gap:12px; border-top: 2px solid var(--border-color); padding-top: 20px;">
+                <button onclick="saveChecklistAndStatus(${id}, ${items.length}, 'For Release')" class="save-btn" style="background:var(--color-forrelease); padding: 18px; font-size: 16px; width: 100%;">✅ SAVE & SET TO "FOR RELEASE (FULL)"</button>
+                <button onclick="saveChecklistAndStatus(${id}, ${items.length}, 'Partial Release')" class="save-btn" style="background:var(--color-partial); padding: 18px; font-size: 16px; width: 100%;">⚠️ SAVE & SET TO "PARTIAL RELEASE"</button>
+                <button onclick="saveChecklistAndStatus(${id}, ${items.length}, null)" class="save-btn" style="background:var(--primary-navy); padding: 18px; font-size: 16px; width: 100%;">💾 SAVE CHECKLIST & NOTES ONLY</button>
+                <button onclick="Swal.close()" class="save-btn" style="background:var(--bg-gray); color:var(--text-muted); border:1px solid var(--border-color); padding: 15px; font-size: 16px; width: 100%;">Cancel / Close</button>
+            </div>
+        `;
+
+        Swal.fire({
+            html: html,
+            background: 'var(--bg-card)',
+            showConfirmButton: false,
+            width: '850px' 
+        });
+    }
+
+    window.saveChecklistAndStatus = async function(id, arrayLength, newStatusStr) {
+        let newChecked = [];
+        let newNotes = [];
+        for(let i=0; i<arrayLength; i++) {
+            let chk = document.getElementById(`itemchk-${id}-${i}`);
+            let note = document.getElementById(`itemnote-${id}-${i}`);
+            // Works reliably even if the input is wrapped in display:none
+            newChecked.push(chk && chk.checked ? 'true' : 'false');
+            newNotes.push(note ? note.value.replace(/\|/g, '') : ''); 
+        }
+        let checkedStr = newChecked.join('|');
+        let noteStr = newNotes.join('|');
+        
+        Swal.close();
+        Toast.fire({icon: 'info', title: 'Saving & Notifying...'});
+        
+        try {
+            let payload = { id: id, checkedItems: checkedStr, itemNotes: noteStr };
+            
+            if (newStatusStr) {
+                payload.action = 'updateStatus';
+                payload.status = newStatusStr;
+                payload.autoStatusUpdate = true;
+                payload.sendCustomNote = false;
+            } else {
+                payload.action = 'updateChecklist';
+            }
+
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            
+            Toast.fire({icon: 'success', title: newStatusStr ? 'Status Updated & Email Sent!' : 'Checklist & Notes saved!'});
+            fetchData();
+        } catch(e) {
+            Toast.fire({icon: 'error', title: 'Connection error'});
+        }
+    }
+
     function renderTable(data) {
         const tbody = document.getElementById('tableBody');
         if (!tbody) return;
         tbody.innerHTML = ''; 
         
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; font-size:15px; color: var(--text-muted);">No requests found matching criteria.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 30px; font-size:15px; color: var(--text-muted);">No requests found matching criteria.</td></tr>';
             return;
         }
 
@@ -1830,15 +1981,43 @@
 
             const itemsArr = String(row.items || '').split('|').map(i => i.trim());
             const qtysArr = String(row.qtys || '').split('|').map(i => i.trim());
+            const checkedArr = row.checkedItems ? String(row.checkedItems).split('|') : [];
+            const notesArr = row.itemNotes ? String(row.itemNotes).split('|') : [];
             
             let itemsHtml = '<ul style="margin:0; padding-left:15px; font-size:0.85rem; line-height:1.5;">';
-            for(let i=0; i<Math.min(itemsArr.length, 3); i++) {
-                if (itemsArr[i]) itemsHtml += `<li><b>${qtysArr[i]||'-'}x</b> ${itemsArr[i]}</li>`;
+            let displayCount = 0;
+            let hiddenCount = 0;
+            let partialHiddenCount = 0;
+
+            for(let i=0; i<itemsArr.length; i++) {
+                if (itemsArr[i]) {
+                    // Logic fix: Hide checked items entirely from main table if Partial Release
+                    if (status === 'Partial Release' && checkedArr[i] === 'true') {
+                        partialHiddenCount++;
+                        continue;
+                    }
+
+                    if (displayCount < 3) {
+                        let n = notesArr[i] ? ` <br><span style="color:#d97706; font-size:11px; background: rgba(217, 119, 6, 0.1); padding: 2px 4px; border-radius: 3px;">Note: ${notesArr[i]}</span>` : '';
+                        itemsHtml += `<li style="margin-bottom: 4px;"><b>${qtysArr[i]||'-'}x</b> ${itemsArr[i]}${n}</li>`;
+                        displayCount++;
+                    } else {
+                        hiddenCount++;
+                    }
+                }
             }
             itemsHtml += '</ul>';
-            if(itemsArr.length > 3) itemsHtml += `<div style="font-size:11px; color:var(--text-muted); margin-left:15px;">+ ${itemsArr.length - 3} more...</div>`;
+            if(hiddenCount > 0) {
+                itemsHtml += `<div style="font-size:11px; color:var(--text-muted); margin-top:5px; margin-left:15px;">+ ${hiddenCount} more pending...</div>`;
+            }
+            
+            // Indicator for hidden released items
+            if(partialHiddenCount > 0) {
+                itemsHtml += `<div style="font-size:11px; color:var(--color-completed); margin-top:6px; margin-left:15px; background: rgba(46, 125, 50, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block;"><i class="fas fa-check-circle"></i> ${partialHiddenCount} item(s) already released</div>`;
+            }
+            
+            itemsHtml += `<button class="btn-items" onclick="openItemsChecklist(${row.id})"><i class="fas fa-list-check"></i> View Full List & Notes</button>`;
 
-            const firstPhoto = String(row.photo || "").split('|').map(p => p.trim()).find(p => p.startsWith('data:image'));
             const sigHod = (row.sigHod && String(row.sigHod).startsWith('data:image')) ? row.sigHod : "";
             const sigAdmin = (row.sigAdmin && String(row.sigAdmin).startsWith('data:image')) ? row.sigAdmin : "";
             const notes = row.additionalNotes || "No notes provided.";
@@ -1905,8 +2084,8 @@
                 <td>
                     <div class="notes-text">"${notes}"</div>
                     <div style="display:flex; flex-wrap: wrap; gap:10px; margin-top:8px; align-items: flex-end;">
-                        <div>${sigHod ? `<img src="${sigHod}" class="sig-preview" onclick="viewFullImage('${sigHod}')">` : '<div class="no-sig-box" style="line-height:1.2;">MISSING<br>HEAD OF DEPT</div>'}</div>
-                        <div>${sigAdmin ? `<img src="${sigAdmin}" class="sig-preview" onclick="viewFullImage('${sigAdmin}')">` : '<div class="no-sig-box">PENDING<br>ADMIN</div>'}</div>
+                        <div>${sigHod ? `<img src="${sigHod}" class="sig-preview" onclick="viewFullImage('${sigHod}')" title="HOD Signature">` : '<div class="no-sig-box" style="line-height:1.2;">MISSING<br>HEAD OF DEPT</div>'}</div>
+                        <div>${sigAdmin ? `<img src="${sigAdmin}" class="sig-preview" onclick="viewFullImage('${sigAdmin}')" title="Admin Signature">` : '<div class="no-sig-box">PENDING<br>ADMIN</div>'}</div>
                     </div>
                 </td>
                 <td style="text-align: center;">
