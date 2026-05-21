@@ -56,7 +56,7 @@
             min-height: 100vh; 
             position: relative; 
             overflow-x: hidden; 
-            transition: background-color 0.3s ease, color 0.3s ease;
+            /* Removed the conflicting background/color transition to prevent stutter during View Transitions */
         }
 
         /* View Transitions Setup for Smooth Bidirectional Switch */
@@ -967,7 +967,7 @@
         
         <div class="admin-prep-banner" id="adminBanner">
             <strong><i class="fas fa-user-shield"></i> STEP 1: ADMIN PREPARATION</strong><br>
-            Please prepare the issuance form. Type the <b>Unit Prices</b> manually for accuracy. Adjust the <b>QTY</b> if this is a partial release. When ready, click "Lock Screen for Signature".
+            Please prepare the issuance form. Type the <b>Unit Prices</b> manually for accuracy. Adjust the <b>QTY</b> and edit the <b>Item Name</b> if this is a partial release. When ready, click "Lock Screen for Signature".
         </div>
 
         <div class="iss-header">
@@ -1113,6 +1113,29 @@
                 </div>
                 <label class="switch">
                     <input type="checkbox" id="issuanceMasterToggle" onchange="toggleIssuanceFeature(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 15px;">
+                <div>
+                    <h3 style="margin: 0 0 5px 0;">Admin Email Notifications</h3>
+                    <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">Receive an email at csr.tdmh@gmail.com whenever a new requisition is submitted. Turn off to mute spam.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="adminNotifToggle" onchange="toggleAdminNotif(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <!-- NEW STRICT TIME TOGGLE -->
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 15px;">
+                <div>
+                    <h3 style="margin: 0 0 5px 0;">Strict Live Time</h3>
+                    <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">When turned ON, the Time field on the Requestee site is locked to strictly follow the live clock and cannot be manually edited.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="strictTimeToggle" onchange="toggleStrictTime(this.checked)">
                     <span class="slider"></span>
                 </label>
             </div>
@@ -1446,6 +1469,32 @@
             Swal.fire('Error', 'Could not save setting to database.', 'error');
         }
     }
+    
+    async function toggleAdminNotif(isEnabled) {
+        Toast.fire({ icon: 'info', title: 'Updating system settings...' });
+        try {
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', mode: 'no-cors', 
+                body: JSON.stringify({ action: 'updateCQISettings', adminEmailNotifications: isEnabled }) 
+            });
+            Toast.fire({ icon: 'success', title: `Admin Notifications are now ${isEnabled ? 'ON' : 'OFF'}` });
+        } catch(e) {
+            Swal.fire('Error', 'Could not save setting to database.', 'error');
+        }
+    }
+
+    async function toggleStrictTime(isEnabled) {
+        Toast.fire({ icon: 'info', title: 'Updating system settings...' });
+        try {
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', mode: 'no-cors', 
+                body: JSON.stringify({ action: 'updateCQISettings', strictTimeMode: isEnabled }) 
+            });
+            Toast.fire({ icon: 'success', title: `Strict Time Mode is now ${isEnabled ? 'ON' : 'OFF'}` });
+        } catch(e) {
+            Swal.fire('Error', 'Could not save setting to database.', 'error');
+        }
+    }
 
     async function saveDisclaimers() {
         const pText = document.getElementById('pinkDisclaimerInput').value;
@@ -1599,7 +1648,7 @@
         const y = event?.clientY ?? window.innerHeight / 2;
         const endRadius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
         
-        const transition = document.startViewTransition(() => executeThemeSwitch(!isDark));
+        const transition = document.startViewTransition(() => executeThemeSwitch(!isDark, true));
         
         transition.ready.then(() => {
             const clipPath = [ 
@@ -1607,19 +1656,25 @@
                 `circle(${endRadius}px at ${x}px ${y}px)` 
             ];
             
-            // Fix: ensure the new theme always expands outwards from the click
             document.documentElement.animate(
                 { clipPath: clipPath },
                 { 
-                    duration: 500, 
-                    easing: 'ease-in-out', 
+                    duration: 350, 
+                    easing: 'ease-out', 
                     pseudoElement: '::view-transition-new(root)' 
                 }
             );
         });
+
+        transition.finished.then(() => {
+            if(currentAdminTab === 'analytics') {
+                renderAnalytics(); 
+                renderYearlyAnalytics();
+            }
+        });
     }
 
-    function executeThemeSwitch(toDark) {
+    function executeThemeSwitch(toDark, skipCharts = false) {
         const icon = document.getElementById('adminThemeIcon');
         if (toDark) {
             document.documentElement.setAttribute('data-theme', 'dark');
@@ -1630,7 +1685,7 @@
             localStorage.setItem('csrAdminTheme', 'light');
             icon.classList.replace('fa-sun', 'fa-moon');
         }
-        if(currentAdminTab === 'analytics') {
+        if(!skipCharts && currentAdminTab === 'analytics') {
             setTimeout(() => { renderAnalytics(); renderYearlyAnalytics(); }, 10);
         }
     }
@@ -1713,6 +1768,12 @@
         const activeBtn = document.getElementById('tabBtn-' + tab);
         if(activeBtn) activeBtn.classList.add('active');
         
+        // Hide CQI tab automatically if navigating away from it (Security Lock)
+        if (tab !== 'cqi') {
+            const cqiBtn = document.getElementById('tabBtn-cqi');
+            if (cqiBtn) cqiBtn.style.display = 'none';
+        }
+        
         if(window.innerWidth <= 1024) toggleSidebarLock();
 
         const title = document.getElementById('pageTitle');
@@ -1775,6 +1836,12 @@
             // Set the master toggle state and disclaimers from backend
             issuanceFeatureEnabled = responseData.issuanceEnabled === true;
             document.getElementById('issuanceMasterToggle').checked = issuanceFeatureEnabled;
+            
+            // Fetch Master Mute Notifications state
+            document.getElementById('adminNotifToggle').checked = responseData.adminEmailNotifications !== false; // defaults to true
+            
+            // Fetch Strict Time Mode state
+            document.getElementById('strictTimeToggle').checked = responseData.strictTimeMode === true; // defaults to false
 
             if (responseData.pinkDisclaimer) {
                 g_pinkDisclaimer = responseData.pinkDisclaimer;
@@ -2220,7 +2287,10 @@
 
             const matchId = !reqId || item.id.toString() === reqId;
             const matchDate = !date || item.date === date;
-            const matchDept = !dept || (item.dept && item.dept.toLowerCase().includes(dept.toLowerCase()));
+            
+            // EXACT MATCH fix for department filtering so "OR" doesn't trigger "LabORatory"
+            const matchDept = !dept || (item.dept && item.dept === dept);
+            
             const matchItemSearch = !itemSearch || (item.items && item.items.toLowerCase().includes(itemSearch));
             
             let itemStatus = item.status || 'Pending';
@@ -2314,7 +2384,7 @@
                         tr.innerHTML = `
                             <td><input type="number" class="iss-qty" value="${remainingQty}" min="1" max="${remainingQty}" oninput="calcIssuanceTotal()"></td>
                             <td><input type="text" class="iss-unit" placeholder="unit"></td>
-                            <td style="text-align: left;">${item}</td>
+                            <td style="text-align: left;"><input type="text" class="iss-desc" value="${item}" placeholder="${item}" style="text-align: left;"></td>
                             <td><input type="number" class="iss-price" placeholder="0.00" value="${savedPrice}" oninput="calcIssuanceTotal()"></td>
                             <td><input type="text" class="iss-amt" value="0.00" readonly style="font-weight:bold; background: transparent; border: none;"></td>
                             <td class="print-hide th-action"><button class="remove-row-btn" onclick="this.parentElement.parentElement.remove(); calcIssuanceTotal();"><i class="fas fa-trash"></i></button></td>
@@ -2435,7 +2505,8 @@
             itemsData.push({
                 qty: tr.querySelector('.iss-qty').value,
                 unit: tr.querySelector('.iss-unit').value,
-                desc: tr.cells[2].innerText,
+                // Fallback to the placeholder if the admin accidentally wiped the input box out
+                desc: tr.querySelector('.iss-desc').value.trim() || tr.querySelector('.iss-desc').placeholder,
                 price: tr.querySelector('.iss-price').value,
                 amount: tr.querySelector('.iss-amt').value
             });
