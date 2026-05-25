@@ -56,7 +56,6 @@
             min-height: 100vh; 
             position: relative; 
             overflow-x: hidden; 
-            /* Removed the conflicting background/color transition to prevent stutter during View Transitions */
         }
 
         /* View Transitions Setup for Smooth Bidirectional Switch */
@@ -883,6 +882,8 @@
         
         .modal-overlay.kiosk-locked .iss-table input { border: none !important; background: transparent !important; pointer-events: none; font-weight: bold; }
         .modal-overlay.kiosk-locked .remove-row-btn { display: none; }
+        .modal-overlay.kiosk-locked #addIssRowBtnContainer { display: none; }
+        .modal-overlay.kiosk-locked #issDate { pointer-events: none; border-bottom: none !important; }
         
         .remove-row-btn { 
             background: #fee2e2; 
@@ -897,8 +898,9 @@
         }
         
         .iss-footer { font-size: 15px; margin-top: 15px; color: black !important; display: flex; justify-content: space-between; align-items: flex-end;}
-        .iss-footer select, .iss-footer input[type="text"] { font-family: 'Times New Roman', serif; font-size: 15px; border: none; border-bottom: 1px solid black !important; background: transparent !important; color: black !important; padding: 2px 5px; width: 200px;}
-        
+        .iss-footer select, .iss-footer input[type="text"], .iss-footer input[type="date"] { font-family: 'Times New Roman', serif; font-size: 15px; border: none; border-bottom: 1px solid black !important; background: transparent !important; color: black !important; padding: 2px 5px; width: 200px;}
+        .iss-footer input[type="date"] { width: auto; font-family: 'Times New Roman', serif; }
+
         .iss-sig-container { border: 1px solid #000; width: 100%; max-width: 300px; height: 100px; margin-top: 5px; position: relative; background: #ffffff !important; overflow: hidden; }
         .iss-sig-container canvas { width: 100%; height: 100%; cursor: crosshair; }
         .clear-sig-btn { font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer; border: 1px solid #ccc; background: white; padding: 5px 10px; margin-top: 8px; border-radius: 4px; color: black; }
@@ -932,6 +934,8 @@
             .modal-overlay { position: absolute; top: 0; left: 0; background: white; padding: 0; display: block; z-index: 99999; }
             .issuance-form { box-shadow: none; padding: 0; max-width: 100%; border: none; }
             .iss-table input { font-size: 12pt; border: none !important; background: transparent !important; color: black !important; }
+            #issDate { border: none !important; pointer-events: none; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+            #issDate::-webkit-inner-spin-button, #issDate::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
         }
     </style>
 </head>
@@ -983,7 +987,7 @@
             </div>
             <div style="text-align: right;">
                 <p>No.: <span id="issNo" style="font-weight: bold; color: red;">Loading...</span></p>
-                <p>Date: <span id="issDate" style="font-weight: normal; text-decoration: underline;">Loading...</span></p>
+                <p class="iss-footer" style="margin: 0; justify-content: flex-end;">Date: <input type="date" id="issDate" style="margin-left: 5px;"></p>
             </div>
         </div>
 
@@ -1008,6 +1012,10 @@
                     </tr>
                 </tfoot>
             </table>
+        </div>
+        
+        <div class="print-hide" style="text-align: left; margin-top: 5px; margin-bottom: 15px;" id="addIssRowBtnContainer">
+            <button onclick="addIssuanceRow()" style="background: #e2e8f0; border: 1px solid #cbd5e1; padding: 6px 12px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Inter', sans-serif; color: #333; font-size: 12px;"><i class="fas fa-plus"></i> Add Extra Item Row</button>
         </div>
 
         <div class="iss-footer">
@@ -1128,7 +1136,6 @@
                 </label>
             </div>
             
-            <!-- NEW STRICT TIME TOGGLE -->
             <div style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 15px;">
                 <div>
                     <h3 style="margin: 0 0 5px 0;">Strict Live Time</h3>
@@ -1921,8 +1928,8 @@
 
         items.forEach((item, idx) => {
             if(item) {
-                // Critical QoL feature: Hide completely if it's already released in a Partial status.
-                let isHidden = (row.status === 'Partial Release' && checkedArr[idx] === 'true');
+                // BUG FIX: Hide the item forever if it is checked, ignoring what status it is currently in.
+                let isHidden = (checkedArr[idx] === 'true');
                 
                 if (isHidden) {
                     releasedCount++;
@@ -2058,8 +2065,8 @@
 
             for(let i=0; i<itemsArr.length; i++) {
                 if (itemsArr[i]) {
-                    // Logic fix: Hide checked items entirely from main table if Partial Release
-                    if (status === 'Partial Release' && checkedArr[i] === 'true') {
+                    // BUG FIX: Hide checked items entirely from main table view
+                    if (checkedArr[i] === 'true') {
                         partialHiddenCount++;
                         continue;
                     }
@@ -2332,6 +2339,21 @@
     // ==========================================
     // SMART ISSUANCE FORM LOGIC (WITH AUTO-FILL PRICING & MASTER TOGGLE GUARD)
     // ==========================================
+    window.addIssuanceRow = function() {
+        const tbody = document.getElementById('issTableBody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="number" class="iss-qty" value="1" min="1" oninput="calcIssuanceTotal()"></td>
+            <td><input type="text" class="iss-unit" placeholder="unit"></td>
+            <td style="text-align: left;"><input type="text" class="iss-desc" placeholder="New Item Description" style="text-align: left;"></td>
+            <td><input type="number" class="iss-price" placeholder="0.00" value="0.00" oninput="calcIssuanceTotal()"></td>
+            <td><input type="text" class="iss-amt" value="0.00" readonly style="font-weight:bold; background: transparent; border: none;"></td>
+            <td class="print-hide th-action"><button class="remove-row-btn" onclick="this.parentElement.parentElement.remove(); calcIssuanceTotal();"><i class="fas fa-trash"></i></button></td>
+        `;
+        tbody.appendChild(tr);
+        calcIssuanceTotal();
+    };
+
     async function openIssuanceForm(id) {
         if (!issuanceFeatureEnabled) {
             return Swal.fire({
@@ -2359,7 +2381,9 @@
             document.getElementById('issNo').innerText = issData.newIssuanceNo;
             document.getElementById('issDept').innerText = row.dept;
             document.getElementById('issReqNo').innerText = reqNoStr;
-            document.getElementById('issDate').innerText = new Date().toLocaleDateString();
+            
+            // Setup the editable date
+            document.getElementById('issDate').value = new Date().toISOString().split('T')[0];
             
             // Set the dynamic white disclaimer
             document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
@@ -2382,7 +2406,7 @@
                     if (remainingQty > 0) {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td><input type="number" class="iss-qty" value="${remainingQty}" min="1" max="${remainingQty}" oninput="calcIssuanceTotal()"></td>
+                            <td><input type="number" class="iss-qty" value="${remainingQty}" min="1" oninput="calcIssuanceTotal()"></td>
                             <td><input type="text" class="iss-unit" placeholder="unit"></td>
                             <td style="text-align: left;"><input type="text" class="iss-desc" value="${item}" placeholder="${item}" style="text-align: left;"></td>
                             <td><input type="number" class="iss-price" placeholder="0.00" value="${savedPrice}" oninput="calcIssuanceTotal()"></td>
@@ -2512,12 +2536,20 @@
             });
         });
 
+        // Ensure the date picks up whatever the admin edited it to
+        let inputDate = document.getElementById('issDate').value;
+        // Format back to string or whatever format is necessary, keeping it simple
+        if(inputDate.includes("-")){
+            const parts = inputDate.split('-');
+            inputDate = `${parts[1]}/${parts[2]}/${parts[0]}`; // Convert to MM/DD/YYYY format generally used
+        }
+
         const payload = {
             action: 'saveIssuance',
             issuanceNo: document.getElementById('issNo').innerText,
             reqNo: currentlyProcessingReqNo,
             reqEmail: currentReqEmail,
-            date: document.getElementById('issDate').innerText,
+            date: inputDate,
             dept: document.getElementById('issDept').innerText,
             preparedBy: document.getElementById('issPreparedBy').value,
             receivedBy: receivedBy,
