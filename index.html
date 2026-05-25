@@ -2099,11 +2099,13 @@
             let actionHtml = '';
             
             if (currentAdminTab === 'active') {
+                // FIXED: Added the separate Manual Issuance Button below the Auto Issuance Button
                 actionHtml = `
                     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 12px;">
-                        <button onclick="openIssuanceForm(${row.id})" class="save-btn" style="background:var(--primary-navy); padding: 12px;"><i class="fas fa-file-invoice"></i> Prep Issuance Form</button>
+                        <button onclick="openIssuanceForm(${row.id})" class="save-btn" style="background:var(--primary-navy); padding: 10px; margin-bottom: 5px;"><i class="fas fa-magic"></i> Auto Issuance Form</button>
+                        <button onclick="openManualIssuanceForm(${row.id})" class="save-btn" style="background:var(--color-forrelease); padding: 10px;"><i class="fas fa-pen"></i> Manual Issuance Form</button>
                         
-                        <select class="action-select" id="rec-${row.id}" onchange="updateReceiver(this, ${row.id})">
+                        <select class="action-select" id="rec-${row.id}" onchange="updateReceiver(this, ${row.id})" style="margin-top: 5px;">
                             <option value="">-- Assign Receiver --</option>
                             <option value="Sir Emman" ${row.receivedBy === 'Sir Emman' ? 'selected' : ''}>Received by Sir Emman</option>
                             <option value="Sir Eruel" ${row.receivedBy === 'Sir Eruel' ? 'selected' : ''}>Received by Sir Eruel</option>
@@ -2354,6 +2356,7 @@
         calcIssuanceTotal();
     };
 
+    // ORIGINAL AUTO FORM
     async function openIssuanceForm(id) {
         if (!issuanceFeatureEnabled) {
             return Swal.fire({
@@ -2371,7 +2374,7 @@
         currentlyProcessingReqNo = reqNoStr;
         currentReqEmail = row.email || "";
 
-        Swal.fire({ title: 'Preparing Form...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+        Swal.fire({ title: 'Preparing Auto Form...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
         try {
             const res = await fetch(`${SCRIPT_URL}?action=getIssuanceData&reqNo=${reqNoStr}`);
@@ -2382,10 +2385,7 @@
             document.getElementById('issDept').innerText = row.dept;
             document.getElementById('issReqNo').innerText = reqNoStr;
             
-            // Setup the editable date
             document.getElementById('issDate').value = new Date().toISOString().split('T')[0];
-            
-            // Set the dynamic white disclaimer
             document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
             
             const tbody = document.getElementById('issTableBody');
@@ -2400,7 +2400,6 @@
                     let alreadyIssued = issData.issuedQtyMap[cleanDesc] || 0;
                     let remainingQty = originalQtys[idx] - alreadyIssued;
 
-                    // Automatically fetch the saved price if we have it
                     let savedPrice = issData.priceMap[cleanDesc] || "";
 
                     if (remainingQty > 0) {
@@ -2422,6 +2421,64 @@
                 Swal.fire('Fully Issued', 'All items for this request have already been issued on previous forms.', 'info'); 
                 return; 
             }
+
+            const prepSel = document.getElementById('issPreparedBy');
+            if (row.receivedBy && (row.receivedBy.includes("Emman") || row.receivedBy.includes("Eruel"))) { 
+                prepSel.value = row.receivedBy; 
+            }
+
+            document.getElementById('issReceivedBy').value = "";
+            if (issPad) issPad.clear();
+            calcIssuanceTotal();
+
+            const modal = document.getElementById('issuanceModal');
+            modal.classList.remove('kiosk-locked');
+            modal.style.display = 'flex';
+            resizeCanvas();
+            
+        } catch(e) { 
+            Swal.fire('Error', 'Failed to generate Form.', 'error'); 
+        }
+    }
+
+    // NEW PURE MANUAL FORM
+    async function openManualIssuanceForm(id) {
+        if (!issuanceFeatureEnabled) {
+            return Swal.fire({
+                icon: 'info',
+                title: 'Feature Unavailable',
+                text: 'The digital Issuance Form feature is currently disabled by CQI Administration. Please deplete physical paper stocks first.',
+                confirmButtonColor: '#002147'
+            });
+        }
+
+        const row = allData.find(r => r.id == id);
+        if (!row) return;
+
+        const reqNoStr = `REQ-${new Date().getFullYear()}-${row.id.toString().padStart(4,'0')}`;
+        currentlyProcessingReqNo = reqNoStr;
+        currentReqEmail = row.email || "";
+
+        Swal.fire({ title: 'Preparing Manual Form...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+        try {
+            // We still need to fetch the next Issuance Number
+            const res = await fetch(`${SCRIPT_URL}?action=getIssuanceData&reqNo=${reqNoStr}`);
+            const issData = await res.json();
+            Swal.close();
+
+            document.getElementById('issNo').innerText = issData.newIssuanceNo;
+            document.getElementById('issDept').innerText = row.dept;
+            document.getElementById('issReqNo').innerText = reqNoStr;
+            
+            document.getElementById('issDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
+            
+            const tbody = document.getElementById('issTableBody');
+            
+            // Start completely blank, then add just one empty row so they can start typing
+            tbody.innerHTML = '';
+            addIssuanceRow();
 
             const prepSel = document.getElementById('issPreparedBy');
             if (row.receivedBy && (row.receivedBy.includes("Emman") || row.receivedBy.includes("Eruel"))) { 
