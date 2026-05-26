@@ -1103,8 +1103,7 @@
             </div>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; height: fit-content;" id="headerButtons">
-            <button onclick="window.print()" class="save-btn" style="background: var(--color-completed); color: white; flex:none;"><i class="fas fa-print"></i> Print View</button>
-            <button onclick="exportFilteredViewToCSV()" class="save-btn" style="background: var(--color-forrelease); color: white; flex:none;" id="btnExportActive"><i class="fas fa-file-excel"></i> Export View</button>
+            <button onclick="exportFilteredViewToCSV()" class="save-btn" style="background: var(--color-forrelease); color: white; flex:none;" id="btnExportActive"><i class="fas fa-file-excel"></i> Export CSV View</button>
             <button onclick="fetchData()" class="save-btn" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); flex:none;"><i class="fas fa-sync"></i> Refresh Site</button>
         </div>
     </div>
@@ -1928,8 +1927,8 @@
 
         items.forEach((item, idx) => {
             if(item) {
-                // BUG FIX: Hide the item forever if it is checked, ignoring what status it is currently in.
-                let isHidden = (checkedArr[idx] === 'true');
+                // BUG FIX: Only hide released items if we are in the active tab. In completed tab, show everything!
+                let isHidden = (currentAdminTab === 'active' && checkedArr[idx] === 'true');
                 
                 if (isHidden) {
                     releasedCount++;
@@ -1945,23 +1944,26 @@
                     let imgHtml = photosArr[idx] && photosArr[idx].startsWith('data:image') 
                         ? `<img src="${photosArr[idx]}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid var(--border-color); cursor:pointer; margin-right:15px;" onclick="viewFullImage('${photosArr[idx]}')">` 
                         : '';
+                    
+                    let pointerEventStyle = currentAdminTab !== 'active' ? 'pointer-events: none;' : '';
 
                     interactiveItemsHtml += `
                         <div style="padding:15px; background:var(--bg-card); color:var(--text-main); border:2px solid var(--border-color); border-radius:8px; margin-bottom:10px; transition: 0.2s;">
                             <div style="display:flex; align-items:center;">
-                                <input type="checkbox" id="itemchk-${id}-${idx}" style="width:24px; height:24px; cursor:pointer; margin-right:15px;" ${isChecked}>
+                                <input type="checkbox" id="itemchk-${id}-${idx}" style="width:24px; height:24px; cursor:pointer; margin-right:15px; ${pointerEventStyle}" ${isChecked}>
                                 ${imgHtml}
-                                <label for="itemchk-${id}-${idx}" style="cursor:pointer; flex:1; margin:0; font-size:16px; text-align:left; font-weight:500; color:var(--text-main);">
+                                <label for="itemchk-${id}-${idx}" style="cursor:pointer; flex:1; margin:0; font-size:16px; text-align:left; font-weight:500; color:var(--text-main); ${pointerEventStyle}">
                                     <strong>${qtys[idx] || '-'}x</strong> ${item}
                                 </label>
                             </div>
                             <div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">
-                                <input type="text" id="itemnote-${id}-${idx}" placeholder="Specific note for this item (e.g. Out of stock)" value="${notesArr[idx] || ''}" style="padding:8px; background:var(--input-bg); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px; font-size:13px; width:100%;">
+                                <input type="text" id="itemnote-${id}-${idx}" placeholder="Specific note for this item (e.g. Out of stock)" value="${notesArr[idx] || ''}" style="padding:8px; background:var(--input-bg); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px; font-size:13px; width:100%; ${pointerEventStyle}">
+                                ${currentAdminTab === 'active' ? `
                                 <div style="display:flex; gap:5px;">
                                     <button onclick="fillNote('itemnote-${id}-${idx}', 'Out of Stock')" class="qf-btn">Out of Stock</button>
                                     <button onclick="fillNote('itemnote-${id}-${idx}', 'Wait for Delivery')" class="qf-btn">Wait for Delivery</button>
                                     <button onclick="fillNote('itemnote-${id}-${idx}', 'Substituted brand')" class="qf-btn">Substituted</button>
-                                </div>
+                                </div>` : ''}
                             </div>
                         </div>
                     `;
@@ -1973,18 +1975,29 @@
             html += `<div style="background: rgba(46, 125, 50, 0.1); border: 1px solid var(--color-completed); color: var(--color-completed); padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; font-weight: bold;"><i class="fas fa-check-circle"></i> ${releasedCount} item(s) previously marked as released are hidden from this view.</div>`;
         }
 
-        html += `<p style="font-size:15px; color:var(--text-main); margin-bottom:15px; font-weight:700;">Select READY items and add specific notes if needed:</p>`;
+        html += `<p style="font-size:15px; color:var(--text-main); margin-bottom:15px; font-weight:700;">${currentAdminTab === 'active' ? 'Select READY items and add specific notes if needed:' : 'Requested Items & Notes:'}</p>`;
         html += interactiveItemsHtml;
         
         html += `
             </div>
+        `;
+        
+        if (currentAdminTab === 'active') {
+            html += `
             <div style="margin-top:30px; display:flex; flex-direction:column; gap:12px; border-top: 2px solid var(--border-color); padding-top: 20px;">
                 <button onclick="saveChecklistAndStatus(${id}, ${items.length}, 'For Release')" class="save-btn" style="background:var(--color-forrelease); padding: 18px; font-size: 16px; width: 100%;">✅ SAVE & SET TO "FOR RELEASE (FULL)"</button>
                 <button onclick="saveChecklistAndStatus(${id}, ${items.length}, 'Partial Release')" class="save-btn" style="background:var(--color-partial); padding: 18px; font-size: 16px; width: 100%;">⚠️ SAVE & SET TO "PARTIAL RELEASE"</button>
                 <button onclick="saveChecklistAndStatus(${id}, ${items.length}, null)" class="save-btn" style="background:var(--primary-navy); padding: 18px; font-size: 16px; width: 100%;">💾 SAVE CHECKLIST & NOTES ONLY</button>
                 <button onclick="Swal.close()" class="save-btn" style="background:var(--bg-gray); color:var(--text-muted); border:1px solid var(--border-color); padding: 15px; font-size: 16px; width: 100%;">Cancel / Close</button>
             </div>
-        `;
+            `;
+        } else {
+            html += `
+            <div style="margin-top:30px; display:flex; flex-direction:column; gap:12px; border-top: 2px solid var(--border-color); padding-top: 20px;">
+                <button onclick="Swal.close()" class="save-btn" style="background:var(--bg-gray); color:var(--text-main); border:1px solid var(--border-color); padding: 15px; font-size: 16px; width: 100%;">Close</button>
+            </div>
+            `;
+        }
 
         Swal.fire({
             html: html,
@@ -2000,7 +2013,6 @@
         for(let i=0; i<arrayLength; i++) {
             let chk = document.getElementById(`itemchk-${id}-${i}`);
             let note = document.getElementById(`itemnote-${id}-${i}`);
-            // Works reliably even if the input is wrapped in display:none
             newChecked.push(chk && chk.checked ? 'true' : 'false');
             newNotes.push(note ? note.value.replace(/\|/g, '') : ''); 
         }
@@ -2065,8 +2077,8 @@
 
             for(let i=0; i<itemsArr.length; i++) {
                 if (itemsArr[i]) {
-                    // BUG FIX: Hide checked items entirely from main table view
-                    if (checkedArr[i] === 'true') {
+                    // Only hide checked items from the active tab view. In completed/archive, show everything.
+                    if (currentAdminTab === 'active' && checkedArr[i] === 'true') {
                         partialHiddenCount++;
                         continue;
                     }
@@ -2082,14 +2094,15 @@
             }
             itemsHtml += '</ul>';
             if(hiddenCount > 0) {
-                itemsHtml += `<div style="font-size:11px; color:var(--text-muted); margin-top:5px; margin-left:15px;">+ ${hiddenCount} more pending...</div>`;
+                itemsHtml += `<div style="font-size:11px; color:var(--text-muted); margin-top:5px; margin-left:15px;">+ ${hiddenCount} more ${currentAdminTab === 'active' ? 'pending...' : 'items...'}</div>`;
             }
             
-            // Indicator for hidden released items
-            if(partialHiddenCount > 0) {
+            // Indicator for hidden released items (only relevant in active tab since in completed tab none are hidden)
+            if(currentAdminTab === 'active' && partialHiddenCount > 0) {
                 itemsHtml += `<div style="font-size:11px; color:var(--color-completed); margin-top:6px; margin-left:15px; background: rgba(46, 125, 50, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block;"><i class="fas fa-check-circle"></i> ${partialHiddenCount} item(s) already released</div>`;
             }
             
+            // Show the "View Full List & Notes" button on ALL tabs now
             itemsHtml += `<button class="btn-items" onclick="openItemsChecklist(${row.id})"><i class="fas fa-list-check"></i> View Full List & Notes</button>`;
 
             const sigHod = (row.sigHod && String(row.sigHod).startsWith('data:image')) ? row.sigHod : "";
@@ -2099,7 +2112,6 @@
             let actionHtml = '';
             
             if (currentAdminTab === 'active') {
-                // FIXED: Added the separate Manual Issuance Button below the Auto Issuance Button
                 actionHtml = `
                     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 12px;">
                         <button onclick="openIssuanceForm(${row.id})" class="save-btn" style="background:var(--primary-navy); padding: 10px; margin-bottom: 5px;"><i class="fas fa-magic"></i> Auto Issuance Form</button>
@@ -2321,20 +2333,50 @@
         applyFilters(); 
     }
 
+    // ==========================================
+    // EXPORT TO CSV (UPGRADED FOR EXCEL)
+    // - Exports items individually per row for Pivot Tables
+    // - Generates proper UTF-8 BOM encoding for Microsoft Excel
+    // - EXACT HEADERS matched from user screenshots
+    // ==========================================
     function exportFilteredViewToCSV() {
         if(filteredDataCache.length === 0) return Swal.fire('Empty', 'No data to export.', 'info');
-        
-        let csvContent = "data:text/csv;charset=utf-8,ID,Date,Time,Department,Requester,Priority,Status,Received By,Items Requested\r\n";
+
+        // Added BOM for Excel UTF-8 compatibility
+        let csvContent = "\uFEFF";
+
+        // Headers matching the requested Excel file format exactly
+        csvContent += "INV. NO./ ISSUANCE #,DATE,SUPPLIER/ DEPARTMENT,QTY,UNIT,DESCRIPTION/ITEM,U/C,CONTROL NO.,BRAND,PURCHASED DATE\r\n";
+
         filteredDataCache.forEach(r => {
-            let cleanItems = String(r.items || '').replace(/\|/g, ', ').replace(/"/g, '""');
-            csvContent += `"${r.id}","${r.date}","${r.time}","${r.dept}","${r.reqBy}","${r.priority}","${r.status}","${r.receivedBy || 'Unassigned'}","${cleanItems}"\r\n`;
+            const itemsArr = String(r.items || '').split('|').map(i => i.trim());
+            const qtysArr = String(r.qtys || '').split('|').map(i => i.trim());
+
+            // One row per item for better Pivot Tables/Filtering
+            itemsArr.forEach((item, idx) => {
+                if (item) {
+                    let cleanItem = item.replace(/"/g, '""');
+                    let qty = qtysArr[idx] || "0";
+
+                    // Map known data. Empty strings ("") for columns to be filled manually.
+                    csvContent += `"${r.id}","${r.date}","${r.dept}","${qty}","","${cleanItem}","","","",""\r\n`;
+                }
+            });
+
+            // If there are no items, still export the request row to avoid missing data
+            if(itemsArr.length === 0 || (itemsArr.length === 1 && itemsArr[0] === "")) {
+                csvContent += `"${r.id}","${r.date}","${r.dept}","0","","","","","",""\r\n`;
+            }
         });
-        
-        const link = document.createElement("a"); 
-        link.setAttribute("href", encodeURI(csvContent)); 
-        link.setAttribute("download", `CSR_Filtered_View_${new Date().getTime()}.csv`);
-        document.body.appendChild(link); 
-        link.click(); 
+
+        // Use Blob and object URL for large robust exports
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `CSR_Monitoring_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
         document.body.removeChild(link);
     }
 
