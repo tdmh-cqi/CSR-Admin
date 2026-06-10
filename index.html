@@ -929,13 +929,36 @@
             .main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; }
             .print-hide { display: none !important; }
             
-            #analyticsSection, #cqiSection { display: none !important; }
+            #analyticsSection, #cqiSection, #issuancesSection { display: none !important; }
             
             .modal-overlay { position: absolute; top: 0; left: 0; background: white; padding: 0; display: block; z-index: 99999; }
             .issuance-form { box-shadow: none; padding: 0; max-width: 100%; border: none; }
             .iss-table input { font-size: 12pt; border: none !important; background: transparent !important; color: black !important; }
             #issDate { border: none !important; pointer-events: none; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
             #issDate::-webkit-inner-spin-button, #issDate::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
+        }
+        
+        /* Fast Tick Modal Checkbox Styles */
+        .fast-tick-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .fast-tick-item:hover {
+            border-color: var(--primary-navy);
+            background: var(--bg-card);
+        }
+        .fast-tick-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -957,6 +980,33 @@
 </div>
 
 <!-- ========================================================= -->
+<!-- FAST TICK MODAL (SMART AUTO ISSUANCE)                     -->
+<!-- ========================================================= -->
+<div class="modal-overlay" id="fastTickModal" style="z-index: 2500;">
+    <div class="issuance-form" style="max-width: 600px; background: var(--bg-card) !important; color: var(--text-main) !important; font-family: 'Inter', sans-serif;">
+        <h3 style="margin-top: 0; color: var(--primary-navy); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
+            <i class="fas fa-tasks"></i> Select Items to Issue Now
+        </h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+            Only items with remaining unissued quantities are shown below. Tick the items you are releasing in this specific form.
+        </p>
+        
+        <div id="fastTickList" style="max-height: 400px; overflow-y: auto; padding-right: 5px; margin-bottom: 20px;">
+            <!-- Checkboxes injected here -->
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+            <button onclick="proceedToAutoForm()" class="save-btn" style="padding: 15px; font-size: 15px;">
+                <i class="fas fa-magic"></i> Generate Auto Form
+            </button>
+            <button onclick="closeFastTick()" class="save-btn" style="background:var(--bg-gray); color:var(--text-main); border: 1px solid var(--border-color); padding: 15px; font-size: 15px; flex: 0.4;">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
 <!-- ISSUANCE FORM MODAL (WHITE PAPER - ORIGINAL COPY)         -->
 <!-- ========================================================= -->
 <div class="modal-overlay" id="issuanceModal">
@@ -971,7 +1021,7 @@
         
         <div class="admin-prep-banner" id="adminBanner">
             <strong><i class="fas fa-user-shield"></i> STEP 1: ADMIN PREPARATION</strong><br>
-            Please prepare the issuance form. Type the <b>Unit Prices</b> manually for accuracy. Adjust the <b>QTY</b> and edit the <b>Item Name</b> if this is a partial release. When ready, click "Lock Screen for Signature".
+            Please prepare the issuance form. Type the <b>Unit Prices</b> manually for accuracy. Adjust the <b>QTY</b> and edit the <b>Item Name</b> if this is a partial release. When ready, click "Preview Form" or "Lock Screen".
         </div>
 
         <div class="iss-header">
@@ -1038,6 +1088,9 @@
         </div>
 
         <div class="prep-controls print-hide" id="prepControls">
+            <button onclick="previewIssuanceForm()" class="save-btn" style="background: #0288d1; padding: 15px 30px; font-size: 16px;">
+                <i class="fas fa-eye"></i> Preview Form
+            </button>
             <button onclick="lockKioskMode()" class="save-btn" style="background: #ef4444; padding: 15px 30px; font-size: 16px;">
                 <i class="fas fa-lock"></i> Lock Screen for Signature
             </button>
@@ -1056,9 +1109,21 @@
 </div>
 
 <!-- ========================================================= -->
+<!-- ISSUANCE FORM PREVIEW MODAL                               -->
+<!-- ========================================================= -->
+<div class="modal-overlay" id="formPreviewModal" onclick="closeFormPreview(event)" style="z-index: 2500;">
+    <div class="issuance-form" id="formPreviewContainer" style="cursor: default;" onclick="event.stopPropagation()">
+        <button class="print-hide" style="position: absolute; top: 15px; right: 15px; background: #e2e8f0; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Inter', sans-serif; color: #333;" onclick="closeFormPreview()"><i class="fas fa-times"></i> Close Preview</button>
+        <div id="formPreviewContent">
+            <!-- Content injected via JS -->
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
 <!-- FULL SCREEN PREVIEW MODAL FOR CQI SETTINGS                -->
 <!-- ========================================================= -->
-<div class="modal-overlay" id="docPreviewModal" onclick="closeDocPreview(event)">
+<div class="modal-overlay" id="docPreviewModal" onclick="closeDocPreview(event)" style="z-index: 2500;">
     <div class="issuance-form" id="docPreviewContainer" style="cursor: default;" onclick="event.stopPropagation()">
         <button class="print-hide" style="position: absolute; top: 15px; right: 15px; background: #e2e8f0; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-family: 'Inter', sans-serif; color: #333;" onclick="closeDocPreview()"><i class="fas fa-times"></i> Close</button>
         <div id="docPreviewContent">
@@ -1084,6 +1149,9 @@
     <div class="nav-item" id="tabBtn-disapproved" onclick="switchAdminTab('disapproved')"><i class="fas fa-ban"></i> <span>Disapproved</span></div>
     <div class="nav-item" id="tabBtn-analytics" onclick="switchAdminTab('analytics')"><i class="fas fa-chart-pie"></i> <span>Exec. Reports</span></div>
     
+    <!-- NEW: ISSUANCE LOGS TAB -->
+    <div class="nav-item" id="tabBtn-issuances" onclick="switchAdminTab('issuances')"><i class="fas fa-file-invoice"></i> <span>Issuance Logs</span></div>
+    
     <!-- Hidden CQI Settings Tab -->
     <div class="nav-item" id="tabBtn-cqi" onclick="switchAdminTab('cqi')" style="display: none; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px; margin-top: 10px;"><i class="fas fa-cogs"></i> <span>CQI Settings</span></div>
 
@@ -1103,7 +1171,8 @@
             </div>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; height: fit-content;" id="headerButtons">
-            <button onclick="exportFilteredViewToCSV()" class="save-btn" style="background: var(--color-forrelease); color: white; flex:none;" id="btnExportActive"><i class="fas fa-file-excel"></i> Export CSV View</button>
+            <button onclick="exportFilteredViewToCSV()" class="save-btn" style="background: var(--color-forrelease); color: white; flex:none;" id="btnExportActive"><i class="fas fa-file-excel"></i> Export Raw CSV</button>
+            <button onclick="exportIssuanceDataToExcel()" class="save-btn" style="background: var(--color-completed); color: white; flex:none; display:none;" id="btnExportIssuance"><i class="fas fa-file-excel"></i> Export Issuance Data</button>
             <button onclick="fetchData()" class="save-btn" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); flex:none;"><i class="fas fa-sync"></i> Refresh Site</button>
         </div>
     </div>
@@ -1221,6 +1290,11 @@
                 <label>ID Search</label>
                 <input type="number" id="filterId" placeholder="e.g. 45" oninput="debouncedApplyFilters()">
             </div>
+            <!-- NEW DATE FILTER -->
+            <div class="filter-group" style="min-width: 120px; flex: 0.8;">
+                <label>Date Filter</label>
+                <input type="date" id="filterDate" onchange="applyFilters()">
+            </div>
             <div class="filter-group">
                 <label>Search Items</label>
                 <input type="text" id="filterItem" placeholder="e.g. Gloves..." oninput="debouncedApplyFilters()">
@@ -1258,6 +1332,47 @@
             </table>
             <div id="loadingState" style="text-align:center; padding: 40px; color: var(--text-muted); display:none;">
                 <i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Fetching Live Data...
+            </div>
+        </div>
+    </div>
+    
+    <!-- ISSUANCES LOGS SECTION -->
+    <div id="issuancesSection" style="display:none;">
+        <div class="filters-section" id="issuanceFiltersBlock">
+            <div class="filter-group" style="min-width: 150px; flex: 1;">
+                <label>Search Issuance / Req No.</label>
+                <input type="text" id="filterIssNo" placeholder="e.g. ISS-2026-0001" oninput="debouncedApplyIssuanceFilters()">
+            </div>
+            <div class="filter-group" style="min-width: 120px; flex: 0.8;">
+                <label>Date Filter</label>
+                <input type="date" id="filterIssDate" onchange="applyIssuanceFilters()">
+            </div>
+            <div class="filter-group" style="min-width: 150px; flex: 1;">
+                <label>Department</label>
+                <select id="filterIssDept" onchange="applyIssuanceFilters()">
+                    <option value="">All Departments</option>
+                </select>
+            </div>
+            <button onclick="resetIssuanceFilters()" class="remark-input" style="cursor:pointer; background: var(--bg-gray); width: auto; border: 1px solid var(--border-color); height: 34px;">Reset</button>
+        </div>
+
+        <div class="table-container">
+            <table id="issuancesTable">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Issuance No.</th>
+                        <th style="width: 15%;">Req Ref No.</th>
+                        <th style="width: 15%;">Date Issued</th>
+                        <th style="width: 15%;">Department</th>
+                        <th style="width: 15%;">Total Amount</th>
+                        <th style="width: 15%;">Received By</th>
+                        <th style="width: 10%; text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="issuancesBody"></tbody>
+            </table>
+            <div id="issuancesLoading" style="text-align:center; padding: 40px; color: var(--text-muted); display:none;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Fetching Digital Issuance Records...
             </div>
         </div>
     </div>
@@ -1399,14 +1514,20 @@
     
     let allData = [];
     let filteredDataCache = []; 
+    let allIssuances = []; // Cache for issuance logs
+    let filteredIssuancesCache = []; // Cache for filtered issuance logs
     let currentAdminTab = 'active'; 
     let issPad = null;
     let currentlyProcessingReqNo = null;
     let currentReqEmail = null;
     let filterTimeout; 
+    let issFilterTimeout;
     let statusChartInst = null;
     let deptChartInst = null;
     let yearlyChartInst = null; 
+    
+    // Auto Issuance Context
+    window.autoIssuanceContext = null;
     
     // Master Settings States
     let issuanceFeatureEnabled = false;
@@ -1716,9 +1837,14 @@
             const text = await res.text();
             const depts = JSON.parse(text);
             const sel = document.getElementById('filterDept');
-            if (sel && Array.isArray(depts) && depts.length > 0) {
-                sel.innerHTML = '<option value="">All Departments</option>';
-                depts.forEach(d => sel.innerHTML += `<option value="${d}">${d}</option>`);
+            const issSel = document.getElementById('filterIssDept');
+            
+            if (Array.isArray(depts) && depts.length > 0) {
+                let optionsHtml = '<option value="">All Departments</option>';
+                depts.forEach(d => optionsHtml += `<option value="${d}">${d}</option>`);
+                
+                if(sel) sel.innerHTML = optionsHtml;
+                if(issSel) issSel.innerHTML = optionsHtml;
             }
         } catch(e) {}
     }
@@ -1766,7 +1892,7 @@
 
     function switchAdminTab(tab) {
         currentAdminTab = tab;
-        ['active', 'archive', 'disapproved', 'analytics', 'cqi'].forEach(t => {
+        ['active', 'archive', 'disapproved', 'analytics', 'cqi', 'issuances'].forEach(t => {
             const btn = document.getElementById('tabBtn-' + t);
             if (btn) btn.classList.remove('active');
         });
@@ -1787,11 +1913,13 @@
         setDisplay('dataViewSection', 'none');
         setDisplay('analyticsSection', 'none');
         setDisplay('cqiSection', 'none');
+        setDisplay('issuancesSection', 'none');
         
         if(tab === 'analytics') {
             title.innerText = 'Analytics & Execomm Reports';
             setDisplay('analyticsSection', 'block');
             setDisplay('btnExportActive', 'none'); 
+            setDisplay('btnExportIssuance', 'none');
             
             const mSel = document.getElementById('analyticsMonthSelect');
             const ySel = document.getElementById('analyticsYearSelect');
@@ -1810,10 +1938,19 @@
             title.innerText = 'CQI Master Setup';
             setDisplay('cqiSection', 'block');
             setDisplay('btnExportActive', 'none');
+            setDisplay('btnExportIssuance', 'none');
+        }
+        else if (tab === 'issuances') {
+            title.innerText = 'Issuance Logs';
+            setDisplay('issuancesSection', 'block');
+            setDisplay('btnExportActive', 'none');
+            setDisplay('btnExportIssuance', 'inline-block');
+            fetchIssuances();
         }
         else {
             setDisplay('dataViewSection', 'block');
             setDisplay('btnExportActive', 'inline-block');
+            setDisplay('btnExportIssuance', 'none');
             if(tab === 'archive') {
                 title.innerText = 'Completed Requisitions';
                 setDisplay('statsGrid', 'none');
@@ -1868,11 +2005,194 @@
             if(currentAdminTab === 'analytics') {
                 renderAnalytics();
                 renderYearlyAnalytics();
-            } else if (currentAdminTab !== 'cqi') {
+            } else if (currentAdminTab !== 'cqi' && currentAdminTab !== 'issuances') {
                 applyFilters();
             }
         } catch (e) {} finally { setDisplay('loadingState', 'none'); }
     }
+
+    // NEW: FETCH ISSUANCES
+    async function fetchIssuances() {
+        setDisplay('issuancesLoading', 'block');
+        const tbody = document.getElementById('issuancesBody');
+        if (tbody) tbody.innerHTML = ''; 
+        
+        try {
+            const res = await fetch(`${SCRIPT_URL}?action=getAllIssuances`);
+            if(!res.ok) throw new Error("Could not fetch issuances.");
+            
+            const fetchedData = await res.json();
+            allIssuances = (Array.isArray(fetchedData) ? fetchedData : []).reverse();
+            
+            applyIssuanceFilters();
+            
+        } catch(e) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; font-size:15px; color: var(--color-disapproved);">Failed to load issuance logs.</td></tr>`;
+        } finally {
+            setDisplay('issuancesLoading', 'none');
+        }
+    }
+
+    function debouncedApplyIssuanceFilters() {
+        clearTimeout(issFilterTimeout);
+        issFilterTimeout = setTimeout(applyIssuanceFilters, 300);
+    }
+
+    function applyIssuanceFilters() {
+        const searchTxt = (document.getElementById('filterIssNo')?.value || "").toLowerCase();
+        const date = document.getElementById('filterIssDate')?.value || "";
+        const dept = document.getElementById('filterIssDept')?.value || "";
+
+        filteredIssuancesCache = allIssuances.filter(iss => {
+            const matchSearch = !searchTxt || iss.issuanceNo.toLowerCase().includes(searchTxt) || iss.reqNo.toLowerCase().includes(searchTxt);
+            
+            let matchDate = true;
+            if (date) {
+                 const [y, m, d] = date.split('-');
+                 const formattedFilterDate = `${m}/${d}/${y}`; // Convert to MM/DD/YYYY to match Google sheets format usually returned
+                 matchDate = (iss.date === date || iss.date === formattedFilterDate);
+            }
+            
+            // Exact Match for department
+            const matchDept = !dept || (iss.dept === dept);
+
+            return matchSearch && matchDate && matchDept;
+        });
+
+        renderIssuancesTable(filteredIssuancesCache);
+    }
+
+    function resetIssuanceFilters() {
+        document.getElementById('filterIssNo').value = "";
+        document.getElementById('filterIssDate').value = "";
+        document.getElementById('filterIssDept').value = "";
+        applyIssuanceFilters();
+    }
+
+    function renderIssuancesTable(data) {
+        const tbody = document.getElementById('issuancesBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px; font-size:15px; color: var(--text-muted);">No issuance logs found.</td></tr>';
+            return;
+        }
+        
+        const frag = document.createDocumentFragment();
+        data.forEach(iss => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight:bold; color:red;">${iss.issuanceNo}</td>
+                <td style="text-decoration:underline;">${iss.reqNo}</td>
+                <td>${iss.date}</td>
+                <td style="font-weight:bold;">${iss.dept}</td>
+                <td style="font-weight:bold;">${iss.totalAmount || '0.00'}</td>
+                <td>${iss.receivedBy || 'Unknown'}</td>
+                <td style="text-align:center;">
+                    <button onclick="viewPastIssuance('${iss.issuanceNo}')" class="save-btn" style="background:var(--primary-navy); padding:6px 12px; margin:auto;"><i class="fas fa-eye"></i> View Form</button>
+                </td>
+            `;
+            frag.appendChild(tr);
+        });
+        tbody.appendChild(frag);
+    }
+
+    // NEW: VIEW PAST ISSUANCE (COLORED EXACT REPLICA)
+    function viewPastIssuance(issNo) {
+        const iss = allIssuances.find(i => i.issuanceNo === issNo);
+        if(!iss) return Swal.fire('Error', 'Issuance data not found.', 'error');
+        
+        let items = [];
+        try {
+            items = typeof iss.itemsJson === 'string' ? JSON.parse(iss.itemsJson) : (iss.itemsJson || []);
+        } catch(e) { console.error("Parse error", e); }
+        
+        let itemsHtml = '';
+        items.forEach(item => {
+            itemsHtml += `
+                <tr>
+                    <td style="border: 1px solid black !important; padding: 10px; text-align: center;">${item.qty || 0}</td>
+                    <td style="border: 1px solid black !important; padding: 10px; text-align: center;">${item.unit || ''}</td>
+                    <td style="border: 1px solid black !important; padding: 10px; text-align: left;">${item.desc || ''}</td>
+                    <td style="border: 1px solid black !important; padding: 10px; text-align: center;">${item.price || '0.00'}</td>
+                    <td style="border: 1px solid black !important; padding: 10px; text-align: center;">${item.amount || '0.00'}</td>
+                </tr>
+            `;
+        });
+
+        // Determine if there's a signature image
+        let sigHtml = '';
+        if (iss.signature && String(iss.signature).startsWith('data:image')) {
+            sigHtml = `<img src="${iss.signature}" style="max-height: 80px; max-width: 250px;">`;
+        } else {
+            sigHtml = `<span style="font-family: 'Brush Script MT', cursive; font-size: 32px; color: #000080;">${iss.receivedBy}</span>`;
+        }
+
+        const content = document.getElementById('docPreviewContent');
+        content.innerHTML = `
+            <div style="background-color: #0288d1; color: white; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: bold; padding: 6px 15px; border-radius: 4px; display: inline-block; margin-top: 25px; margin-bottom: 20px;"><i class="fas fa-file-invoice"></i> Digital Issuance Record</div>
+            
+            <div class="iss-header">
+                <img src="https://raw.githubusercontent.com/tdmh-cqi/csr2026/main/images/tdmh-logo.png" style="max-height: 70px; margin-bottom: 10px;">
+                <h2 class="iss-title">Issuance Form</h2>
+                <p class="iss-subtitle" style="color: black !important;">${g_whiteDisclaimer}</p>
+            </div>
+            
+            <div class="iss-meta" style="color: black !important;">
+                <div>
+                    <p>Department: <span style="font-weight: normal; text-decoration: underline;">${iss.dept}</span></p>
+                    <p>Request No.: <span style="font-weight: normal; text-decoration: underline;">${iss.reqNo}</span></p>
+                </div>
+                <div style="text-align: right;">
+                    <p>No.: <span style="font-weight: bold; color: red;">${iss.issuanceNo}</span></p>
+                    <p>Date: <span style="font-weight: normal; text-decoration: underline;">${iss.date}</span></p>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto; width: 100%; margin-bottom: 30px;">
+                <table class="iss-table" style="width: 100%; border-collapse: collapse; min-width: 600px; font-size: 15px; color: black !important;">
+                    <thead>
+                        <tr>
+                            <th style="border: 1px solid black !important; padding: 10px; text-align: center; width:10%; background-color: white !important; color: black !important;">QTY.</th>
+                            <th style="border: 1px solid black !important; padding: 10px; text-align: center; width:15%; background-color: white !important; color: black !important;">UNIT</th>
+                            <th style="border: 1px solid black !important; padding: 10px; text-align: left; width:45%; background-color: white !important; color: black !important;">DESCRIPTION</th>
+                            <th style="border: 1px solid black !important; padding: 10px; text-align: center; width:15%; background-color: white !important; color: black !important;">UNIT PRICE</th>
+                            <th style="border: 1px solid black !important; padding: 10px; text-align: center; width:15%; background-color: white !important; color: black !important;">AMOUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsHtml}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="text-align: right; font-weight: bold; border: none; padding-top: 15px; padding-right: 15px;">TOTAL:</td>
+                            <td style="font-weight: bold; border: 2px solid black !important; padding-top: 15px; text-align: center;">${iss.totalAmount || '0.00'}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <div class="iss-footer" style="color: black !important;">
+                <div>
+                    <p style="margin:0 0 10px 0;">Prepared by: <span style="text-decoration: underline;">${iss.preparedBy}</span></p>
+                    <p style="margin:0; font-style: italic; font-size: 13px;">"Received goods in good condition."</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin:0 0 5px 0;">Received by: <span style="text-decoration: underline;">${iss.receivedBy}</span></p>
+                    <div style="border: 1px solid #000; width: 250px; height: 80px; margin-top: 5px; position: relative; background: transparent; display: flex; align-items:center; justify-content:center;">
+                        ${sigHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const container = document.getElementById('docPreviewContainer');
+        container.style.backgroundColor = "#ffffff";
+        container.style.border = "1px solid #cbd5e1";
+        document.getElementById('docPreviewModal').style.display = 'flex';
+    }
+
 
     function updateStats(data) {
         const active = data.filter(r => r.status !== 'Completed' && r.status !== 'Disapproved');
@@ -1927,12 +2247,11 @@
 
         items.forEach((item, idx) => {
             if(item) {
-                // BUG FIX: Only hide released items if we are in the active tab. In completed tab, show everything!
+                // Hiding released items in active tab
                 let isHidden = (currentAdminTab === 'active' && checkedArr[idx] === 'true');
                 
                 if (isHidden) {
                     releasedCount++;
-                    // Retain the hidden inputs so `saveChecklistAndStatus` doesn't clear them out.
                     interactiveItemsHtml += `
                         <div style="display: none;">
                             <input type="checkbox" id="itemchk-${id}-${idx}" checked>
@@ -2077,7 +2396,7 @@
 
             for(let i=0; i<itemsArr.length; i++) {
                 if (itemsArr[i]) {
-                    // Only hide checked items from the active tab view. In completed/archive, show everything.
+                    // Only hide checked items from the active tab view.
                     if (currentAdminTab === 'active' && checkedArr[i] === 'true') {
                         partialHiddenCount++;
                         continue;
@@ -2097,12 +2416,10 @@
                 itemsHtml += `<div style="font-size:11px; color:var(--text-muted); margin-top:5px; margin-left:15px;">+ ${hiddenCount} more ${currentAdminTab === 'active' ? 'pending...' : 'items...'}</div>`;
             }
             
-            // Indicator for hidden released items (only relevant in active tab since in completed tab none are hidden)
             if(currentAdminTab === 'active' && partialHiddenCount > 0) {
                 itemsHtml += `<div style="font-size:11px; color:var(--color-completed); margin-top:6px; margin-left:15px; background: rgba(46, 125, 50, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block;"><i class="fas fa-check-circle"></i> ${partialHiddenCount} item(s) already released</div>`;
             }
             
-            // Show the "View Full List & Notes" button on ALL tabs now
             itemsHtml += `<button class="btn-items" onclick="openItemsChecklist(${row.id})"><i class="fas fa-list-check"></i> View Full List & Notes</button>`;
 
             const sigHod = (row.sigHod && String(row.sigHod).startsWith('data:image')) ? row.sigHod : "";
@@ -2114,7 +2431,7 @@
             if (currentAdminTab === 'active') {
                 actionHtml = `
                     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 12px;">
-                        <button onclick="openIssuanceForm(${row.id})" class="save-btn" style="background:var(--primary-navy); padding: 10px; margin-bottom: 5px;"><i class="fas fa-magic"></i> Auto Issuance Form</button>
+                        <button onclick="promptAutoIssuanceSelection(${row.id})" class="save-btn" style="background:var(--primary-navy); padding: 10px; margin-bottom: 5px;"><i class="fas fa-magic"></i> Auto Issuance Form</button>
                         <button onclick="openManualIssuanceForm(${row.id})" class="save-btn" style="background:var(--color-forrelease); padding: 10px;"><i class="fas fa-pen"></i> Manual Issuance Form</button>
                         
                         <select class="action-select" id="rec-${row.id}" onchange="updateReceiver(this, ${row.id})" style="margin-top: 5px;">
@@ -2309,8 +2626,8 @@
             const matchId = !reqId || item.id.toString() === reqId;
             const matchDate = !date || item.date === date;
             
-            // EXACT MATCH fix for department filtering so "OR" doesn't trigger "LabORatory"
-            const matchDept = !dept || (item.dept && item.dept === dept);
+            // EXACT MATCH fix for department filtering
+            const matchDept = !dept || (item.dept === dept);
             
             const matchItemSearch = !itemSearch || (item.items && item.items.toLowerCase().includes(itemSearch));
             
@@ -2326,8 +2643,8 @@
 
     function resetFilters() { 
         document.getElementById('filterId').value = ""; 
-        document.getElementById('filterItem').value = ""; 
         document.getElementById('filterDate').value = ""; 
+        document.getElementById('filterItem').value = ""; 
         document.getElementById('filterDept').value = ""; 
         document.getElementById('filterStatusDropdown').value = ""; 
         applyFilters(); 
@@ -2335,54 +2652,224 @@
 
     // ==========================================
     // EXPORT TO CSV (UPGRADED FOR EXCEL)
-    // - Exports items individually per row for Pivot Tables
-    // - Generates proper UTF-8 BOM encoding for Microsoft Excel
-    // - EXACT HEADERS matched from user screenshots
     // ==========================================
     function exportFilteredViewToCSV() {
         if(filteredDataCache.length === 0) return Swal.fire('Empty', 'No data to export.', 'info');
 
-        // Added BOM for Excel UTF-8 compatibility
         let csvContent = "\uFEFF";
 
-        // Headers matching the requested Excel file format exactly
         csvContent += "INV. NO./ ISSUANCE #,DATE,SUPPLIER/ DEPARTMENT,QTY,UNIT,DESCRIPTION/ITEM,U/C,CONTROL NO.,BRAND,PURCHASED DATE\r\n";
 
         filteredDataCache.forEach(r => {
             const itemsArr = String(r.items || '').split('|').map(i => i.trim());
             const qtysArr = String(r.qtys || '').split('|').map(i => i.trim());
 
-            // One row per item for better Pivot Tables/Filtering
             itemsArr.forEach((item, idx) => {
                 if (item) {
                     let cleanItem = item.replace(/"/g, '""');
                     let qty = qtysArr[idx] || "0";
 
-                    // Map known data. Empty strings ("") for columns to be filled manually.
                     csvContent += `"${r.id}","${r.date}","${r.dept}","${qty}","","${cleanItem}","","","",""\r\n`;
                 }
             });
 
-            // If there are no items, still export the request row to avoid missing data
             if(itemsArr.length === 0 || (itemsArr.length === 1 && itemsArr[0] === "")) {
                 csvContent += `"${r.id}","${r.date}","${r.dept}","0","","","","","",""\r\n`;
             }
         });
 
-        // Use Blob and object URL for large robust exports
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
-        link.setAttribute("download", `CSR_Monitoring_${new Date().toISOString().split('T')[0]}.csv`);
+        link.setAttribute("download", `CSR_Raw_Requests_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+    // NEW EXPORT ISSUANCE DATA TO EXCEL
+    async function exportIssuanceDataToExcel() {
+        if (!allIssuances || allIssuances.length === 0) {
+             Swal.fire('Empty', 'No issuance logs found to export. Fetch them first by opening the Issuance Logs tab.', 'info');
+             return;
+        }
+
+        let csvContent = "\uFEFF"; // BOM for Excel
+        csvContent += "Issuance No.,Request No.,Date,Department,Item Description,Qty,Unit,Unit Price,Amount,Prepared By,Received By\r\n";
+
+        // EXPORT FILTERED DATA IF APPLIED, OTHERWISE ALL
+        let dataToExport = filteredIssuancesCache.length > 0 ? filteredIssuancesCache : allIssuances;
+
+        dataToExport.forEach(iss => {
+            let items = [];
+            try {
+                items = typeof iss.itemsJson === 'string' ? JSON.parse(iss.itemsJson) : iss.itemsJson;
+            } catch(e) {
+                console.error("Could not parse items for issuance", iss.issuanceNo);
+            }
+
+            if (Array.isArray(items)) {
+                items.forEach(item => {
+                    let cleanDesc = (item.desc || "").replace(/"/g, '""');
+                    let qty = item.qty || 0;
+                    let unit = item.unit || "";
+                    let price = item.price || 0;
+                    let amount = item.amount || 0;
+                    
+                    csvContent += `"${iss.issuanceNo}","${iss.reqNo}","${iss.date}","${iss.dept}","${cleanDesc}","${qty}","${unit}","${price}","${amount}","${iss.preparedBy}","${iss.receivedBy}"\r\n`;
+                });
+            }
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Issuance_Records_${new Date().toISOString().split('T')[0]}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     }
 
     // ==========================================
-    // SMART ISSUANCE FORM LOGIC (WITH AUTO-FILL PRICING & MASTER TOGGLE GUARD)
+    // SMART ISSUANCE FORM LOGIC 
     // ==========================================
+    
+    async function promptAutoIssuanceSelection(id) {
+        if (!issuanceFeatureEnabled) {
+            return Swal.fire({
+                icon: 'info',
+                title: 'Feature Unavailable',
+                text: 'The digital Issuance Form feature is currently disabled by CQI Administration. Please deplete physical paper stocks first.',
+                confirmButtonColor: '#002147'
+            });
+        }
+
+        const row = allData.find(r => r.id == id);
+        if (!row) return;
+
+        const reqNoStr = `REQ-${new Date().getFullYear()}-${row.id.toString().padStart(4,'0')}`;
+        
+        Swal.fire({ title: 'Calculating Remaining Items...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+        try {
+            const res = await fetch(`${SCRIPT_URL}?action=getIssuanceData&reqNo=${reqNoStr}`);
+            const issData = await res.json();
+            Swal.close();
+
+            const originalItems = String(row.items || '').split('|').map(i => i.trim());
+            const originalQtys = String(row.qtys || '').split('|').map(i => parseInt(i.trim()) || 0);
+            
+            let listHtml = '';
+            let remainingItemsCount = 0;
+            let remainingItemsArray = [];
+
+            originalItems.forEach((item, idx) => {
+                if(item) {
+                    let cleanDesc = item.toUpperCase();
+                    let alreadyIssued = issData.issuedQtyMap[cleanDesc] || 0;
+                    let remainingQty = originalQtys[idx] - alreadyIssued;
+
+                    let savedPrice = issData.priceMap[cleanDesc] || "";
+                    
+                    if (remainingQty > 0) {
+                        remainingItemsCount++;
+                        remainingItemsArray.push({ desc: item, qty: remainingQty, price: savedPrice });
+                        
+                        listHtml += `
+                            <label class="fast-tick-item">
+                                <input type="checkbox" class="fast-tick-checkbox" data-idx="${remainingItemsArray.length - 1}" checked>
+                                <span style="font-weight: 500;"><strong>${remainingQty}x</strong> ${item}</span>
+                            </label>
+                        `;
+                    }
+                }
+            });
+
+            if(remainingItemsCount === 0) { 
+                Swal.fire('Fully Issued', 'All items for this request have already been issued on previous forms.', 'info'); 
+                return; 
+            }
+
+            // Save context for Step 2
+            window.autoIssuanceContext = {
+                row: row,
+                reqNoStr: reqNoStr,
+                issData: issData,
+                remainingItemsArray: remainingItemsArray
+            };
+
+            document.getElementById('fastTickList').innerHTML = listHtml;
+            document.getElementById('fastTickModal').style.display = 'flex';
+            
+        } catch(e) { 
+            Swal.fire('Error', 'Failed to fetch issuance status.', 'error'); 
+        }
+    }
+    
+    function closeFastTick() {
+        document.getElementById('fastTickModal').style.display = 'none';
+        window.autoIssuanceContext = null;
+    }
+
+    function proceedToAutoForm() {
+        const checkboxes = document.querySelectorAll('.fast-tick-checkbox');
+        let selectedIndices = [];
+        checkboxes.forEach(chk => {
+            if (chk.checked) selectedIndices.push(parseInt(chk.dataset.idx));
+        });
+        
+        if (selectedIndices.length === 0) {
+            Swal.fire('No Items Selected', 'Please select at least one item to issue, or click Cancel.', 'warning');
+            return;
+        }
+
+        const ctx = window.autoIssuanceContext;
+        currentlyProcessingReqNo = ctx.reqNoStr;
+        currentReqEmail = ctx.row.email || "";
+
+        document.getElementById('issNo').innerText = ctx.issData.newIssuanceNo;
+        document.getElementById('issDept').innerText = ctx.row.dept;
+        document.getElementById('issReqNo').innerText = ctx.reqNoStr;
+        
+        document.getElementById('issDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
+        
+        const tbody = document.getElementById('issTableBody');
+        tbody.innerHTML = '';
+
+        selectedIndices.forEach(idx => {
+            const item = ctx.remainingItemsArray[idx];
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="number" class="iss-qty" value="${item.qty}" min="1" oninput="calcIssuanceTotal()"></td>
+                <td><input type="text" class="iss-unit" placeholder="unit"></td>
+                <td style="text-align: left;"><input type="text" class="iss-desc" value="${item.desc}" placeholder="${item.desc}" style="text-align: left;"></td>
+                <td><input type="number" class="iss-price" placeholder="0.00" value="${item.price}" oninput="calcIssuanceTotal()"></td>
+                <td><input type="text" class="iss-amt" value="0.00" readonly style="font-weight:bold; background: transparent; border: none;"></td>
+                <td class="print-hide th-action"><button class="remove-row-btn" onclick="this.parentElement.parentElement.remove(); calcIssuanceTotal();"><i class="fas fa-trash"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        const prepSel = document.getElementById('issPreparedBy');
+        if (ctx.row.receivedBy && (ctx.row.receivedBy.includes("Emman") || ctx.row.receivedBy.includes("Eruel"))) { 
+            prepSel.value = ctx.row.receivedBy; 
+        }
+
+        document.getElementById('issReceivedBy').value = "";
+        if (issPad) issPad.clear();
+        calcIssuanceTotal();
+        
+        closeFastTick();
+
+        const modal = document.getElementById('issuanceModal');
+        modal.classList.remove('kiosk-locked');
+        modal.style.display = 'flex';
+        resizeCanvas();
+    }
+
     window.addIssuanceRow = function() {
         const tbody = document.getElementById('issTableBody');
         const tr = document.createElement('tr');
@@ -2398,92 +2885,6 @@
         calcIssuanceTotal();
     };
 
-    // ORIGINAL AUTO FORM
-    async function openIssuanceForm(id) {
-        if (!issuanceFeatureEnabled) {
-            return Swal.fire({
-                icon: 'info',
-                title: 'Feature Unavailable',
-                text: 'The digital Issuance Form feature is currently disabled by CQI Administration. Please deplete physical paper stocks first.',
-                confirmButtonColor: '#002147'
-            });
-        }
-
-        const row = allData.find(r => r.id == id);
-        if (!row) return;
-
-        const reqNoStr = `REQ-${new Date().getFullYear()}-${row.id.toString().padStart(4,'0')}`;
-        currentlyProcessingReqNo = reqNoStr;
-        currentReqEmail = row.email || "";
-
-        Swal.fire({ title: 'Preparing Auto Form...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-
-        try {
-            const res = await fetch(`${SCRIPT_URL}?action=getIssuanceData&reqNo=${reqNoStr}`);
-            const issData = await res.json();
-            Swal.close();
-
-            document.getElementById('issNo').innerText = issData.newIssuanceNo;
-            document.getElementById('issDept').innerText = row.dept;
-            document.getElementById('issReqNo').innerText = reqNoStr;
-            
-            document.getElementById('issDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
-            
-            const tbody = document.getElementById('issTableBody');
-            tbody.innerHTML = '';
-
-            const originalItems = String(row.items || '').split('|').map(i => i.trim());
-            const originalQtys = String(row.qtys || '').split('|').map(i => parseInt(i.trim()) || 0);
-
-            originalItems.forEach((item, idx) => {
-                if(item) {
-                    let cleanDesc = item.toUpperCase();
-                    let alreadyIssued = issData.issuedQtyMap[cleanDesc] || 0;
-                    let remainingQty = originalQtys[idx] - alreadyIssued;
-
-                    let savedPrice = issData.priceMap[cleanDesc] || "";
-
-                    if (remainingQty > 0) {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td><input type="number" class="iss-qty" value="${remainingQty}" min="1" oninput="calcIssuanceTotal()"></td>
-                            <td><input type="text" class="iss-unit" placeholder="unit"></td>
-                            <td style="text-align: left;"><input type="text" class="iss-desc" value="${item}" placeholder="${item}" style="text-align: left;"></td>
-                            <td><input type="number" class="iss-price" placeholder="0.00" value="${savedPrice}" oninput="calcIssuanceTotal()"></td>
-                            <td><input type="text" class="iss-amt" value="0.00" readonly style="font-weight:bold; background: transparent; border: none;"></td>
-                            <td class="print-hide th-action"><button class="remove-row-btn" onclick="this.parentElement.parentElement.remove(); calcIssuanceTotal();"><i class="fas fa-trash"></i></button></td>
-                        `;
-                        tbody.appendChild(tr);
-                    }
-                }
-            });
-
-            if(tbody.innerHTML === '') { 
-                Swal.fire('Fully Issued', 'All items for this request have already been issued on previous forms.', 'info'); 
-                return; 
-            }
-
-            const prepSel = document.getElementById('issPreparedBy');
-            if (row.receivedBy && (row.receivedBy.includes("Emman") || row.receivedBy.includes("Eruel"))) { 
-                prepSel.value = row.receivedBy; 
-            }
-
-            document.getElementById('issReceivedBy').value = "";
-            if (issPad) issPad.clear();
-            calcIssuanceTotal();
-
-            const modal = document.getElementById('issuanceModal');
-            modal.classList.remove('kiosk-locked');
-            modal.style.display = 'flex';
-            resizeCanvas();
-            
-        } catch(e) { 
-            Swal.fire('Error', 'Failed to generate Form.', 'error'); 
-        }
-    }
-
-    // NEW PURE MANUAL FORM
     async function openManualIssuanceForm(id) {
         if (!issuanceFeatureEnabled) {
             return Swal.fire({
@@ -2504,7 +2905,6 @@
         Swal.fire({ title: 'Preparing Manual Form...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
         try {
-            // We still need to fetch the next Issuance Number
             const res = await fetch(`${SCRIPT_URL}?action=getIssuanceData&reqNo=${reqNoStr}`);
             const issData = await res.json();
             Swal.close();
@@ -2539,6 +2939,102 @@
         } catch(e) { 
             Swal.fire('Error', 'Failed to generate Form.', 'error'); 
         }
+    }
+
+    function previewIssuanceForm() {
+        const previewModal = document.getElementById('formPreviewModal');
+        const content = document.getElementById('formPreviewContent');
+        
+        // Gather current form data
+        const dept = document.getElementById('issDept').innerText;
+        const reqNo = document.getElementById('issReqNo').innerText;
+        const issNo = document.getElementById('issNo').innerText;
+        const date = document.getElementById('issDate').value;
+        const preparedBy = document.getElementById('issPreparedBy').value;
+        const totalAmt = document.getElementById('issTotalAmount').innerText;
+        
+        let itemsHtml = '';
+        const rows = document.getElementById('issTableBody').querySelectorAll('tr');
+        rows.forEach(tr => {
+            const qty = tr.querySelector('.iss-qty').value;
+            const unit = tr.querySelector('.iss-unit').value;
+            const desc = tr.querySelector('.iss-desc').value || tr.querySelector('.iss-desc').placeholder;
+            const price = tr.querySelector('.iss-price').value;
+            const amt = tr.querySelector('.iss-amt').value;
+            
+            itemsHtml += `
+                <tr>
+                    <td style="border: 1px solid black !important; padding: 10px; text-align: center;">${qty}</td>
+                    <td style="border: 1px solid black !important; padding: 10px; text-align: center;">${unit}</td>
+                    <td style="border: 1px solid black !important; padding: 10px; text-align: left;">${desc}</td>
+                    <td style="border: 1px solid black !important; padding: 10px; text-align: center;">${price}</td>
+                    <td style="border: 1px solid black !important; padding: 10px; text-align: center;">${amt}</td>
+                </tr>
+            `;
+        });
+
+        content.innerHTML = `
+            <div style="background-color: #ec4899; color: white; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: bold; padding: 6px 15px; border-radius: 4px; display: inline-block; margin-top: 25px; margin-bottom: 20px;"><i class="fas fa-eye"></i> Live Form Preview</div>
+
+            <div class="iss-header">
+                <img src="https://raw.githubusercontent.com/tdmh-cqi/csr2026/main/images/tdmh-logo.png" style="max-height: 70px; margin-bottom: 10px;">
+                <h2 class="iss-title">Issuance Form</h2>
+                <p class="iss-subtitle" style="color: black !important;">${g_whiteDisclaimer}</p>
+            </div>
+            
+            <div class="iss-meta" style="color: black !important;">
+                <div>
+                    <p>Department: <span style="font-weight: normal; text-decoration: underline;">${dept}</span></p>
+                    <p>Request No.: <span style="font-weight: normal; text-decoration: underline;">${reqNo}</span></p>
+                </div>
+                <div style="text-align: right;">
+                    <p>No.: <span style="font-weight: bold; color: red;">${issNo}</span></p>
+                    <p>Date: <span style="font-weight: normal; text-decoration: underline;">${date}</span></p>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto; width: 100%; margin-bottom: 30px;">
+                <table class="iss-table" style="width: 100%; border-collapse: collapse; min-width: 600px; font-size: 15px; color: black !important;">
+                    <thead>
+                        <tr>
+                            <th style="border: 1px solid black !important; padding: 10px; text-align: center; width:10%; background-color: white !important; color: black !important;">QTY.</th>
+                            <th style="border: 1px solid black !important; padding: 10px; text-align: center; width:15%; background-color: white !important; color: black !important;">UNIT</th>
+                            <th style="border: 1px solid black !important; padding: 10px; text-align: left; width:45%; background-color: white !important; color: black !important;">DESCRIPTION</th>
+                            <th style="border: 1px solid black !important; padding: 10px; text-align: center; width:15%; background-color: white !important; color: black !important;">UNIT PRICE</th>
+                            <th style="border: 1px solid black !important; padding: 10px; text-align: center; width:15%; background-color: white !important; color: black !important;">AMOUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsHtml}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="text-align: right; font-weight: bold; border: none; padding-top: 15px; padding-right: 15px;">TOTAL:</td>
+                            <td style="font-weight: bold; border: 2px solid black !important; padding-top: 15px; text-align: center;">${totalAmt}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <div class="iss-footer" style="color: black !important;">
+                <div>
+                    <p style="margin:0 0 10px 0;">Prepared by: <span style="text-decoration: underline;">${preparedBy}</span></p>
+                    <p style="margin:0; font-style: italic; font-size: 13px;">"Received goods in good condition."</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin:0 0 5px 0;">Received by: <span style="text-decoration: underline;">(Pending Signature)</span></p>
+                </div>
+            </div>
+        `;
+        
+        previewModal.style.display = 'flex';
+    }
+    
+    function closeFormPreview(event) {
+        if (event && event.target.id !== 'formPreviewModal' && event.target.tagName !== 'BUTTON' && event.target.tagName !== 'I') {
+            return;
+        }
+        document.getElementById('formPreviewModal').style.display = 'none';
     }
 
     function closeIssuanceForm() {
@@ -2637,10 +3133,9 @@
 
         // Ensure the date picks up whatever the admin edited it to
         let inputDate = document.getElementById('issDate').value;
-        // Format back to string or whatever format is necessary, keeping it simple
         if(inputDate.includes("-")){
             const parts = inputDate.split('-');
-            inputDate = `${parts[1]}/${parts[2]}/${parts[0]}`; // Convert to MM/DD/YYYY format generally used
+            inputDate = `${parts[1]}/${parts[2]}/${parts[0]}`;
         }
 
         const payload = {
@@ -2665,7 +3160,10 @@
                 text: 'Receipt saved. A digital copy has been sent to your department.', 
                 timer: 3000, 
                 showConfirmButton: false 
-            }).then(() => { closeIssuanceForm(); });
+            }).then(() => { 
+                closeIssuanceForm(); 
+                fetchData(); 
+            });
         } catch(e) { 
             Swal.fire('Error', 'Could not save the issuance form.', 'error'); 
         }
