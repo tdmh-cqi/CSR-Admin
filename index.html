@@ -430,6 +430,10 @@
         .st-forrelease { background: rgba(2, 136, 209, 0.1); color: var(--color-forrelease); border: 1px solid var(--color-forrelease); }
         .st-completed { background: rgba(46, 125, 50, 0.1); color: var(--color-completed); border: 1px solid var(--color-completed); }
         .st-disapproved { background: rgba(198, 40, 40, 0.1); color: var(--color-disapproved); border: 1px solid var(--color-disapproved); }
+        /* Draft Status Style */
+        .st-draft { background: rgba(255, 193, 7, 0.1); color: #ff8f00; border: 1px solid #ff8f00; }
+        [data-theme="dark"] .st-draft { background: rgba(255, 193, 7, 0.1); color: #ffca28; border-color: rgba(255, 193, 7, 0.3); }
+
 
         .action-select { 
             padding: 6px; 
@@ -930,12 +934,14 @@
             .main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; }
             .print-hide { display: none !important; }
             
-            #analyticsSection, #cqiSection, #issuancesSection { display: none !important; }
+            #analyticsSection, #cqiSection, #issuancesSection, #draftsSection { display: none !important; }
             
             .modal-overlay { position: absolute; top: 0; left: 0; background: white; padding: 0; display: block; z-index: 99999; }
             .issuance-form { box-shadow: none; padding: 0; max-width: 100%; border: none; }
             .iss-table input { font-size: 12pt; border: none !important; background: transparent !important; color: black !important; }
             #issDept { border: none !important; background: transparent !important; color: black !important; }
+            /* Editable Number Inputs */
+            #issNoInput, #issReqNoInput { border: none !important; background: transparent !important; color: black !important; font-weight: bold; font-family: 'Times New Roman', serif; font-size: 15px; }
             #issDate { border: none !important; pointer-events: none; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
             #issDate::-webkit-inner-spin-button, #issDate::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
         }
@@ -1038,10 +1044,14 @@
                     <input type="text" id="issDept" list="deptDatalist" style="font-family: 'Times New Roman', serif; font-size: 15px; border: none; border-bottom: 1px dashed #ccc !important; background: transparent !important; color: black !important; padding: 2px 5px; width: 250px; font-weight: normal; margin-left: 5px;" value="Loading...">
                     <datalist id="deptDatalist"></datalist>
                 </p>
-                <p>Request No.: <span id="issReqNo" style="font-weight: normal; text-decoration: underline;">Loading...</span></p>
+                <p style="display: flex; align-items: center; margin: 5px 0;">Request No.: 
+                    <input type="text" id="issReqNoInput" style="font-family: 'Times New Roman', serif; font-size: 15px; border: none; border-bottom: 1px dashed #ccc !important; background: transparent !important; color: black !important; padding: 2px 5px; width: 200px; font-weight: normal; margin-left: 5px; text-decoration: underline;" value="Loading...">
+                </p>
             </div>
             <div style="text-align: right;">
-                <p>No.: <span id="issNo" style="font-weight: bold; color: red;">Loading...</span></p>
+                <p style="display: flex; align-items: center; justify-content: flex-end; margin: 5px 0;">No.: 
+                    <input type="text" id="issNoInput" style="font-family: 'Times New Roman', serif; font-size: 15px; border: none; border-bottom: 1px dashed #ccc !important; background: transparent !important; color: red !important; padding: 2px 5px; width: 200px; font-weight: bold; margin-left: 5px;" value="Loading...">
+                </p>
                 <p class="iss-footer" style="margin: 0; justify-content: flex-end;">Date: <input type="date" id="issDate" style="margin-left: 5px;"></p>
             </div>
         </div>
@@ -1093,13 +1103,16 @@
         </div>
 
         <div class="prep-controls print-hide" id="prepControls">
-            <button onclick="previewIssuanceForm()" class="save-btn" style="background: #0288d1; padding: 15px 30px; font-size: 16px;">
+            <button onclick="previewIssuanceForm()" class="save-btn" style="background: #0288d1; padding: 15px 20px; font-size: 14px;">
                 <i class="fas fa-eye"></i> Preview Form
             </button>
-            <button onclick="lockKioskMode()" class="save-btn" style="background: #ef4444; padding: 15px 30px; font-size: 16px;">
+            <button onclick="saveIssuanceDraft()" class="save-btn" style="background: #f59e0b; padding: 15px 20px; font-size: 14px; color: #fff;">
+                <i class="fas fa-save"></i> Save Draft
+            </button>
+            <button onclick="lockKioskMode()" class="save-btn" style="background: #ef4444; padding: 15px 20px; font-size: 14px;">
                 <i class="fas fa-lock"></i> Lock Screen for Signature
             </button>
-            <button onclick="window.print()" class="save-btn" style="background: #2e7d32; padding: 15px 30px; font-size: 16px;">
+            <button onclick="window.print()" class="save-btn" style="background: #2e7d32; padding: 15px 20px; font-size: 14px;">
                 <i class="fas fa-print"></i> Print Current Form
             </button>
         </div>
@@ -1152,9 +1165,12 @@
     <div class="nav-item active" id="tabBtn-active" onclick="switchAdminTab('active')"><i class="fas fa-list-check"></i> <span>Active Requests</span></div>
     <div class="nav-item" id="tabBtn-archive" onclick="switchAdminTab('archive')"><i class="fas fa-box-archive"></i> <span>Completed</span></div>
     <div class="nav-item" id="tabBtn-disapproved" onclick="switchAdminTab('disapproved')"><i class="fas fa-ban"></i> <span>Disapproved</span></div>
+    
+    <!-- NEW: DRAFTED ISSUANCES TAB -->
+    <div class="nav-item" id="tabBtn-drafts" onclick="switchAdminTab('drafts')"><i class="fas fa-file-signature"></i> <span>Drafted Issuances</span></div>
+    
     <div class="nav-item" id="tabBtn-analytics" onclick="switchAdminTab('analytics')"><i class="fas fa-chart-pie"></i> <span>Exec. Reports</span></div>
     
-    <!-- NEW: ISSUANCE LOGS TAB -->
     <div class="nav-item" id="tabBtn-issuances" onclick="switchAdminTab('issuances')"><i class="fas fa-file-invoice"></i> <span>Issuance Logs</span></div>
     
     <!-- Hidden CQI Settings Tab -->
@@ -1176,6 +1192,8 @@
             </div>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; height: fit-content;" id="headerButtons">
+            <!-- NEW BLANK FORM BUTTON -->
+            <button onclick="openBlankIssuanceForm()" class="save-btn" style="background: var(--primary-navy); color: white; flex:none;" id="btnBlankForm"><i class="fas fa-plus"></i> Blank Issuance Form</button>
             <button onclick="exportFilteredViewToCSV()" class="save-btn" style="background: var(--color-forrelease); color: white; flex:none;" id="btnExportActive"><i class="fas fa-file-excel"></i> Export Raw CSV</button>
             <button onclick="exportIssuanceDataToExcel()" class="save-btn" style="background: var(--color-completed); color: white; flex:none; display:none;" id="btnExportIssuance"><i class="fas fa-file-excel"></i> Export Issuance Data</button>
             <button onclick="fetchData()" class="save-btn" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); flex:none;"><i class="fas fa-sync"></i> Refresh Site</button>
@@ -1341,6 +1359,43 @@
         </div>
     </div>
     
+    <!-- DRAFTS SECTION -->
+    <div id="draftsSection" style="display:none;">
+        <div class="filters-section">
+            <div class="filter-group" style="min-width: 150px; flex: 1;">
+                <label>Search Draft / Req No.</label>
+                <input type="text" id="filterDraftNo" placeholder="e.g. ISS-2026-0001" oninput="applyDraftFilters()">
+            </div>
+            <div class="filter-group" style="min-width: 150px; flex: 1;">
+                <label>Department</label>
+                <select id="filterDraftDept" onchange="applyDraftFilters()">
+                    <option value="">All Departments</option>
+                </select>
+            </div>
+            <button onclick="document.getElementById('filterDraftNo').value=''; document.getElementById('filterDraftDept').value=''; applyDraftFilters();" class="remark-input" style="cursor:pointer; background: var(--bg-gray); width: auto; border: 1px solid var(--border-color); height: 34px;">Reset</button>
+        </div>
+
+        <div class="table-container">
+            <table id="draftsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Draft No.</th>
+                        <th style="width: 15%;">Req Ref No.</th>
+                        <th style="width: 15%;">Date Prepared</th>
+                        <th style="width: 15%;">Department</th>
+                        <th style="width: 15%;">Total Amount</th>
+                        <th style="width: 10%; text-align: center;">Status</th>
+                        <th style="width: 15%; text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="draftsBody"></tbody>
+            </table>
+            <div id="draftsLoading" style="text-align:center; padding: 40px; color: var(--text-muted); display:none;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Fetching Saved Drafts...
+            </div>
+        </div>
+    </div>
+
     <!-- ISSUANCES LOGS SECTION -->
     <div id="issuancesSection" style="display:none;">
         <div class="filters-section" id="issuanceFiltersBlock">
@@ -1522,6 +1577,7 @@
     let filteredDataCache = []; 
     let allIssuances = []; // Cache for issuance logs
     let filteredIssuancesCache = []; // Cache for filtered issuance logs
+    let allDrafts = []; // Cache for drafted issuances
     let currentAdminTab = 'active'; 
     let issPad = null;
     let currentlyProcessingReqNo = null;
@@ -1878,6 +1934,7 @@
             const depts = JSON.parse(text);
             const sel = document.getElementById('filterDept');
             const issSel = document.getElementById('filterIssDept');
+            const draftSel = document.getElementById('filterDraftDept');
             
             if (Array.isArray(depts) && depts.length > 0) {
                 let optionsHtml = '<option value="">All Departments</option>';
@@ -1890,6 +1947,7 @@
                 
                 if(sel) sel.innerHTML = optionsHtml;
                 if(issSel) issSel.innerHTML = optionsHtml;
+                if(draftSel) draftSel.innerHTML = optionsHtml;
                 
                 const datalist = document.getElementById('deptDatalist');
                 if(datalist) datalist.innerHTML = datalistHtml;
@@ -1946,7 +2004,7 @@
 
     function switchAdminTab(tab) {
         currentAdminTab = tab;
-        ['active', 'archive', 'disapproved', 'analytics', 'cqi', 'issuances'].forEach(t => {
+        ['active', 'archive', 'disapproved', 'analytics', 'cqi', 'issuances', 'drafts'].forEach(t => {
             const btn = document.getElementById('tabBtn-' + t);
             if (btn) btn.classList.remove('active');
         });
@@ -1968,6 +2026,8 @@
         setDisplay('analyticsSection', 'none');
         setDisplay('cqiSection', 'none');
         setDisplay('issuancesSection', 'none');
+        setDisplay('draftsSection', 'none');
+        setDisplay('btnBlankForm', 'none');
         
         if(tab === 'analytics') {
             title.innerText = 'Analytics & Execomm Reports';
@@ -2001,18 +2061,29 @@
             setDisplay('btnExportIssuance', 'inline-block');
             fetchIssuances();
         }
+        else if (tab === 'drafts') {
+            title.innerText = 'Drafted Issuances';
+            setDisplay('draftsSection', 'block');
+            setDisplay('btnExportActive', 'none');
+            setDisplay('btnExportIssuance', 'none');
+            fetchIssuances(); // We pull both drafts and completed from the same endpoint
+        }
         else {
             setDisplay('dataViewSection', 'block');
             setDisplay('btnExportActive', 'inline-block');
             setDisplay('btnExportIssuance', 'none');
+            setDisplay('btnBlankForm', 'inline-block');
+            
             if(tab === 'archive') {
                 title.innerText = 'Completed Requisitions';
                 setDisplay('statsGrid', 'none');
                 setDisplay('filterStatusGroup', 'none');
+                setDisplay('btnBlankForm', 'none');
             } else if (tab === 'disapproved') {
                 title.innerText = 'Disapproved Requisitions';
                 setDisplay('statsGrid', 'none');
                 setDisplay('filterStatusGroup', 'none');
+                setDisplay('btnBlankForm', 'none');
             } else {
                 title.innerText = 'Active Requisitions';
                 setDisplay('statsGrid', 'grid');
@@ -2066,34 +2137,8 @@
             if(currentAdminTab === 'analytics') {
                 renderAnalytics();
                 renderYearlyAnalytics();
-            } else if (currentAdminTab !== 'cqi' && currentAdminTab !== 'issuances') {
+            } else if (currentAdminTab !== 'cqi' && currentAdminTab !== 'issuances' && currentAdminTab !== 'drafts') {
                 applyFilters();
-            }
-
-            // DRAFT TAB LOGIC
-            const urlParams = new URLSearchParams(window.location.search);
-            const draftId = urlParams.get('draft');
-            if (draftId && !window.draftOpened) {
-                window.draftOpened = true; 
-                
-                // Completely hide the dashboard for a dedicated "Draft" view
-                const sidebar = document.getElementById('sidebar');
-                const mainContent = document.getElementById('mainContent');
-                if(sidebar) sidebar.style.display = 'none';
-                if(mainContent) mainContent.style.display = 'none';
-                
-                // Make the modal background solid and hide the close button
-                const modalOverlay = document.getElementById('issuanceModal');
-                if (modalOverlay) {
-                    modalOverlay.style.background = 'var(--bg-gray)';
-                }
-                const closeBtn = document.getElementById('issCloseBtnTop');
-                if (closeBtn) {
-                    closeBtn.style.display = 'none';
-                }
-                
-                // Open the form directly
-                setTimeout(() => openManualIssuanceForm(draftId), 300);
             }
 
         } catch (e) {} finally { 
@@ -2102,25 +2147,139 @@
         }
     }
 
-    // NEW: FETCH ISSUANCES
+    // NEW: FETCH ISSUANCES (AND DRAFTS)
     async function fetchIssuances() {
-        if (allIssuances.length === 0) setDisplay('issuancesLoading', 'block');
+        if (allIssuances.length === 0) {
+            setDisplay('issuancesLoading', 'block');
+            setDisplay('draftsLoading', 'block');
+        }
         
         try {
             const res = await fetch(`${SCRIPT_URL}?action=getAllIssuances`);
             if(!res.ok) throw new Error("Could not fetch issuances.");
             
             const fetchedData = await res.json();
-            allIssuances = (Array.isArray(fetchedData) ? fetchedData : []).reverse();
+            const rawList = Array.isArray(fetchedData) ? fetchedData : [];
+            
+            // Separate the lists
+            allIssuances = rawList.filter(i => i.status !== 'Draft').reverse();
+            allDrafts = rawList.filter(i => i.status === 'Draft').reverse();
             
             applyIssuanceFilters();
+            applyDraftFilters();
             
         } catch(e) {
-            const tbody = document.getElementById('issuancesBody');
-            if(tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; font-size:15px; color: var(--color-disapproved);">Failed to load issuance logs.</td></tr>`;
+            const tbodyIss = document.getElementById('issuancesBody');
+            if(tbodyIss) tbodyIss.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; font-size:15px; color: var(--color-disapproved);">Failed to load issuance logs.</td></tr>`;
+            
+            const tbodyDraft = document.getElementById('draftsBody');
+            if(tbodyDraft) tbodyDraft.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; font-size:15px; color: var(--color-disapproved);">Failed to load drafts.</td></tr>`;
         } finally {
             setDisplay('issuancesLoading', 'none');
+            setDisplay('draftsLoading', 'none');
         }
+    }
+
+    function applyDraftFilters() {
+        const searchTxt = (document.getElementById('filterDraftNo')?.value || "").toLowerCase();
+        const dept = document.getElementById('filterDraftDept')?.value || "";
+
+        let filteredDrafts = allDrafts.filter(iss => {
+            const matchSearch = !searchTxt || iss.issuanceNo.toLowerCase().includes(searchTxt) || iss.reqNo.toLowerCase().includes(searchTxt);
+            const matchDept = !dept || (iss.dept === dept);
+            return matchSearch && matchDept;
+        });
+
+        renderDraftsTable(filteredDrafts);
+    }
+
+    function renderDraftsTable(data) {
+        const tbody = document.getElementById('draftsBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px; font-size:15px; color: var(--text-muted);">No drafts found.</td></tr>';
+            return;
+        }
+        
+        const frag = document.createDocumentFragment();
+        data.forEach(iss => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight:bold; color:red;">${iss.issuanceNo}</td>
+                <td style="text-decoration:underline;">${iss.reqNo}</td>
+                <td>${iss.date}</td>
+                <td style="font-weight:bold;">${iss.dept}</td>
+                <td style="font-weight:bold;">${iss.totalAmount || '0.00'}</td>
+                <td style="text-align:center;"><span class="status-badge st-draft">Draft</span></td>
+                <td style="text-align:center;">
+                    <button onclick="resumeDraft('${iss.issuanceNo}')" class="save-btn" style="background:var(--color-forrelease); padding:6px 12px; margin:auto;"><i class="fas fa-pen"></i> Resume</button>
+                </td>
+            `;
+            frag.appendChild(tr);
+        });
+        tbody.appendChild(frag);
+    }
+    
+    function resumeDraft(issuanceNo) {
+        const draft = allDrafts.find(d => d.issuanceNo === issuanceNo);
+        if (!draft) return Swal.fire('Error', 'Draft not found', 'error');
+        
+        // This is a global flag so submitIssuanceForm knows it's overwriting a draft
+        currentlyProcessingReqNo = draft.reqNo;
+        // Try to find the original request to get the email
+        const originalReq = allData.find(r => `REQ-${new Date().getFullYear()}-${r.id.toString().padStart(4,'0')}` === draft.reqNo);
+        currentReqEmail = originalReq ? originalReq.email : "";
+
+        document.getElementById('issNoInput').value = draft.issuanceNo;
+        document.getElementById('issDept').value = draft.dept;
+        document.getElementById('issReqNoInput').value = draft.reqNo;
+        
+        if (draft.date && draft.date.includes('/')) {
+            const parts = draft.date.split('/');
+            document.getElementById('issDate').value = `${parts[2]}-${parts[0]}-${parts[1]}`;
+        } else {
+            document.getElementById('issDate').value = draft.date || new Date().toISOString().split('T')[0];
+        }
+        
+        document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
+        
+        const tbody = document.getElementById('issTableBody');
+        tbody.innerHTML = '';
+        
+        let items = [];
+        try {
+            items = JSON.parse(draft.itemsJson);
+        } catch(e) {}
+        
+        if (items.length === 0) {
+            addIssuanceRow();
+        } else {
+            items.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="number" class="iss-qty" value="${item.qty}" min="1" oninput="calcIssuanceTotal()"></td>
+                    <td><input type="text" class="iss-unit" value="${item.unit}" placeholder="unit"></td>
+                    <td style="text-align: left;"><input type="text" class="iss-desc" value="${item.desc}" placeholder="New Item Description" style="text-align: left;"></td>
+                    <td><input type="number" class="iss-price" placeholder="0.00" value="${item.price}" oninput="calcIssuanceTotal()"></td>
+                    <td><input type="text" class="iss-amt" value="${item.amount}" readonly style="font-weight:bold; background: transparent; border: none;"></td>
+                    <td class="print-hide th-action"><button class="remove-row-btn" onclick="this.parentElement.parentElement.remove(); calcIssuanceTotal();"><i class="fas fa-trash"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('issPreparedBy').value = draft.preparedBy || "Sir Emman";
+        document.getElementById('issReceivedBy').value = draft.receivedBy || "";
+        
+        if (issPad) issPad.clear();
+        calcIssuanceTotal();
+
+        const modal = document.getElementById('issuanceModal');
+        modal.classList.remove('kiosk-locked');
+        modal.style.display = 'flex';
+        resizeCanvas();
     }
 
     function debouncedApplyIssuanceFilters() {
@@ -2304,12 +2463,6 @@
             Toast.fire({icon: 'success', title: `Note updated`}); 
         }
     };
-    
-    // NEW DRAFT TAB FUNCTION
-    window.openDraftInNewTab = function(id) {
-        const url = window.location.href.split('?')[0] + '?draft=' + id;
-        window.open(url, '_blank');
-    };
 
     // ITEM CHECKLIST FUNCTIONALITY
     function openItemsChecklist(id) {
@@ -2437,16 +2590,6 @@
         Swal.close();
         Toast.fire({icon: 'info', title: 'Saving & Notifying...'});
         
-        // Optimistic UI Update
-        let row = allData.find(r => r.id == id);
-        if (row) {
-            row.checkedItems = checkedStr;
-            row.itemNotes = noteStr;
-            if (newStatusStr) row.status = newStatusStr;
-        }
-        updateStats(allData);
-        applyFilters();
-
         try {
             let payload = { id: id, checkedItems: checkedStr, itemNotes: noteStr };
             
@@ -2460,6 +2603,16 @@
             }
 
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            
+            // Optimistic UI Update locally
+            let row = allData.find(r => r.id == id);
+            if (row) {
+                row.checkedItems = checkedStr;
+                row.itemNotes = noteStr;
+                if (newStatusStr) row.status = newStatusStr;
+            }
+            updateStats(allData);
+            applyFilters();
             
             Toast.fire({icon: 'success', title: newStatusStr ? 'Status Updated & Email Sent!' : 'Checklist & Notes saved!'});
         } catch(e) {
@@ -2538,10 +2691,7 @@
                     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 12px;">
                         <button onclick="promptAutoIssuanceSelection(${row.id})" class="save-btn" style="background:var(--primary-navy); padding: 10px; margin-bottom: 5px;"><i class="fas fa-magic"></i> Auto Issuance Form</button>
                         
-                        <div style="display:flex; gap:5px;">
-                            <button onclick="openManualIssuanceForm(${row.id})" class="save-btn" style="background:var(--color-forrelease); padding: 10px; flex:1;"><i class="fas fa-pen"></i> Manual Form</button>
-                            <button onclick="openDraftInNewTab(${row.id})" class="save-btn" style="background:#475569; padding: 10px; flex:1;" title="Prepare Form in New Tab"><i class="fas fa-external-link-alt"></i> Draft Tab</button>
-                        </div>
+                        <button onclick="openManualIssuanceForm(${row.id})" class="save-btn" style="background:var(--color-forrelease); padding: 10px;"><i class="fas fa-pen"></i> Manual Issuance Form</button>
                         
                         <select class="action-select" id="rec-${row.id}" onchange="updateReceiver(this, ${row.id})" style="margin-top: 5px;">
                             <option value="">-- Assign Receiver --</option>
@@ -2619,11 +2769,6 @@
         const badge = document.getElementById(`recv-badge-${id}`);
         if(badge) badge.innerText = val || '';
         
-        // Optimistic UI Update
-        let row = allData.find(r => r.id == id);
-        if (row) row.receivedBy = val;
-        applyFilters();
-
         Toast.fire({ icon: 'info', title: 'Assigning...' });
         try {
             await fetch(SCRIPT_URL, { 
@@ -2631,6 +2776,11 @@
                 mode: 'no-cors', 
                 body: JSON.stringify({ action: 'updateReceiver', id: id, receivedBy: val }) 
             });
+            // Optimistic UI Update locally
+            let row = allData.find(r => r.id == id);
+            if (row) row.receivedBy = val;
+            applyFilters();
+            
             Toast.fire({ icon: 'success', title: 'Receiver assigned & Email sent!' });
         } catch (e) { 
             Toast.fire({ icon: 'error', title: 'Connection error.' }); 
@@ -2656,15 +2806,6 @@
             }
         }
         
-        // Optimistic UI Update
-        let row = allData.find(r => r.id == id);
-        if (row) {
-            row.status = newStatus;
-            row.remarks = newRemark;
-        }
-        updateStats(allData);
-        applyFilters();
-
         Toast.fire({ icon: 'info', title: 'Updating status...' });
         try {
             await fetch(SCRIPT_URL, { 
@@ -2672,6 +2813,15 @@
                 mode: 'no-cors', 
                 body: JSON.stringify({ action: 'updateStatus', id: id, status: newStatus, remarks: newRemark, autoStatusUpdate: true, sendCustomNote: false }) 
             });
+            // Optimistic UI Update locally
+            let row = allData.find(r => r.id == id);
+            if (row) {
+                row.status = newStatus;
+                row.remarks = newRemark;
+            }
+            updateStats(allData);
+            applyFilters();
+            
             Toast.fire({ icon: 'success', title: 'Status updated & Email sent!' });
         } catch (e) { 
             Toast.fire({ icon: 'error', title: 'Connection error.' }); 
@@ -2689,11 +2839,6 @@
             return; 
         }
 
-        // Optimistic UI Update
-        let row = allData.find(r => r.id == id);
-        if(row) row.remarks = newRemark;
-        applyFilters();
-
         Toast.fire({ icon: 'info', title: 'Saving Note...' });
         try {
             await fetch(SCRIPT_URL, { 
@@ -2701,6 +2846,11 @@
                 mode: 'no-cors', 
                 body: JSON.stringify({ action: 'updateStatus', id: id, status: newStatus, remarks: newRemark, autoStatusUpdate: false, sendCustomNote: sendCustomNote }) 
             });
+            // Optimistic UI Update locally
+            let row = allData.find(r => r.id == id);
+            if(row) row.remarks = newRemark;
+            applyFilters();
+            
             Toast.fire({ icon: 'success', title: sendCustomNote ? 'Note Sent!' : 'Saved successfully!' });
         } catch (e) { 
             Toast.fire({ icon: 'error', title: 'Connection error.' }); 
@@ -2714,12 +2864,6 @@
             setTimeout(() => { tr.style.display = 'none'; }, 500); 
         }
         
-        // Optimistic UI Update
-        let row = allData.find(r => r.id == id);
-        if(row) row.status = 'Pending';
-        updateStats(allData);
-        applyFilters();
-
         Toast.fire({ icon: 'info', title: 'Restoring...' });
         try {
             await fetch(SCRIPT_URL, { 
@@ -2727,6 +2871,12 @@
                 mode: 'no-cors', 
                 body: JSON.stringify({ action: 'restoreRequest', id: id }) 
             });
+            // Optimistic UI Update locally
+            let row = allData.find(r => r.id == id);
+            if(row) row.status = 'Pending';
+            updateStats(allData);
+            applyFilters();
+            
             Toast.fire({ icon: 'success', title: 'Restored to Active panel.' });
         } catch (e) { 
             Toast.fire({ icon: 'error', title: 'Connection error.' }); 
@@ -2867,6 +3017,56 @@
     // SMART ISSUANCE FORM LOGIC 
     // ==========================================
     
+    // NEW: BLANK ISSUANCE FORM LOGIC
+    async function openBlankIssuanceForm() {
+        if (!issuanceFeatureEnabled) {
+            return Swal.fire({
+                icon: 'info',
+                title: 'Feature Unavailable',
+                text: 'The digital Issuance Form feature is currently disabled by CQI Administration. Please deplete physical paper stocks first.',
+                confirmButtonColor: '#002147'
+            });
+        }
+
+        currentlyProcessingReqNo = "";
+        currentReqEmail = "";
+
+        Swal.fire({ title: 'Preparing Blank Form...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+        try {
+            // Get the next issuance number from the backend
+            const res = await fetch(`${SCRIPT_URL}?action=getIssuanceData&reqNo=NONE`);
+            const issData = await res.json();
+            Swal.close();
+
+            document.getElementById('issNoInput').value = issData.newIssuanceNo;
+            document.getElementById('issDept').value = "";
+            document.getElementById('issReqNoInput').value = "N/A";
+            
+            document.getElementById('issDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
+            
+            const tbody = document.getElementById('issTableBody');
+            
+            // Start completely blank
+            tbody.innerHTML = '';
+            addIssuanceRow();
+
+            document.getElementById('issPreparedBy').value = "Sir Emman";
+            document.getElementById('issReceivedBy').value = "";
+            if (issPad) issPad.clear();
+            calcIssuanceTotal();
+
+            const modal = document.getElementById('issuanceModal');
+            modal.classList.remove('kiosk-locked');
+            modal.style.display = 'flex';
+            resizeCanvas();
+            
+        } catch(e) { 
+            Swal.fire('Error', 'Failed to generate Form.', 'error'); 
+        }
+    }
+    
     async function promptAutoIssuanceSelection(id) {
         if (!issuanceFeatureEnabled) {
             return Swal.fire({
@@ -2960,9 +3160,9 @@
         currentlyProcessingReqNo = ctx.reqNoStr;
         currentReqEmail = ctx.row.email || "";
 
-        document.getElementById('issNo').innerText = ctx.issData.newIssuanceNo;
+        document.getElementById('issNoInput').value = ctx.issData.newIssuanceNo;
         document.getElementById('issDept').value = ctx.row.dept;
-        document.getElementById('issReqNo').innerText = ctx.reqNoStr;
+        document.getElementById('issReqNoInput').value = ctx.reqNoStr;
         
         document.getElementById('issDate').value = new Date().toISOString().split('T')[0];
         document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
@@ -3040,9 +3240,9 @@
             const issData = await res.json();
             Swal.close();
 
-            document.getElementById('issNo').innerText = issData.newIssuanceNo;
+            document.getElementById('issNoInput').value = issData.newIssuanceNo;
             document.getElementById('issDept').value = row.dept;
-            document.getElementById('issReqNo').innerText = reqNoStr;
+            document.getElementById('issReqNoInput').value = reqNoStr;
             
             document.getElementById('issDate').value = new Date().toISOString().split('T')[0];
             document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
@@ -3078,8 +3278,8 @@
         
         // Gather current form data
         const dept = document.getElementById('issDept').value;
-        const reqNo = document.getElementById('issReqNo').innerText;
-        const issNo = document.getElementById('issNo').innerText;
+        const reqNo = document.getElementById('issReqNoInput').value;
+        const issNo = document.getElementById('issNoInput').value;
         const date = document.getElementById('issDate').value;
         const preparedBy = document.getElementById('issPreparedBy').value;
         const totalAmt = document.getElementById('issTotalAmount').innerText;
@@ -3241,6 +3441,64 @@
         }
     }
 
+    async function saveIssuanceDraft() {
+        Swal.fire({ title: 'Saving Draft...', html: 'Please wait...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+        let itemsData = [];
+        const rows = document.getElementById('issTableBody').querySelectorAll('tr');
+        rows.forEach(tr => {
+            itemsData.push({
+                qty: tr.querySelector('.iss-qty').value,
+                unit: tr.querySelector('.iss-unit').value,
+                desc: tr.querySelector('.iss-desc').value.trim() || tr.querySelector('.iss-desc').placeholder,
+                price: tr.querySelector('.iss-price').value,
+                amount: tr.querySelector('.iss-amt').value
+            });
+        });
+
+        let inputDate = document.getElementById('issDate').value;
+        if(inputDate.includes("-")){
+            const parts = inputDate.split('-');
+            inputDate = `${parts[1]}/${parts[2]}/${parts[0]}`;
+        }
+
+        const payload = {
+            action: 'saveIssuance',
+            isDraft: true,
+            issuanceNo: document.getElementById('issNoInput').value,
+            reqNo: document.getElementById('issReqNoInput').value,
+            reqEmail: currentReqEmail, // Even if it's blank form, backend will ignore email for drafts
+            date: inputDate,
+            dept: document.getElementById('issDept').value,
+            preparedBy: document.getElementById('issPreparedBy').value,
+            receivedBy: document.getElementById('issReceivedBy').value, // Might be empty, that's fine for draft
+            totalAmount: document.getElementById('issTotalAmount').innerText,
+            itemsJson: JSON.stringify(itemsData),
+            signature: "" // We don't save signature for drafts
+        };
+
+        try {
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const resultText = await res.text();
+            
+            // Expected return from backend is "Success|ISS-XXXX-XXXX"
+            const returnedIssNo = resultText.split('|')[1];
+            
+            Swal.fire({ 
+                icon: 'success', 
+                title: 'Draft Saved!', 
+                text: 'This issuance has been saved to the Drafts tab.', 
+                timer: 2000, 
+                showConfirmButton: false 
+            }).then(() => { 
+                closeIssuanceForm(); 
+                fetchIssuances(); // Reload to update drafts list
+            });
+        } catch(e) { 
+            Swal.fire('Error', 'Could not save the draft.', 'error'); 
+        }
+    }
+
     async function submitIssuanceForm() {
         if (!issPad || issPad.isEmpty()) return Swal.fire('Missing Signature', 'Please sign the pad to confirm receipt.', 'warning');
         
@@ -3271,8 +3529,9 @@
 
         const payload = {
             action: 'saveIssuance',
-            issuanceNo: document.getElementById('issNo').innerText,
-            reqNo: currentlyProcessingReqNo,
+            isDraft: false,
+            issuanceNo: document.getElementById('issNoInput').value,
+            reqNo: document.getElementById('issReqNoInput').value,
             reqEmail: currentReqEmail,
             date: inputDate,
             dept: document.getElementById('issDept').value,
@@ -3292,13 +3551,8 @@
                 timer: 3000, 
                 showConfirmButton: false 
             }).then(() => { 
-                if (window.draftOpened) {
-                    // If this was a dedicated draft tab, just close the tab automatically
-                    window.close(); 
-                } else {
-                    closeIssuanceForm(); 
-                    fetchData(); 
-                }
+                closeIssuanceForm(); 
+                fetchData(); 
             });
         } catch(e) { 
             Swal.fire('Error', 'Could not save the issuance form.', 'error'); 
