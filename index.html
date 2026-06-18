@@ -878,9 +878,10 @@
             transition: 0.2s; 
         }
 
-        .iss-table input:focus { outline: none; border: 1px solid #000 !important; background: white !important; }
+        .iss-table input:focus, #issDept:focus { outline: none; border: 1px solid #000 !important; background: white !important; }
         
-        .modal-overlay.kiosk-locked .iss-table input { border: none !important; background: transparent !important; pointer-events: none; font-weight: bold; }
+        .modal-overlay.kiosk-locked .iss-table input,
+        .modal-overlay.kiosk-locked #issDept { border: none !important; background: transparent !important; pointer-events: none; font-weight: bold; }
         .modal-overlay.kiosk-locked .remove-row-btn { display: none; }
         .modal-overlay.kiosk-locked #addIssRowBtnContainer { display: none; }
         .modal-overlay.kiosk-locked #issDate { pointer-events: none; border-bottom: none !important; }
@@ -934,6 +935,7 @@
             .modal-overlay { position: absolute; top: 0; left: 0; background: white; padding: 0; display: block; z-index: 99999; }
             .issuance-form { box-shadow: none; padding: 0; max-width: 100%; border: none; }
             .iss-table input { font-size: 12pt; border: none !important; background: transparent !important; color: black !important; }
+            #issDept { border: none !important; background: transparent !important; color: black !important; }
             #issDate { border: none !important; pointer-events: none; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
             #issDate::-webkit-inner-spin-button, #issDate::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
         }
@@ -1032,7 +1034,10 @@
         
         <div class="iss-meta">
             <div>
-                <p>Department: <span id="issDept" style="font-weight: normal; text-decoration: underline;">Loading...</span></p>
+                <p style="display: flex; align-items: center; margin: 5px 0;">Department: 
+                    <input type="text" id="issDept" list="deptDatalist" style="font-family: 'Times New Roman', serif; font-size: 15px; border: none; border-bottom: 1px dashed #ccc !important; background: transparent !important; color: black !important; padding: 2px 5px; width: 250px; font-weight: normal; margin-left: 5px;" value="Loading...">
+                    <datalist id="deptDatalist"></datalist>
+                </p>
                 <p>Request No.: <span id="issReqNo" style="font-weight: normal; text-decoration: underline;">Loading...</span></p>
             </div>
             <div style="text-align: right;">
@@ -1155,7 +1160,7 @@
     <!-- Hidden CQI Settings Tab -->
     <div class="nav-item" id="tabBtn-cqi" onclick="switchAdminTab('cqi')" style="display: none; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px; margin-top: 10px;"><i class="fas fa-cogs"></i> <span>CQI Settings</span></div>
 
-    <div class="nav-item" style="margin-top: auto;" onclick="location.reload()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></div>
+    <div class="nav-item" style="margin-top: auto;" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></div>
 </aside>
 
 <main class="main-content expanded" id="mainContent" style="display:none;">
@@ -1511,7 +1516,8 @@
 <script>
     // MAKE SURE TO UPDATE THIS TO YOUR LATEST SCRIPT URL ONCE YOU DEPLOY THE NEW CODE.GS
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhQwVJTvLo_W4IcxPTdcCDojC92XjS4Y5wb1r_ldwO1jXu7LJ99QBMJ_Ncl4FBek239Q/exec";
-    
+    const CURRENT_VERSION = "2.1"; // INCREMENT THIS IN BACKEND AND FRONTEND TO FORCE REFRESH
+
     let allData = [];
     let filteredDataCache = []; 
     let allIssuances = []; // Cache for issuance logs
@@ -1546,6 +1552,30 @@
         timer: 2000, 
         timerProgressBar: true 
     });
+
+    // --- SYSTEM VERSION MONITOR LOGIC ---
+    function startVersionMonitor() {
+        setInterval(async () => {
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=checkVersion`);
+                const data = await res.json();
+                if(data.version && data.version !== CURRENT_VERSION) {
+                    Swal.fire({
+                        title: 'System Update Detected',
+                        text: 'Applying new features & fixes... Please wait.',
+                        icon: 'info',
+                        showConfirmButton: false,
+                        allowOutsideClick: false,
+                        timer: 3500
+                    }).then(() => {
+                        location.reload(true);
+                    });
+                }
+            } catch(e) {
+                // Ignore offline errors during background polling
+            }
+        }, 120000); // Check every 2 minutes
+    }
 
     // --- SECRET TRIPLE CLICK LOGIC ---
     let logoClickCount = 0;
@@ -1828,6 +1858,16 @@
         }
         const canvas = document.getElementById('issSigPad');
         if(canvas) issPad = new SignaturePad(canvas, { backgroundColor: 'rgb(255, 255, 255)' }); 
+        
+        // PERSIST LOGIN LOGIC
+        if (localStorage.getItem('csrAdminAuth') === 'true') {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            fetchData();
+        }
+
+        // Start the Auto-Refresh Polling
+        startVersionMonitor();
     });
 
     async function fetchDepartments() {
@@ -1841,10 +1881,18 @@
             
             if (Array.isArray(depts) && depts.length > 0) {
                 let optionsHtml = '<option value="">All Departments</option>';
-                depts.forEach(d => optionsHtml += `<option value="${d}">${d}</option>`);
+                let datalistHtml = '';
+                
+                depts.forEach(d => {
+                    optionsHtml += `<option value="${d}">${d}</option>`;
+                    datalistHtml += `<option value="${d}">`;
+                });
                 
                 if(sel) sel.innerHTML = optionsHtml;
                 if(issSel) issSel.innerHTML = optionsHtml;
+                
+                const datalist = document.getElementById('deptDatalist');
+                if(datalist) datalist.innerHTML = datalistHtml;
             }
         } catch(e) {}
     }
@@ -1869,6 +1917,7 @@
             const res = await fetch(`${SCRIPT_URL}?action=verifyPassword&pass=${encodeURIComponent(passInput)}`);
             const data = await res.json();
             if (data.success) {
+                localStorage.setItem('csrAdminAuth', 'true');
                 Swal.fire({ icon: 'success', title: 'Access Granted!', showConfirmButton: false, timer: 1000 });
                 updateQuotaDisplay(data.quota);
                 setTimeout(() => {
@@ -1880,6 +1929,11 @@
                 document.getElementById('adminPass').value = '';
             }
         } catch (e) { Swal.fire('Error', 'Could not connect.', 'error'); }
+    }
+
+    function logout() {
+        localStorage.removeItem('csrAdminAuth');
+        window.location.href = window.location.pathname; 
     }
 
     function updateQuotaDisplay(quota) {
@@ -1969,9 +2023,16 @@
     }
 
     async function fetchData() {
-        setDisplay('loadingState', 'block');
-        const tbody = document.getElementById('tableBody');
-        if (tbody) tbody.innerHTML = ''; 
+        const refreshBtn = document.querySelector('button[onclick="fetchData()"]');
+        let originalText = '';
+        if(refreshBtn) {
+            originalText = refreshBtn.innerHTML;
+            refreshBtn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Refreshing...';
+        }
+
+        // Only show the massive full-screen loading state if the table is completely empty
+        if (allData.length === 0) setDisplay('loadingState', 'block');
+        
         try {
             const res = await fetch(`${SCRIPT_URL}?action=getRequests`);
             const responseData = await res.json();
@@ -2008,14 +2069,42 @@
             } else if (currentAdminTab !== 'cqi' && currentAdminTab !== 'issuances') {
                 applyFilters();
             }
-        } catch (e) {} finally { setDisplay('loadingState', 'none'); }
+
+            // DRAFT TAB LOGIC
+            const urlParams = new URLSearchParams(window.location.search);
+            const draftId = urlParams.get('draft');
+            if (draftId && !window.draftOpened) {
+                window.draftOpened = true; 
+                
+                // Completely hide the dashboard for a dedicated "Draft" view
+                const sidebar = document.getElementById('sidebar');
+                const mainContent = document.getElementById('mainContent');
+                if(sidebar) sidebar.style.display = 'none';
+                if(mainContent) mainContent.style.display = 'none';
+                
+                // Make the modal background solid and hide the close button
+                const modalOverlay = document.getElementById('issuanceModal');
+                if (modalOverlay) {
+                    modalOverlay.style.background = 'var(--bg-gray)';
+                }
+                const closeBtn = document.getElementById('issCloseBtnTop');
+                if (closeBtn) {
+                    closeBtn.style.display = 'none';
+                }
+                
+                // Open the form directly
+                setTimeout(() => openManualIssuanceForm(draftId), 300);
+            }
+
+        } catch (e) {} finally { 
+            setDisplay('loadingState', 'none'); 
+            if(refreshBtn) refreshBtn.innerHTML = originalText;
+        }
     }
 
     // NEW: FETCH ISSUANCES
     async function fetchIssuances() {
-        setDisplay('issuancesLoading', 'block');
-        const tbody = document.getElementById('issuancesBody');
-        if (tbody) tbody.innerHTML = ''; 
+        if (allIssuances.length === 0) setDisplay('issuancesLoading', 'block');
         
         try {
             const res = await fetch(`${SCRIPT_URL}?action=getAllIssuances`);
@@ -2027,7 +2116,8 @@
             applyIssuanceFilters();
             
         } catch(e) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; font-size:15px; color: var(--color-disapproved);">Failed to load issuance logs.</td></tr>`;
+            const tbody = document.getElementById('issuancesBody');
+            if(tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; font-size:15px; color: var(--color-disapproved);">Failed to load issuance logs.</td></tr>`;
         } finally {
             setDisplay('issuancesLoading', 'none');
         }
@@ -2214,6 +2304,12 @@
             Toast.fire({icon: 'success', title: `Note updated`}); 
         }
     };
+    
+    // NEW DRAFT TAB FUNCTION
+    window.openDraftInNewTab = function(id) {
+        const url = window.location.href.split('?')[0] + '?draft=' + id;
+        window.open(url, '_blank');
+    };
 
     // ITEM CHECKLIST FUNCTIONALITY
     function openItemsChecklist(id) {
@@ -2341,6 +2437,16 @@
         Swal.close();
         Toast.fire({icon: 'info', title: 'Saving & Notifying...'});
         
+        // Optimistic UI Update
+        let row = allData.find(r => r.id == id);
+        if (row) {
+            row.checkedItems = checkedStr;
+            row.itemNotes = noteStr;
+            if (newStatusStr) row.status = newStatusStr;
+        }
+        updateStats(allData);
+        applyFilters();
+
         try {
             let payload = { id: id, checkedItems: checkedStr, itemNotes: noteStr };
             
@@ -2356,7 +2462,6 @@
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
             
             Toast.fire({icon: 'success', title: newStatusStr ? 'Status Updated & Email Sent!' : 'Checklist & Notes saved!'});
-            fetchData();
         } catch(e) {
             Toast.fire({icon: 'error', title: 'Connection error'});
         }
@@ -2432,7 +2537,11 @@
                 actionHtml = `
                     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 12px;">
                         <button onclick="promptAutoIssuanceSelection(${row.id})" class="save-btn" style="background:var(--primary-navy); padding: 10px; margin-bottom: 5px;"><i class="fas fa-magic"></i> Auto Issuance Form</button>
-                        <button onclick="openManualIssuanceForm(${row.id})" class="save-btn" style="background:var(--color-forrelease); padding: 10px;"><i class="fas fa-pen"></i> Manual Issuance Form</button>
+                        
+                        <div style="display:flex; gap:5px;">
+                            <button onclick="openManualIssuanceForm(${row.id})" class="save-btn" style="background:var(--color-forrelease); padding: 10px; flex:1;"><i class="fas fa-pen"></i> Manual Form</button>
+                            <button onclick="openDraftInNewTab(${row.id})" class="save-btn" style="background:#475569; padding: 10px; flex:1;" title="Prepare Form in New Tab"><i class="fas fa-external-link-alt"></i> Draft Tab</button>
+                        </div>
                         
                         <select class="action-select" id="rec-${row.id}" onchange="updateReceiver(this, ${row.id})" style="margin-top: 5px;">
                             <option value="">-- Assign Receiver --</option>
@@ -2509,6 +2618,12 @@
         const val = selectElement.value;
         const badge = document.getElementById(`recv-badge-${id}`);
         if(badge) badge.innerText = val || '';
+        
+        // Optimistic UI Update
+        let row = allData.find(r => r.id == id);
+        if (row) row.receivedBy = val;
+        applyFilters();
+
         Toast.fire({ icon: 'info', title: 'Assigning...' });
         try {
             await fetch(SCRIPT_URL, { 
@@ -2517,7 +2632,6 @@
                 body: JSON.stringify({ action: 'updateReceiver', id: id, receivedBy: val }) 
             });
             Toast.fire({ icon: 'success', title: 'Receiver assigned & Email sent!' });
-            fetchData();
         } catch (e) { 
             Toast.fire({ icon: 'error', title: 'Connection error.' }); 
         }
@@ -2542,6 +2656,15 @@
             }
         }
         
+        // Optimistic UI Update
+        let row = allData.find(r => r.id == id);
+        if (row) {
+            row.status = newStatus;
+            row.remarks = newRemark;
+        }
+        updateStats(allData);
+        applyFilters();
+
         Toast.fire({ icon: 'info', title: 'Updating status...' });
         try {
             await fetch(SCRIPT_URL, { 
@@ -2550,7 +2673,6 @@
                 body: JSON.stringify({ action: 'updateStatus', id: id, status: newStatus, remarks: newRemark, autoStatusUpdate: true, sendCustomNote: false }) 
             });
             Toast.fire({ icon: 'success', title: 'Status updated & Email sent!' });
-            fetchData();
         } catch (e) { 
             Toast.fire({ icon: 'error', title: 'Connection error.' }); 
         }
@@ -2567,6 +2689,11 @@
             return; 
         }
 
+        // Optimistic UI Update
+        let row = allData.find(r => r.id == id);
+        if(row) row.remarks = newRemark;
+        applyFilters();
+
         Toast.fire({ icon: 'info', title: 'Saving Note...' });
         try {
             await fetch(SCRIPT_URL, { 
@@ -2575,8 +2702,6 @@
                 body: JSON.stringify({ action: 'updateStatus', id: id, status: newStatus, remarks: newRemark, autoStatusUpdate: false, sendCustomNote: sendCustomNote }) 
             });
             Toast.fire({ icon: 'success', title: sendCustomNote ? 'Note Sent!' : 'Saved successfully!' });
-            let row = allData.find(r => r.id == id);
-            if(row) row.remarks = newRemark;
         } catch (e) { 
             Toast.fire({ icon: 'error', title: 'Connection error.' }); 
         }
@@ -2588,6 +2713,13 @@
             tr.classList.add('row-animating'); 
             setTimeout(() => { tr.style.display = 'none'; }, 500); 
         }
+        
+        // Optimistic UI Update
+        let row = allData.find(r => r.id == id);
+        if(row) row.status = 'Pending';
+        updateStats(allData);
+        applyFilters();
+
         Toast.fire({ icon: 'info', title: 'Restoring...' });
         try {
             await fetch(SCRIPT_URL, { 
@@ -2596,7 +2728,6 @@
                 body: JSON.stringify({ action: 'restoreRequest', id: id }) 
             });
             Toast.fire({ icon: 'success', title: 'Restored to Active panel.' });
-            fetchData();
         } catch (e) { 
             Toast.fire({ icon: 'error', title: 'Connection error.' }); 
         }
@@ -2830,7 +2961,7 @@
         currentReqEmail = ctx.row.email || "";
 
         document.getElementById('issNo').innerText = ctx.issData.newIssuanceNo;
-        document.getElementById('issDept').innerText = ctx.row.dept;
+        document.getElementById('issDept').value = ctx.row.dept;
         document.getElementById('issReqNo').innerText = ctx.reqNoStr;
         
         document.getElementById('issDate').value = new Date().toISOString().split('T')[0];
@@ -2910,7 +3041,7 @@
             Swal.close();
 
             document.getElementById('issNo').innerText = issData.newIssuanceNo;
-            document.getElementById('issDept').innerText = row.dept;
+            document.getElementById('issDept').value = row.dept;
             document.getElementById('issReqNo').innerText = reqNoStr;
             
             document.getElementById('issDate').value = new Date().toISOString().split('T')[0];
@@ -2946,7 +3077,7 @@
         const content = document.getElementById('formPreviewContent');
         
         // Gather current form data
-        const dept = document.getElementById('issDept').innerText;
+        const dept = document.getElementById('issDept').value;
         const reqNo = document.getElementById('issReqNo').innerText;
         const issNo = document.getElementById('issNo').innerText;
         const date = document.getElementById('issDate').value;
@@ -3144,7 +3275,7 @@
             reqNo: currentlyProcessingReqNo,
             reqEmail: currentReqEmail,
             date: inputDate,
-            dept: document.getElementById('issDept').innerText,
+            dept: document.getElementById('issDept').value,
             preparedBy: document.getElementById('issPreparedBy').value,
             receivedBy: receivedBy,
             totalAmount: document.getElementById('issTotalAmount').innerText,
@@ -3161,8 +3292,13 @@
                 timer: 3000, 
                 showConfirmButton: false 
             }).then(() => { 
-                closeIssuanceForm(); 
-                fetchData(); 
+                if (window.draftOpened) {
+                    // If this was a dedicated draft tab, just close the tab automatically
+                    window.close(); 
+                } else {
+                    closeIssuanceForm(); 
+                    fetchData(); 
+                }
             });
         } catch(e) { 
             Swal.fire('Error', 'Could not save the issuance form.', 'error'); 
