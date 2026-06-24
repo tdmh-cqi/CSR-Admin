@@ -888,7 +888,8 @@
         .modal-overlay.kiosk-locked #issDept { border: none !important; background: transparent !important; pointer-events: none; font-weight: bold; }
         .modal-overlay.kiosk-locked .remove-row-btn { display: none; }
         .modal-overlay.kiosk-locked #addIssRowBtnContainer { display: none; }
-        .modal-overlay.kiosk-locked #issDate { pointer-events: none; border-bottom: none !important; }
+        .modal-overlay.kiosk-locked #issDatePrepared,
+        .modal-overlay.kiosk-locked #issDateReceived { pointer-events: none; border-bottom: none !important; }
         
         .remove-row-btn { 
             background: #fee2e2; 
@@ -942,8 +943,9 @@
             #issDept { border: none !important; background: transparent !important; color: black !important; }
             /* Editable Number Inputs */
             #issNoInput, #issReqNoInput { border: none !important; background: transparent !important; color: black !important; font-weight: bold; font-family: 'Times New Roman', serif; font-size: 15px; }
-            #issDate { border: none !important; pointer-events: none; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
-            #issDate::-webkit-inner-spin-button, #issDate::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
+            #issDatePrepared, #issDateReceived { border: none !important; pointer-events: none; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+            #issDatePrepared::-webkit-inner-spin-button, #issDatePrepared::-webkit-calendar-picker-indicator,
+            #issDateReceived::-webkit-inner-spin-button, #issDateReceived::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
         }
         
         /* Fast Tick Modal Checkbox Styles */
@@ -1052,7 +1054,7 @@
                 <p style="display: flex; align-items: center; justify-content: flex-end; margin: 5px 0;">No.: 
                     <input type="text" id="issNoInput" style="font-family: 'Times New Roman', serif; font-size: 15px; border: none; border-bottom: 1px dashed #ccc !important; background: transparent !important; color: red !important; padding: 2px 5px; width: 200px; font-weight: bold; margin-left: 5px;" value="Loading...">
                 </p>
-                <p class="iss-footer" style="margin: 0; justify-content: flex-end;">Date: <input type="date" id="issDate" style="margin-left: 5px;"></p>
+                <p class="iss-footer" style="margin: 0; justify-content: flex-end;">Date Prepared: <input type="date" id="issDatePrepared" style="margin-left: 5px;"></p>
             </div>
         </div>
 
@@ -1094,6 +1096,7 @@
                 <p style="margin:0; font-style: italic; font-size: 13px;">"Received goods in good condition."</p>
             </div>
             <div style="text-align: right;">
+                <p style="margin:0 0 5px 0; display:flex; align-items:center; justify-content:flex-end;">Date Received: <input type="date" id="issDateReceived" style="margin-left: 5px;"></p>
                 <p style="margin:0 0 5px 0;">Received by: <input type="text" id="issReceivedBy" placeholder="Type Full Name"></p>
                 <div class="iss-sig-container" style="display: inline-block;">
                     <canvas id="issSigPad"></canvas>
@@ -1422,10 +1425,11 @@
                     <tr>
                         <th style="width: 15%;">Issuance No.</th>
                         <th style="width: 15%;">Req Ref No.</th>
-                        <th style="width: 15%;">Date Issued</th>
+                        <th style="width: 10%;">Date Prepared</th>
+                        <th style="width: 10%;">Date Received</th>
                         <th style="width: 15%;">Department</th>
                         <th style="width: 15%;">Total Amount</th>
-                        <th style="width: 15%;">Received By</th>
+                        <th style="width: 10%;">Received By</th>
                         <th style="width: 10%; text-align: center;">Action</th>
                     </tr>
                 </thead>
@@ -1789,7 +1793,7 @@
                 </div>
                 <div style="text-align: right;">
                     <p>No.: <span style="font-weight: bold; color: red;">ISS-2026-0005</span></p>
-                    <p>Date: <span style="font-weight: normal; text-decoration: underline;">05/20/2026</span></p>
+                    <p>Date Prepared: <span style="font-weight: normal; text-decoration: underline;">05/20/2026</span></p>
                 </div>
             </div>
 
@@ -1835,6 +1839,7 @@
                     <p style="margin:0; font-style: italic; font-size: 13px;">"Received goods in good condition."</p>
                 </div>
                 <div style="text-align: right;">
+                    <p style="margin:0 0 5px 0;">Date Received: <span style="text-decoration: underline;">05/21/2026</span></p>
                     <p style="margin:0 0 5px 0;">Received by: <span style="text-decoration: underline;">Nurse Joy</span></p>
                     <p style="margin: 5px 0 0 0; font-size: 12px; font-style: italic;">(Signed Electronically)</p>
                     <div style="border: 1px solid #000; width: 250px; height: 80px; margin-top: 5px; position: relative; background: transparent; display: inline-block;">
@@ -2187,7 +2192,7 @@
             
         } catch(e) {
             const tbodyIss = document.getElementById('issuancesBody');
-            if(tbodyIss) tbodyIss.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; font-size:15px; color: var(--color-disapproved);">Failed to load issuance logs.</td></tr>`;
+            if(tbodyIss) tbodyIss.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; font-size:15px; color: var(--color-disapproved);">Failed to load issuance logs.</td></tr>`;
             
             const tbodyDraft = document.getElementById('draftsBody');
             if(tbodyDraft) tbodyDraft.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; font-size:15px; color: var(--color-disapproved);">Failed to load drafts.</td></tr>`;
@@ -2226,7 +2231,7 @@
             tr.innerHTML = `
                 <td style="font-weight:bold; color:red;">${iss.issuanceNo}</td>
                 <td style="text-decoration:underline;">${iss.reqNo}</td>
-                <td>${iss.date}</td>
+                <td>${iss.datePrepared || iss.date || ''}</td>
                 <td style="font-weight:bold;">${iss.dept}</td>
                 <td style="font-weight:bold;">${iss.totalAmount || '0.00'}</td>
                 <td style="text-align:center;"><span class="status-badge st-draft">Draft</span></td>
@@ -2253,11 +2258,21 @@
         document.getElementById('issDept').value = draft.dept;
         document.getElementById('issReqNoInput').value = draft.reqNo;
         
-        if (draft.date && draft.date.includes('/')) {
-            const parts = draft.date.split('/');
-            document.getElementById('issDate').value = `${parts[2]}-${parts[0]}-${parts[1]}`;
+        // Robust Date Fallback for older drafts
+        let prepDate = draft.datePrepared || draft.date || "";
+        if (prepDate && prepDate.includes('/')) {
+            const parts = prepDate.split('/');
+            document.getElementById('issDatePrepared').value = `${parts[2]}-${parts[0]}-${parts[1]}`;
         } else {
-            document.getElementById('issDate').value = draft.date || new Date().toISOString().split('T')[0];
+            document.getElementById('issDatePrepared').value = prepDate || new Date().toISOString().split('T')[0];
+        }
+
+        let recvDate = draft.dateReceived || "";
+        if (recvDate && recvDate.includes('/')) {
+            const parts = recvDate.split('/');
+            document.getElementById('issDateReceived').value = `${parts[2]}-${parts[0]}-${parts[1]}`;
+        } else {
+            document.getElementById('issDateReceived').value = recvDate;
         }
         
         document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
@@ -2315,8 +2330,8 @@
             let matchDate = true;
             if (date) {
                  const [y, m, d] = date.split('-');
-                 const formattedFilterDate = `${m}/${d}/${y}`; // Convert to MM/DD/YYYY to match Google sheets format usually returned
-                 matchDate = (iss.date === date || iss.date === formattedFilterDate);
+                 const formattedFilterDate = `${m}/${d}/${y}`; // Convert to MM/DD/YYYY
+                 matchDate = (iss.datePrepared === date || iss.datePrepared === formattedFilterDate || iss.date === date || iss.date === formattedFilterDate);
             }
             
             // Exact Match for department
@@ -2341,7 +2356,7 @@
         tbody.innerHTML = '';
         
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px; font-size:15px; color: var(--text-muted);">No issuance logs found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 30px; font-size:15px; color: var(--text-muted);">No issuance logs found.</td></tr>';
             return;
         }
         
@@ -2351,7 +2366,8 @@
             tr.innerHTML = `
                 <td style="font-weight:bold; color:red;">${iss.issuanceNo}</td>
                 <td style="text-decoration:underline;">${iss.reqNo}</td>
-                <td>${iss.date}</td>
+                <td>${iss.datePrepared || iss.date || ''}</td>
+                <td>${iss.dateReceived || ''}</td>
                 <td style="font-weight:bold;">${iss.dept}</td>
                 <td style="font-weight:bold;">${iss.totalAmount || '0.00'}</td>
                 <td>${iss.receivedBy || 'Unknown'}</td>
@@ -2412,7 +2428,7 @@
                 </div>
                 <div style="text-align: right;">
                     <p>No.: <span style="font-weight: bold; color: red;">${iss.issuanceNo}</span></p>
-                    <p>Date: <span style="font-weight: normal; text-decoration: underline;">${iss.date}</span></p>
+                    <p>Date Prepared: <span style="font-weight: normal; text-decoration: underline;">${iss.datePrepared || iss.date || ''}</span></p>
                 </div>
             </div>
 
@@ -2445,6 +2461,7 @@
                     <p style="margin:0; font-style: italic; font-size: 13px;">"Received goods in good condition."</p>
                 </div>
                 <div style="text-align: right;">
+                    <p style="margin:0 0 5px 0;">Date Received: <span style="text-decoration: underline;">${iss.dateReceived || ''}</span></p>
                     <p style="margin:0 0 5px 0;">Received by: <span style="text-decoration: underline;">${iss.receivedBy}</span></p>
                     <div style="border: 1px solid #000; width: 250px; height: 80px; margin-top: 5px; position: relative; background: transparent; display: flex; align-items:center; justify-content:center;">
                         ${sigHtml}
@@ -3056,7 +3073,7 @@
         }
 
         let csvContent = "\uFEFF"; // BOM for Excel
-        csvContent += "Issuance No.,Request No.,Date,Department,Item Description,Qty,Unit,Unit Price,Amount,Prepared By,Received By\r\n";
+        csvContent += "Issuance No.,Request No.,Date Prepared,Date Received,Department,Item Description,Qty,Unit,Unit Price,Amount,Prepared By,Received By\r\n";
 
         // EXPORT FILTERED DATA IF APPLIED, OTHERWISE ALL
         let dataToExport = filteredIssuancesCache.length > 0 ? filteredIssuancesCache : allIssuances;
@@ -3077,7 +3094,7 @@
                     let price = item.price || 0;
                     let amount = item.amount || 0;
                     
-                    csvContent += `"${iss.issuanceNo}","${iss.reqNo}","${iss.date}","${iss.dept}","${cleanDesc}","${qty}","${unit}","${price}","${amount}","${iss.preparedBy}","${iss.receivedBy}"\r\n`;
+                    csvContent += `"${iss.issuanceNo}","${iss.reqNo}","${iss.datePrepared || iss.date || ''}","${iss.dateReceived || ''}","${iss.dept}","${cleanDesc}","${qty}","${unit}","${price}","${amount}","${iss.preparedBy}","${iss.receivedBy}"\r\n`;
                 });
             }
         });
@@ -3122,7 +3139,8 @@
             document.getElementById('issDept').value = "";
             document.getElementById('issReqNoInput').value = "N/A";
             
-            document.getElementById('issDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('issDatePrepared').value = new Date().toISOString().split('T')[0];
+            document.getElementById('issDateReceived').value = "";
             document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
             
             const tbody = document.getElementById('issTableBody');
@@ -3243,7 +3261,8 @@
         document.getElementById('issDept').value = ctx.row.dept;
         document.getElementById('issReqNoInput').value = ctx.reqNoStr;
         
-        document.getElementById('issDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('issDatePrepared').value = new Date().toISOString().split('T')[0];
+        document.getElementById('issDateReceived').value = "";
         document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
         
         const tbody = document.getElementById('issTableBody');
@@ -3323,7 +3342,8 @@
             document.getElementById('issDept').value = row.dept;
             document.getElementById('issReqNoInput').value = reqNoStr;
             
-            document.getElementById('issDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('issDatePrepared').value = new Date().toISOString().split('T')[0];
+            document.getElementById('issDateReceived').value = "";
             document.getElementById('issDisclaimer').innerText = g_whiteDisclaimer;
             
             const tbody = document.getElementById('issTableBody');
@@ -3359,7 +3379,8 @@
         const dept = document.getElementById('issDept').value;
         const reqNo = document.getElementById('issReqNoInput').value;
         const issNo = document.getElementById('issNoInput').value;
-        const date = document.getElementById('issDate').value;
+        const datePrep = document.getElementById('issDatePrepared').value;
+        const dateRecv = document.getElementById('issDateReceived').value;
         const preparedBy = document.getElementById('issPreparedBy').value;
         const totalAmt = document.getElementById('issTotalAmount').innerText;
         
@@ -3399,7 +3420,7 @@
                 </div>
                 <div style="text-align: right;">
                     <p>No.: <span style="font-weight: bold; color: red;">${issNo}</span></p>
-                    <p>Date: <span style="font-weight: normal; text-decoration: underline;">${date}</span></p>
+                    <p>Date Prepared: <span style="font-weight: normal; text-decoration: underline;">${datePrep}</span></p>
                 </div>
             </div>
 
@@ -3432,6 +3453,7 @@
                     <p style="margin:0; font-style: italic; font-size: 13px;">"Received goods in good condition."</p>
                 </div>
                 <div style="text-align: right;">
+                    <p style="margin:0 0 5px 0;">Date Received: <span style="text-decoration: underline;">${dateRecv || '(Pending)'}</span></p>
                     <p style="margin:0 0 5px 0;">Received by: <span style="text-decoration: underline;">(Pending Signature)</span></p>
                 </div>
             </div>
@@ -3488,6 +3510,12 @@
         const rows = document.getElementById('issTableBody').querySelectorAll('tr');
         if (rows.length === 0) return Swal.fire('Empty Form', 'There are no items left on this form.', 'warning');
         
+        // Auto-fill received date to today when passing to kiosk
+        const recvDateInput = document.getElementById('issDateReceived');
+        if (!recvDateInput.value) {
+            recvDateInput.value = new Date().toISOString().split('T')[0];
+        }
+
         const elem = document.documentElement;
         if (elem.requestFullscreen) elem.requestFullscreen().catch(err => console.log(err));
 
@@ -3535,10 +3563,16 @@
             });
         });
 
-        let inputDate = document.getElementById('issDate').value;
-        if(inputDate.includes("-")){
-            const parts = inputDate.split('-');
-            inputDate = `${parts[1]}/${parts[2]}/${parts[0]}`;
+        let inputDatePrep = document.getElementById('issDatePrepared').value;
+        if(inputDatePrep.includes("-")){
+            const parts = inputDatePrep.split('-');
+            inputDatePrep = `${parts[1]}/${parts[2]}/${parts[0]}`;
+        }
+        
+        let inputDateRecv = document.getElementById('issDateReceived').value;
+        if(inputDateRecv.includes("-")){
+            const parts = inputDateRecv.split('-');
+            inputDateRecv = `${parts[1]}/${parts[2]}/${parts[0]}`;
         }
 
         const payload = {
@@ -3546,21 +3580,21 @@
             isDraft: true,
             issuanceNo: document.getElementById('issNoInput').value,
             reqNo: document.getElementById('issReqNoInput').value,
-            reqEmail: currentReqEmail, // Even if it's blank form, backend will ignore email for drafts
-            date: inputDate,
+            reqEmail: currentReqEmail, 
+            datePrepared: inputDatePrep,
+            dateReceived: inputDateRecv,
             dept: document.getElementById('issDept').value,
             preparedBy: document.getElementById('issPreparedBy').value,
-            receivedBy: document.getElementById('issReceivedBy').value, // Might be empty, that's fine for draft
+            receivedBy: document.getElementById('issReceivedBy').value, 
             totalAmount: document.getElementById('issTotalAmount').innerText,
             itemsJson: JSON.stringify(itemsData),
-            signature: "" // We don't save signature for drafts
+            signature: "" 
         };
 
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
             const resultText = await res.text();
             
-            // Expected return from backend is "Success|ISS-XXXX-XXXX"
             const returnedIssNo = resultText.split('|')[1];
             
             Swal.fire({ 
@@ -3571,7 +3605,7 @@
                 showConfirmButton: false 
             }).then(() => { 
                 closeIssuanceForm(); 
-                fetchIssuances(); // Reload to update drafts list
+                fetchIssuances(); 
             });
         } catch(e) { 
             Swal.fire('Error', 'Could not save the draft.', 'error'); 
@@ -3592,18 +3626,25 @@
             itemsData.push({
                 qty: tr.querySelector('.iss-qty').value,
                 unit: tr.querySelector('.iss-unit').value,
-                // Fallback to the placeholder if the admin accidentally wiped the input box out
                 desc: tr.querySelector('.iss-desc').value.trim() || tr.querySelector('.iss-desc').placeholder,
                 price: tr.querySelector('.iss-price').value,
                 amount: tr.querySelector('.iss-amt').value
             });
         });
 
-        // Ensure the date picks up whatever the admin edited it to
-        let inputDate = document.getElementById('issDate').value;
-        if(inputDate.includes("-")){
-            const parts = inputDate.split('-');
-            inputDate = `${parts[1]}/${parts[2]}/${parts[0]}`;
+        let inputDatePrep = document.getElementById('issDatePrepared').value;
+        if(inputDatePrep.includes("-")){
+            const parts = inputDatePrep.split('-');
+            inputDatePrep = `${parts[1]}/${parts[2]}/${parts[0]}`;
+        }
+        
+        let inputDateRecv = document.getElementById('issDateReceived').value;
+        if (!inputDateRecv) {
+             inputDateRecv = new Date().toISOString().split('T')[0]; // auto fill if they forgot
+        }
+        if(inputDateRecv.includes("-")){
+            const parts = inputDateRecv.split('-');
+            inputDateRecv = `${parts[1]}/${parts[2]}/${parts[0]}`;
         }
 
         const payload = {
@@ -3612,7 +3653,8 @@
             issuanceNo: document.getElementById('issNoInput').value,
             reqNo: document.getElementById('issReqNoInput').value,
             reqEmail: currentReqEmail,
-            date: inputDate,
+            datePrepared: inputDatePrep,
+            dateReceived: inputDateRecv,
             dept: document.getElementById('issDept').value,
             preparedBy: document.getElementById('issPreparedBy').value,
             receivedBy: receivedBy,
