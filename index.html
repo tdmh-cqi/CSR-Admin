@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSR Admin | TDMH Requisition Management</title>
     
+    <!-- FIX: Added favicon to stop 404 console error -->
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/tdmh-cqi/csr2026/main/images/tdmh-logo.png">
+    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1247,12 +1250,14 @@
             <p style="margin: 0 0 20px 0; font-size: 0.9rem; color: var(--text-muted);">Edit the text that appears under the Issuance Form title. This updates both the Admin printout and the automated Pink Copy email.</p>
             
             <div class="form-group">
-                <label>Pink Form Disclaimer (For Requestor's Email)</label>
+                <!-- FIX: Added for="pinkDisclaimerInput" -->
+                <label for="pinkDisclaimerInput">Pink Form Disclaimer (For Requestor's Email)</label>
                 <input type="text" id="pinkDisclaimerInput" class="remark-input" style="padding: 12px; font-size: 14px;" value="(Digital Pink Copy - Department Receiving Copy)" onkeyup="document.getElementById('prevPinkDisclaimerThumb').innerText = this.value;">
             </div>
             
             <div class="form-group" style="margin-top: 15px;">
-                <label>White Form Disclaimer (For CSR Printout)</label>
+                <!-- FIX: Added for="whiteDisclaimerInput" -->
+                <label for="whiteDisclaimerInput">White Form Disclaimer (For CSR Printout)</label>
                 <input type="text" id="whiteDisclaimerInput" class="remark-input" style="padding: 12px; font-size: 14px;" value="(Original White Copy - CSR & Accounting File)" onkeyup="document.getElementById('prevWhiteDisclaimerThumb').innerText = this.value;">
             </div>
             
