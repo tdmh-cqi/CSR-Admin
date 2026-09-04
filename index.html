@@ -1,3 +1,4 @@
+Frontend Code Admin Site:
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1255,6 +1256,20 @@
                     <span class="slider"></span>
                 </label>
             </div>
+
+            <!-- NEW BLOCK STARTS HERE -->
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--color-disapproved); margin-top: 15px;">
+                <div>
+                    <h3 style="margin: 0 0 5px 0; color: var(--color-disapproved);">Accept New Requests</h3>
+                    <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">Turn OFF to completely block the Request Site from submitting new forms (System Maintenance / Closed).</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="acceptRequestsToggle" onchange="toggleAcceptRequests(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <!-- NEW BLOCK ENDS HERE -->
+
         </div>
         
         <div class="cqi-settings-card" style="margin-top: 20px;">
@@ -1644,6 +1659,10 @@
                 if (document.activeElement !== document.getElementById('issuanceMasterToggle')) { document.getElementById('issuanceMasterToggle').checked = issuanceFeatureEnabled; }
                 if (document.activeElement !== document.getElementById('adminNotifToggle')) { document.getElementById('adminNotifToggle').checked = responseData.adminEmailNotifications !== false; }
                 if (document.activeElement !== document.getElementById('strictTimeToggle')) { document.getElementById('strictTimeToggle').checked = responseData.strictTimeMode === true; }
+                
+                // NEW LINE HERE
+                if (document.activeElement !== document.getElementById('acceptRequestsToggle')) { document.getElementById('acceptRequestsToggle').checked = responseData.acceptRequests !== false; }
+
                 if (document.getElementById('quotaCount')) document.getElementById('quotaCount').innerText = responseData.quota;
 
                 allData = responseData.data.sort((a, b) => b.id - a.id);
@@ -1745,6 +1764,21 @@
             Swal.fire('Error', 'Could not save setting to database.', 'error');
         }
     }
+
+    // NEW FUNCTION STARTS HERE
+    async function toggleAcceptRequests(isEnabled) {
+        Toast.fire({ icon: 'info', title: 'Updating system settings...' });
+        try {
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', mode: 'no-cors', 
+                body: JSON.stringify({ action: 'updateCQISettings', acceptRequests: isEnabled }) 
+            });
+            Toast.fire({ icon: 'success', title: `Request Site is now ${isEnabled ? 'OPEN' : 'CLOSED'}` });
+        } catch(e) {
+            Swal.fire('Error', 'Could not save setting to database.', 'error');
+        }
+    }
+    // NEW FUNCTION ENDS HERE
 
     async function saveDisclaimers() {
         const pText = document.getElementById('pinkDisclaimerInput').value;
@@ -2157,6 +2191,11 @@
             
             // Fetch Strict Time Mode state
             document.getElementById('strictTimeToggle').checked = responseData.strictTimeMode === true; // defaults to false
+
+            // NEW LINES HERE
+            if (document.getElementById('acceptRequestsToggle')) {
+                document.getElementById('acceptRequestsToggle').checked = responseData.acceptRequests !== false; // defaults to true
+            }
 
             if (responseData.pinkDisclaimer) {
                 g_pinkDisclaimer = responseData.pinkDisclaimer;
